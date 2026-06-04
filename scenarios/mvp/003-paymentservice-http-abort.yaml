@@ -1,0 +1,30 @@
+metadata:
+  scenario_id: paymentservice-http_abort-seed42
+  fault_service: paymentservice
+  fault_type: http_abort
+  seed: 42
+  fault_duration_s: 300
+  window_extra_s: 60
+  namespace: otel-demo
+  description: >
+    HTTP 5xx injection on paymentservice (abort 80% of requests with 503).
+    Expected signal: error_rate spike on paymentservice and checkout failures.
+
+chaos_manifest:
+  apiVersion: chaos-mesh.org/v1alpha1
+  kind: HTTPChaos
+  metadata:
+    name: paymentservice-http-abort-seed42
+    namespace: chaos-mesh
+  spec:
+    mode: all
+    selector:
+      namespaces:
+        - otel-demo
+      labelSelectors:
+        app: paymentservice
+    target: Response
+    abort: true
+    code: 503
+    percentage: 80
+    duration: "300s"

@@ -1,0 +1,30 @@
+# Grafana Tempo — single-binary mode for local kind cluster
+tempo:
+  storage:
+    trace:
+      backend: local
+      local:
+        path: /var/tempo/traces
+  retention: 24h
+
+# Expose via NodePort 30200 → localhost:3200
+service:
+  type: NodePort
+  nodePort: 30200
+
+# Accept OTLP gRPC (from OTel Collector)
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: "0.0.0.0:4317"
+      http:
+        endpoint: "0.0.0.0:4318"
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 1Gi

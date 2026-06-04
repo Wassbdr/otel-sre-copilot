@@ -1,0 +1,32 @@
+{
+  "snapshot_ts": "2024-01-15T14:06:00+00:00",
+  "window_start": "2024-01-15T13:59:00+00:00",
+  "window_end": "2024-01-15T14:06:00+00:00",
+  "namespace": "otel-demo",
+  "services_snapshotted": [
+    "frontend", "cartservice", "checkoutservice", "currencyservice",
+    "emailservice", "paymentservice", "productcatalogservice",
+    "recommendationservice", "shippingservice", "adservice",
+    "loadgenerator", "accountingservice", "frauddetectionservice",
+    "quoteservice", "flagd"
+  ],
+  "service_topology": {
+    "frontend": ["checkoutservice", "recommendationservice", "productcatalogservice",
+                 "cartservice", "shippingservice", "currencyservice", "adservice"],
+    "checkoutservice": ["cartservice", "paymentservice", "emailservice",
+                        "shippingservice", "currencyservice", "productcatalogservice"],
+    "cartservice": [],
+    "paymentservice": [],
+    "emailservice": [],
+    "shippingservice": ["quoteservice"],
+    "quoteservice": [],
+    "productcatalogservice": [],
+    "recommendationservice": ["productcatalogservice"],
+    "currencyservice": [],
+    "adservice": [],
+    "loadgenerator": ["frontend"],
+    "accountingservice": ["checkoutservice"],
+    "frauddetectionservice": ["checkoutservice"],
+    "flagd": []
+  }
+}

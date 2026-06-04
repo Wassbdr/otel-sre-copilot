@@ -1,0 +1,23 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: otel-sre-copilot
+# Single-node: sufficient for local dev on WSL2 (multi-node causes kubelet startup issues)
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      # Prometheus
+      - containerPort: 30090
+        hostPort: 9090
+        protocol: TCP
+      # Tempo
+      - containerPort: 30200
+        hostPort: 3200
+        protocol: TCP
+      # Loki
+      - containerPort: 30100
+        hostPort: 3100
+        protocol: TCP
+      # Astronomy Shop frontend
+      - containerPort: 30080
+        hostPort: 8080
+        protocol: TCP

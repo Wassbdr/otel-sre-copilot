@@ -1,0 +1,95 @@
+[
+  {
+    "type": "range",
+    "query": "sum(rate(http_server_request_duration_seconds_count{http_response_status_code=~\"5..\",service_name=\"checkoutservice\"}[2m])) / sum(rate(http_server_request_duration_seconds_count{service_name=\"checkoutservice\"}[2m]))",
+    "start": "2024-01-15T13:59:00+00:00",
+    "end": "2024-01-15T14:06:00+00:00",
+    "step": "30s",
+    "result": [
+      {
+        "metric": {"service_name": "checkoutservice"},
+        "values": [
+          [1705325940, "0.01"], [1705325970, "0.02"], [1705326000, "0.95"],
+          [1705326030, "1.0"], [1705326060, "1.0"], [1705326090, "1.0"],
+          [1705326120, "1.0"], [1705326150, "0.98"], [1705326180, "0.95"],
+          [1705326210, "0.5"], [1705326240, "0.1"], [1705326270, "0.02"],
+          [1705326300, "0.01"], [1705326330, "0.01"]
+        ]
+      }
+    ]
+  },
+  {
+    "type": "range",
+    "query": "sum(rate(http_server_request_duration_seconds_count{http_response_status_code=~\"5..\",service_name=\"checkoutservice\"}[2m])) / sum(rate(http_server_request_duration_seconds_count{service_name=\"checkoutservice\"}[2m]))",
+    "start": "2024-01-15T13:30:00+00:00",
+    "end": "2024-01-15T13:59:00+00:00",
+    "step": "30s",
+    "is_baseline": true,
+    "result": [
+      {
+        "metric": {"service_name": "checkoutservice"},
+        "values": [
+          [1705324200, "0.01"], [1705324230, "0.01"], [1705324260, "0.01"],
+          [1705324290, "0.02"], [1705324320, "0.01"], [1705324350, "0.01"],
+          [1705324380, "0.01"], [1705324410, "0.01"], [1705324440, "0.01"],
+          [1705324470, "0.01"], [1705324500, "0.02"], [1705324530, "0.01"]
+        ]
+      }
+    ]
+  },
+  {
+    "type": "range",
+    "query": "histogram_quantile(0.99, sum(rate(http_server_request_duration_seconds_bucket{service_name=\"checkoutservice\"}[2m])) by (le))",
+    "start": "2024-01-15T13:59:00+00:00",
+    "end": "2024-01-15T14:06:00+00:00",
+    "step": "30s",
+    "result": [
+      {
+        "metric": {},
+        "values": [
+          [1705325940, "0.05"], [1705325970, "0.06"], [1705326000, "2.5"],
+          [1705326030, "5.0"], [1705326060, "5.0"], [1705326090, "5.0"],
+          [1705326120, "4.8"], [1705326150, "3.2"], [1705326180, "1.5"],
+          [1705326210, "0.5"], [1705326240, "0.1"], [1705326270, "0.06"],
+          [1705326300, "0.05"], [1705326330, "0.05"]
+        ]
+      }
+    ]
+  },
+  {
+    "type": "range",
+    "query": "sum(rate(http_server_request_duration_seconds_count{http_response_status_code=~\"5..\",service_name=\"frontend\"}[2m])) / sum(rate(http_server_request_duration_seconds_count{service_name=\"frontend\"}[2m]))",
+    "start": "2024-01-15T13:59:00+00:00",
+    "end": "2024-01-15T14:06:00+00:00",
+    "step": "30s",
+    "result": [
+      {
+        "metric": {"service_name": "frontend"},
+        "values": [
+          [1705325940, "0.01"], [1705325970, "0.02"], [1705326000, "0.45"],
+          [1705326030, "0.5"], [1705326060, "0.48"], [1705326090, "0.5"],
+          [1705326120, "0.48"], [1705326150, "0.3"], [1705326180, "0.1"],
+          [1705326210, "0.02"], [1705326240, "0.01"], [1705326270, "0.01"]
+        ]
+      }
+    ]
+  },
+  {
+    "type": "range",
+    "query": "sum(kube_pod_container_status_restarts_total{pod=~\"checkoutservice.*\"})",
+    "start": "2024-01-15T13:59:00+00:00",
+    "end": "2024-01-15T14:06:00+00:00",
+    "step": "30s",
+    "result": [
+      {
+        "metric": {},
+        "values": [
+          [1705325940, "2"], [1705325970, "2"], [1705326000, "3"],
+          [1705326030, "4"], [1705326060, "5"], [1705326090, "5"],
+          [1705326120, "5"], [1705326150, "5"], [1705326180, "5"],
+          [1705326210, "5"], [1705326240, "5"], [1705326270, "5"]
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,30 @@
+metadata:
+  scenario_id: checkoutservice-pod_crash-seed42
+  fault_service: checkoutservice
+  fault_type: pod_crash
+  seed: 42
+  fault_duration_s: 300
+  window_extra_s: 60
+  namespace: otel-demo
+  description: >
+    Pod crash loop on checkoutservice. Expected signal: error_rate spike to ~1.0,
+    pod restart counter incrementing, K8s BackOff events.
+
+chaos_manifest:
+  apiVersion: chaos-mesh.org/v1alpha1
+  kind: PodChaos
+  metadata:
+    name: checkoutservice-pod-crash-seed42
+    namespace: chaos-mesh
+  spec:
+    action: pod-kill
+    mode: one
+    selector:
+      namespaces:
+        - otel-demo
+      labelSelectors:
+        app: checkoutservice
+    scheduler:
+      cron: "@every 60s"
+    duration: "300s"
+    gracePeriod: 0

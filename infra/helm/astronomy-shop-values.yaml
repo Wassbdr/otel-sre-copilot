@@ -1,0 +1,35 @@
+# OpenTelemetry Astronomy Shop — sends telemetry to our OTel Collector in monitoring namespace.
+# Chart builds OTEL_EXPORTER_OTLP_ENDPOINT as http://$(OTEL_COLLECTOR_NAME):4317.
+# We override OTEL_COLLECTOR_NAME to point to our collector's FQDN.
+
+default:
+  env:
+    - name: OTEL_COLLECTOR_NAME
+      value: "otel-collector.monitoring.svc.cluster.local"
+    - name: OTEL_EXPORTER_OTLP_INSECURE
+      value: "true"
+
+opentelemetry-collector:
+  enabled: false
+
+jaeger:
+  enabled: false
+
+prometheus:
+  enabled: false
+
+grafana:
+  enabled: false
+
+components:
+  load-generator:
+    enabled: true
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+
+  frontend:
+    service:
+      type: NodePort
+      nodePort: 30080

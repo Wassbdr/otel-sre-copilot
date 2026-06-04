@@ -1,0 +1,33 @@
+metadata:
+  scenario_id: shippingservice-high_latency-seed42
+  fault_service: shippingservice
+  fault_type: high_latency
+  seed: 42
+  fault_duration_s: 300
+  window_extra_s: 60
+  namespace: otel-demo
+  description: >
+    Network latency on shippingservice (500ms ± 100ms).
+    Tests agent's ability to distinguish direct vs cascading latency.
+    shippingservice → quoteservice (leaf), so latency is not a dependency failure.
+
+chaos_manifest:
+  apiVersion: chaos-mesh.org/v1alpha1
+  kind: NetworkChaos
+  metadata:
+    name: shippingservice-latency-seed42
+    namespace: chaos-mesh
+  spec:
+    action: delay
+    mode: all
+    selector:
+      namespaces:
+        - otel-demo
+      labelSelectors:
+        app: shippingservice
+    delay:
+      latency: "500ms"
+      jitter: "100ms"
+      correlation: "25"
+    duration: "300s"
+    direction: to

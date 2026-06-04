@@ -1,0 +1,35 @@
+# prometheus (standalone) — lightweight for single-node kind on WSL2
+# Exposes Prometheus via NodePort 30090 → localhost:9090
+# Enables remote_write receiver for OTel Collector
+
+server:
+  enabled: true
+  remoteWrite: []
+  # Accept remote_write from OTel Collector
+  extraFlags:
+    - web.enable-remote-write-receiver
+  retention: "7d"
+  service:
+    type: NodePort
+    nodePort: 30090
+  persistentVolume:
+    enabled: false   # no PVC on single-node kind (simpler)
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+
+alertmanager:
+  enabled: false
+
+prometheus-pushgateway:
+  enabled: false
+
+kube-state-metrics:
+  enabled: true
+
+nodeExporter:
+  enabled: false   # no daemonset on single-node

@@ -1,0 +1,31 @@
+metadata:
+  scenario_id: cartservice-memory_stress-seed42
+  fault_service: cartservice
+  fault_type: memory_stress
+  seed: 42
+  fault_duration_s: 300
+  window_extra_s: 60
+  namespace: otel-demo
+  description: >
+    Memory stress on cartservice (200MB allocation).
+    Expected signal: memory usage spike, possible OOMKilled events, cart errors.
+    Note: requires container_memory_working_set_bytes metric to be available.
+
+chaos_manifest:
+  apiVersion: chaos-mesh.org/v1alpha1
+  kind: StressChaos
+  metadata:
+    name: cartservice-memory-stress-seed42
+    namespace: chaos-mesh
+  spec:
+    mode: all
+    selector:
+      namespaces:
+        - otel-demo
+      labelSelectors:
+        app: cartservice
+    stressors:
+      memory:
+        workers: 1
+        size: "200MB"
+    duration: "300s"

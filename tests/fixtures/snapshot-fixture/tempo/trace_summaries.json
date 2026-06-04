@@ -1,0 +1,49 @@
+[
+  {
+    "traceID": "abc123def456789000000001",
+    "rootServiceName": "frontend",
+    "rootTraceName": "POST /checkout",
+    "startTimeUnixNano": "1705326005000000000",
+    "durationMs": 5123,
+    "hasError": true,
+    "spanSets": [
+      {
+        "attributes": {"service.name": "frontend"},
+        "spans": [{"spanID": "s001", "name": "POST /checkout", "durationMs": 5123, "error": true}]
+      },
+      {
+        "attributes": {"service.name": "checkoutservice"},
+        "spans": [{"spanID": "s002", "name": "CheckoutService/PlaceOrder", "durationMs": 5100, "error": true}]
+      }
+    ]
+  },
+  {
+    "traceID": "abc123def456789000000002",
+    "rootServiceName": "frontend",
+    "rootTraceName": "POST /checkout",
+    "startTimeUnixNano": "1705326035000000000",
+    "durationMs": 5000,
+    "hasError": true,
+    "spanSets": [
+      {
+        "attributes": {"service.name": "checkoutservice"},
+        "spans": [{"spanID": "s003", "name": "CheckoutService/PlaceOrder", "durationMs": 5000,
+                   "error": true, "status": "connection refused"}]
+      }
+    ]
+  },
+  {
+    "traceID": "abc123def456789000000003",
+    "rootServiceName": "checkoutservice",
+    "rootTraceName": "CheckoutService/PlaceOrder",
+    "startTimeUnixNano": "1705325950000000000",
+    "durationMs": 45,
+    "hasError": false,
+    "spanSets": [
+      {
+        "attributes": {"service.name": "checkoutservice"},
+        "spans": [{"spanID": "s004", "name": "CheckoutService/PlaceOrder", "durationMs": 45}]
+      }
+    ]
+  }
+]

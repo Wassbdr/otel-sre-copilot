@@ -1,0 +1,30 @@
+[
+  {
+    "logql": "{service_name=\"checkoutservice\"} |= \"error\" | json",
+    "start": "2024-01-15T13:59:00+00:00",
+    "end": "2024-01-15T14:06:00+00:00",
+    "result": [
+      {
+        "stream": {"service_name": "checkoutservice", "level": "error"},
+        "values": [
+          ["1705326001000000000", "{\"level\":\"error\",\"msg\":\"failed to connect to pod\",\"service\":\"checkoutservice\"}"],
+          ["1705326031000000000", "{\"level\":\"error\",\"msg\":\"context deadline exceeded\",\"service\":\"checkoutservice\"}"],
+          ["1705326061000000000", "{\"level\":\"error\",\"msg\":\"pod not ready\",\"service\":\"checkoutservice\"}"]
+        ]
+      }
+    ]
+  },
+  {
+    "logql": "{service_name=\"frontend\"} |= \"error\" | json",
+    "start": "2024-01-15T13:59:00+00:00",
+    "end": "2024-01-15T14:06:00+00:00",
+    "result": [
+      {
+        "stream": {"service_name": "frontend", "level": "error"},
+        "values": [
+          ["1705326005000000000", "{\"level\":\"error\",\"msg\":\"upstream checkoutservice unavailable\",\"service\":\"frontend\"}"]
+        ]
+      }
+    ]
+  }
+]

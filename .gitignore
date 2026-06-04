@@ -1,0 +1,35 @@
+# Secrets
+.env
+*.key
+*.pem
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+build/
+.venv/
+venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Raw telemetry snapshots (only metadata + ground_truth are versioned)
+snapshots/*/prometheus/
+snapshots/*/tempo/traces/
+snapshots/*/loki/
+snapshots/*/k8s/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# kind kubeconfig
+kubeconfig-otel-sre-copilot.yaml
