@@ -22,16 +22,11 @@ make compare                  # agent vs 3 baselines
 
 ## Results (MVP — seed=42)
 
-> Results populated after M4 is complete.
+Evaluation in progress — harness and 7 scenarios are implemented, full benchmark run pending cluster setup.
 
-| Method             | Acc@1 | Acc@3 | MRR  | FaultType Acc | Grounding | Latency (s) | Cost ($/run) |
-|--------------------|-------|-------|------|---------------|-----------|-------------|--------------|
-| Random             | —     | —     | —    | —             | —         | —           | —            |
-| Z-score error_rate | —     | —     | —    | —             | —         | —           | —            |
-| Composite Z-score  | —     | —     | —    | —             | —         | —           | —            |
-| **SRE-Copilot**    | —     | —     | —    | —             | —         | —           | —            |
-
-Snapshot SHA: `TBD` · Model: `meta/llama-3.1-70b-instruct` · App: OTel Astronomy Shop vTBD
+Metrics tracked: Acc@1, Acc@3, MRR, FaultType accuracy, grounding score, latency, cost/run.
+Baselines: Random, Z-score (error_rate), Composite Z-score.
+Model: `meta/llama-3.1-70b-instruct`
 
 ## Architecture
 
@@ -60,7 +55,9 @@ All eval runs in `artifacts/` are bit-reproducible given the same `config.json`.
 
 ## Known Limitations
 
-> Populated after M1 telemetry audit.
+- Requires a NVIDIA NIM API key (`NIM_API_KEY`) — no OpenAI fallback yet
+- Live mode needs a running kind cluster (~5 min setup via `make up`)
+- Replay mode works offline with the bundled telemetry snapshots
 
 ## Project Structure
 
