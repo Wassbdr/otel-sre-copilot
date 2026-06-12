@@ -81,7 +81,7 @@ down:
 
 # ── Health check ───────────────────────────────────────────────────────────
 health-check:
-	@python scripts/health_check.py
+	@python3 scripts/health_check.py
 
 # ── Fault injection ────────────────────────────────────────────────────────
 fault:
