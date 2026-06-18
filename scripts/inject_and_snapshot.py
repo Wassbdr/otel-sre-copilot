@@ -120,16 +120,41 @@ def extract_ground_truth(
     }
 
 
-def run_kubectl(args: list[str], dry_run: bool = False) -> subprocess.CompletedProcess[str]:
+# The kind node runs the whole otel-demo + LGTM stack on a constrained host; under load the
+# apiserver intermittently drops connections. These are transient — retry instead of aborting
+# a multi-minute capture on a single dropped packet.
+_KUBECTL_RETRY_MARKERS = (
+    "connection reset by peer",
+    "EOF",
+    "i/o timeout",
+    "TLS handshake timeout",
+    "connection refused",
+    "Unable to connect to the server",
+)
+
+
+def run_kubectl(
+    args: list[str], dry_run: bool = False, retries: int = 4, backoff_s: float = 5.0
+) -> subprocess.CompletedProcess[str]:
     cmd = ["kubectl", "--context", _KUBE_CONTEXT] + args
     if dry_run:
         log.info("dry_run_kubectl", cmd=" ".join(cmd))
         return subprocess.CompletedProcess(cmd, 0, "", "")
-    result = subprocess.run(cmd, capture_output=True, text=True)
-    if result.returncode != 0:
-        log.error("kubectl_failed", cmd=" ".join(cmd), stderr=result.stderr)
-        raise RuntimeError(f"kubectl failed: {result.stderr}")
-    return result
+    last_stderr = ""
+    for attempt in range(1, retries + 1):
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        if result.returncode == 0:
+            return result
+        last_stderr = result.stderr
+        transient = any(m in result.stderr for m in _KUBECTL_RETRY_MARKERS)
+        if transient and attempt < retries:
+            log.warning("kubectl_transient_retry", attempt=attempt, cmd=" ".join(cmd),
+                        stderr=result.stderr.strip()[:200])
+            time.sleep(backoff_s * attempt)
+            continue
+        break
+    log.error("kubectl_failed", cmd=" ".join(cmd), stderr=last_stderr)
+    raise RuntimeError(f"kubectl failed: {last_stderr}")
 
 
 def inject(
@@ -257,6 +282,14 @@ def validate_snapshot(output_dir: Path, gt: dict[str, object]) -> bool:
     if fault_type == "high_latency":
         return _validate_latency(fault_service, by_query, baseline_by_query)
 
+    # http_abort via NetworkChaos loss is also non-discriminative cross-service: dropped
+    # packets mean the target emits NO server span (so spanmetrics SERVER-only error_rate
+    # stays ~0), and its request_rate collapse blends in with naturally-idle services
+    # (email/ad/accounting sit at 0). The honest signal is a traffic collapse vs the target's
+    # OWN baseline. See docs/DECISIONS.md ADR-005.
+    if fault_type == "http_abort":
+        return _validate_abort(fault_service, by_query, baseline_by_query)
+
     best: dict[str, object] | None = None
     for sig in _FAULT_SIGNALS.get(fault_type, list(METRIC_QUERIES.keys())):
         tpl = METRIC_QUERIES[sig]
@@ -322,6 +355,33 @@ def _validate_latency(
         return True
     log.warning("snapshot_validation_FAIL", service=fault_service, fault_type="high_latency",
                 best=cand, hint="culprit not rank-1 p99 or p99 not >=2x its own baseline")
+    return False
+
+
+def _validate_abort(
+    fault_service: str,
+    by_query: dict[str, list],
+    baseline_by_query: dict[str, list],
+) -> bool:
+    """Gate for http_abort (NetworkChaos loss): the culprit's request_rate must have collapsed
+    to <=50% of its OWN baseline. Dropped packets emit no error span (error_rate stays ~0) and
+    the traffic collapse blends in with naturally-idle services, so a cross-service z-test
+    cannot see it; the self-relative drop is the honest signal that the abort fired."""
+    tpl = METRIC_QUERIES["request_rate"]
+    fault_rate = _series_mean(by_query.get(tpl.format(svc=fault_service), []))
+    base_rate = _series_mean(baseline_by_query.get(tpl.format(svc=fault_service), []))
+    ratio = (fault_rate / base_rate) if (base_rate and base_rate > 0 and fault_rate is not None) else None
+    cand = {"signal": "request_rate", "fault_value": round(fault_rate, 4) if fault_rate is not None else None,
+            "baseline_value": round(base_rate, 4) if base_rate else None,
+            "fault_over_baseline": round(ratio, 3) if ratio is not None else None}
+    # Require a real baseline (the service was actually serving traffic before the fault) and a
+    # >=50% collapse — otherwise we cannot tell an abort from a naturally-idle service.
+    if base_rate and base_rate > 0.005 and ratio is not None and ratio <= 0.5:
+        log.info("snapshot_validation_pass", service=fault_service,
+                 fault_type="http_abort", **cand)
+        return True
+    log.warning("snapshot_validation_FAIL", service=fault_service, fault_type="http_abort",
+                best=cand, hint="culprit request_rate did not collapse to <=50% of its own baseline")
     return False
 
 

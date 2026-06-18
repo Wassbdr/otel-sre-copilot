@@ -58,3 +58,22 @@ remonte chez l'appelant (cf. 001).
 l'éval (non-discriminative par construction en topologie microservices). (b) Signal de latence
 « self/exclusive » isolant le délai propre du culprit → plus fidèle mais nécessite une requête
 spanmetrics possiblement non exportée et plus de cycles de capture ; reporté.
+
+## ADR-005 (2026-06-19) — Gate spécifique pour http_abort (collapse request_rate vs baseline)
+
+**Décision.** Pour `http_abort` (NetworkChaos `loss`), la gate exige que le request_rate du
+service fauté soit tombé à **<= 50% de son propre baseline** (et que le baseline soit réel,
+> 0.005 req/s). Implémenté dans `_validate_abort`. Pas de test d'outlier cross-service.
+
+**Pourquoi.** Mesuré sur 003 (payment, loss:100) : la faute frappe réellement (request_rate
+payment = 18.5% de son baseline), mais **non-discriminative** en z cross-service car (a) les
+paquets droppés font que payment n'émet AUCUN span SERVER → `error_rate` spanmetrics (SERVER +
+STATUS_CODE_ERROR) reste ~0 partout ; (b) le collapse de trafic de payment se confond avec 6
+services naturellement inactifs (email/ad/accounting… à request_rate=0) → payment z=-0.49, pas
+un outlier bas ; le seul outlier est frontend (+3.31, symptôme amont). Le signal honnête d'un
+abort est l'effondrement du trafic du service ciblé vs sa propre normale.
+
+**Alternative écartée.** (a) Garder error_rate cross-service → exclurait http_abort de l'éval
+(signal structurellement absent avec loss). (b) Remplacer loss par un mécanisme générant de
+vrais spans ERROR → risque de faire remonter l'erreur chez l'appelant (checkout) et coûte des
+cycles de capture sur ce cluster saturé ; rejeté.

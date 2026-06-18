@@ -110,8 +110,8 @@ def snapshot(
             unique_traces.append(t)
     trace_summaries = unique_traces[:50]
 
-    log.info("fetching_full_traces", count=min(10, len(trace_summaries)))
-    for t in trace_summaries[:10]:
+    log.info("fetching_full_traces", count=min(5, len(trace_summaries)))
+    for t in trace_summaries[:5]:
         tid = str(t.get("traceID", ""))
         if tid:
             try:

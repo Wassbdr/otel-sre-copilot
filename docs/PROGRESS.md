@@ -54,6 +54,25 @@ faire atterrir HTTP/logs dans Prometheus/Loki, cohérence ground_truth, gate de 
 snapshot) → Phase 2 recapturer 7 snapshots → Phase 3 corriger agent + **run éval honnête vs
 baselines** → Phase 4 README/CI/LICENSE. Détail dans le plan d'implémentation.
 
+## MAJ 2026-06-18 — reprise : commit, cluster, capture 002
+
+- **Phase 0** : 44 fichiers de la session précédente committés (`81ea3ba`) après vérif zéro secret.
+- **Phase 1** : cluster relancé. Le node kind était `Exited (128)` (WSL redémarré) et le contexte
+  kubectl pointait sur le mauvais cluster (`observit-cluster1`). `docker start` + `use-context
+  kind-otel-sre-copilot` + attente API. health-check exit 0 (échec initial = race de warm-up).
+- **Fix résilience capture** (`7b6943a`) : un seul timeout Tempo/Prometheus/Loki avortait toute
+  la capture — précisément quand un fault de latence ralentit les backends. Chaque requête
+  par-service est maintenant try/except (dégrade en vide + warn), timeout client 10s→30s.
+- **Capture 002** (product-catalog high_latency, `b72228d`) : VALIDÉ. Le délai 200ms d'origine
+  était noyé dans le bruit multi-seconde du cluster (gate FAIL, z=-0.22). Porté à 1500ms : la
+  faute domine clairement (p99=7717ms = 23x son baseline 329ms) mais reste z=1.16 < 2 car la
+  latence cascade vers les SPAN SERVER des appelants (frontend 7548, checkout 6928…). D'où une
+  **gate spécifique latence** (ADR-004) : PASS si culprit rank-1 p99 ET p99 >= 2x son baseline.
+  Décision validée par l'utilisateur.
+- **Reste** : capturer 003-007 (003 en cours), puis éval+baselines+compare 7 scénarios, run agent
+  live, README/CI/LICENSE. Snapshots validés à ce jour : 001 (checkout pod_crash), 002 (product-
+  catalog high_latency).
+
 ## Journal des phases
 
 - **2026-06-14** — Audit honnête du repo : diagnostic « éval creuse » documenté ci-dessus.
