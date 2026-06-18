@@ -37,3 +37,24 @@ garde-fous CLAUDE.md).
 
 **Alternative écartée.** S'appuyer uniquement sur la mémoire auto / le code ; rejetée car la
 mémoire affirmait à tort « M0-M4 COMPLETE, 50/50 tests ».
+
+## ADR-004 (2026-06-18) — Gate spécifique pour les fautes de latence (rank-1 + saut vs baseline)
+
+**Décision.** Pour `high_latency`, la gate de validation snapshot ne teste PAS un outlier
+cross-service `|z|>=2` (comme les autres fautes). Elle exige : le service fauté est **rank-1**
+sur p99 (le pire) **ET** son p99 fenêtre-faute est **>= 2x son propre baseline** (la faute a
+démonstrablement explosé au-dessus de sa normale). Implémenté dans `_validate_latency`.
+
+**Pourquoi.** Un délai injecté sur un service feuille **cascade** vers les SPAN SERVER de tous
+ses appelants (frontend/checkout/recommendation accumulent l'attente downstream). Culprit et
+appelants montent ensemble → l'écart-type cross-service explose et même le rang 1 n'atteint pas
+2σ (mesuré : product-catalog z=1.16 à 1.5s de délai, alors qu'il EST le pire à 7717ms = 23x son
+baseline de 329ms). Augmenter le délai pousse toute la cascade ensemble (treadmill). Le test
+honnête de « la faute de latence a fiéllement frappé ce service » est rank-1 + saut vs sa propre
+baseline, pas l'outlier de population. C'est le pendant latence du symptôme error_rate qui
+remonte chez l'appelant (cf. 001).
+
+**Alternative écartée.** (a) Garder `|z|>=2` cross-service → exclurait toute faute de latence de
+l'éval (non-discriminative par construction en topologie microservices). (b) Signal de latence
+« self/exclusive » isolant le délai propre du culprit → plus fidèle mais nécessite une requête
+spanmetrics possiblement non exportée et plus de cycles de capture ; reporté.

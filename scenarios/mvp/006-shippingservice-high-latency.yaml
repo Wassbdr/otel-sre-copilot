@@ -7,7 +7,8 @@ metadata:
   window_extra_s: 60
   namespace: otel-demo
   description: >
-    Network latency on shipping (500ms ± 100ms).
+    Network latency on shipping (1500ms ± 300ms). The delay must clearly exceed this
+    cluster's noisy multi-second baseline p99 to be a discriminative outlier.
     Tests agent's ability to distinguish direct vs cascading latency.
     shipping → quoteservice (leaf), so latency is not a dependency failure.
 
@@ -26,8 +27,8 @@ chaos_manifest:
       labelSelectors:
         app.kubernetes.io/component: shipping
     delay:
-      latency: "500ms"
-      jitter: "100ms"
+      latency: "1500ms"
+      jitter: "300ms"
       correlation: "25"
     duration: "300s"
     direction: to

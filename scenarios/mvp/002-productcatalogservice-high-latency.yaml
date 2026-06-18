@@ -7,7 +7,9 @@ metadata:
   window_extra_s: 60
   namespace: otel-demo
   description: >
-    Network latency injection on product-catalog (200ms ± 50ms delay).
+    Network latency injection on product-catalog (1500ms ± 300ms delay). The delay must
+    clearly exceed this cluster's noisy multi-second baseline p99 for the culprit to be a
+    discriminative outlier (a 200ms delay was lost in the noise — gate FAIL).
     Expected signal: p99 latency spike, cascading latency to recommendation and checkout.
 
 chaos_manifest:
@@ -25,8 +27,8 @@ chaos_manifest:
       labelSelectors:
         app.kubernetes.io/component: product-catalog
     delay:
-      latency: "200ms"
-      jitter: "50ms"
+      latency: "1500ms"
+      jitter: "300ms"
       correlation: "25"
     duration: "300s"
     direction: to
