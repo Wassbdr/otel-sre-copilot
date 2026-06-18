@@ -12,7 +12,6 @@ from typing import Annotated, Literal
 from langchain_core.messages import BaseMessage
 from pydantic import BaseModel, Field
 
-
 # ── Output schema ──────────────────────────────────────────────────────────────
 
 class EvidenceItem(BaseModel):

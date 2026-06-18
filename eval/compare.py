@@ -142,7 +142,7 @@ def main() -> None:
         f.write("- Random baseline grounding_score=0.0 by design (no evidence items)\n")
         f.write("- Reproduce: `make eval-replay RUN_ID=" + run_id + "`\n")
 
-    print(f"Written to: results/baseline_comparison.md")
+    print("Written to: results/baseline_comparison.md")
 
 
 if __name__ == "__main__":

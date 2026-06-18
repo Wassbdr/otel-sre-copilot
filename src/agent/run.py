@@ -18,10 +18,9 @@ Usage (replay mode):
 from __future__ import annotations
 
 import argparse
-import json
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import structlog
@@ -66,7 +65,7 @@ def main(argv: list[str] | None = None) -> None:
         incident_end_ts=args.end,
         affected_namespace=args.namespace,
     )
-    state["_investigation_start_ts"] = datetime.now(timezone.utc).isoformat()
+    state["_investigation_start_ts"] = datetime.now(UTC).isoformat()
 
     log.info("investigation_start", incident_id=args.incident_id)
     result = graph.invoke(state)

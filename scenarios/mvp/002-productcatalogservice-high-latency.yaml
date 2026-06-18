@@ -1,20 +1,20 @@
 metadata:
-  scenario_id: productcatalogservice-high_latency-seed42
-  fault_service: productcatalogservice
+  scenario_id: product-catalog-high_latency-seed42
+  fault_service: product-catalog
   fault_type: high_latency
   seed: 42
   fault_duration_s: 300
   window_extra_s: 60
   namespace: otel-demo
   description: >
-    Network latency injection on productcatalogservice (200ms ± 50ms delay).
+    Network latency injection on product-catalog (200ms ± 50ms delay).
     Expected signal: p99 latency spike, cascading latency to recommendation and checkout.
 
 chaos_manifest:
   apiVersion: chaos-mesh.org/v1alpha1
   kind: NetworkChaos
   metadata:
-    name: productcatalogservice-latency-seed42
+    name: product-catalog-latency-seed42
     namespace: chaos-mesh
   spec:
     action: delay
@@ -23,7 +23,7 @@ chaos_manifest:
       namespaces:
         - otel-demo
       labelSelectors:
-        app: productcatalogservice
+        app.kubernetes.io/component: product-catalog
     delay:
       latency: "200ms"
       jitter: "50ms"

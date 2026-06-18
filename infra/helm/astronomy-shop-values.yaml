@@ -1,13 +1,21 @@
-# OpenTelemetry Astronomy Shop — sends telemetry to our OTel Collector in monitoring namespace.
-# Chart builds OTEL_EXPORTER_OTLP_ENDPOINT as http://$(OTEL_COLLECTOR_NAME):4317.
-# We override OTEL_COLLECTOR_NAME to point to our collector's FQDN.
-
 default:
+  # NOTE: providing `default.env` REPLACES the chart's built-in env list (Helm does not merge
+  # lists). The chart's defaults include OTEL_SERVICE_NAME / OTEL_RESOURCE_ATTRIBUTES — we must
+  # restore them here, otherwise every service falls back to the SDK default
+  # `unknown_service:<exe>` and all per-service metric/trace identity is lost.
   env:
+    - name: OTEL_SERVICE_NAME
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.labels['app.kubernetes.io/component']
+    - name: OTEL_RESOURCE_ATTRIBUTES
+      value: "service.namespace=opentelemetry-demo,service.version=2.2.0,k8s.namespace.name=otel-demo"
     - name: OTEL_COLLECTOR_NAME
       value: "otel-collector.monitoring.svc.cluster.local"
     - name: OTEL_EXPORTER_OTLP_INSECURE
       value: "true"
+    - name: OTEL_EXPORTER_OTLP_ENDPOINT
+      value: "http://otel-collector.monitoring.svc.cluster.local:4317"
 
 opentelemetry-collector:
   enabled: false

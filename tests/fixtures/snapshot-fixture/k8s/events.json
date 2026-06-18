@@ -1,20 +1,23 @@
 [
   {
     "type": "Warning",
-    "reason": "BackOff",
-    "message": "Back-off restarting failed container checkoutservice in pod checkoutservice-abc123",
-    "count": 5,
-    "first_time": "2024-01-15T14:00:05+00:00",
-    "last_time": "2024-01-15T14:04:55+00:00",
-    "involved_object_name": "checkoutservice-abc123"
+    "reason": "Killing",
+    "message": "Stopping container checkout",
+    "count": 1,
+    "involved_object_name": "checkout-abc123"
   },
   {
-    "type": "Warning",
-    "reason": "OOMKilled",
-    "message": "Container checkoutservice was OOM killed",
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container checkout",
     "count": 1,
-    "first_time": "2024-01-15T14:00:02+00:00",
-    "last_time": "2024-01-15T14:00:02+00:00",
-    "involved_object_name": "checkoutservice-abc123"
+    "involved_object_name": "checkout-abc123"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Container image present",
+    "count": 1,
+    "involved_object_name": "frontend-def456"
   }
 ]

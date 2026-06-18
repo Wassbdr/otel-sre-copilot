@@ -86,14 +86,14 @@ health-check:
 # ── Fault injection ────────────────────────────────────────────────────────
 fault:
 	@test -f "$(SCENARIO)" || (echo "ERROR: SCENARIO not found: $(SCENARIO)" && exit 1)
-	@python scripts/inject_and_snapshot.py --scenario $(SCENARIO)
+	@python3 scripts/inject_and_snapshot.py --scenario $(SCENARIO)
 
 # ── Agent (live mode) ─────────────────────────────────────────────────────
 investigate:
 	@test -n "$(INCIDENT_ID)" || (echo "ERROR: INCIDENT_ID required" && exit 1)
 	@test -n "$(START)"       || (echo "ERROR: START required (ISO-8601)" && exit 1)
 	@test -n "$(END)"         || (echo "ERROR: END required (ISO-8601)" && exit 1)
-	@python -m src.agent.run \
+	@python3 -m src.agent.run \
 		--incident-id "$(INCIDENT_ID)" \
 		--start "$(START)" \
 		--end "$(END)" \
@@ -101,24 +101,24 @@ investigate:
 
 # ── Evaluation ────────────────────────────────────────────────────────────
 eval:
-	@python -m eval.scenario_runner \
+	@python3 -m eval.scenario_runner \
 		--scenario-dir "$(SCENARIO_DIR)" \
 		--mode replay
 
 eval-replay:
 	@test -n "$(RUN_ID)" || (echo "ERROR: RUN_ID required" && exit 1)
-	@python -m eval.scenario_runner \
+	@python3 -m eval.scenario_runner \
 		--scenario-dir "$(SCENARIO_DIR)" \
 		--mode replay \
 		--run-id "$(RUN_ID)"
 
 eval-baselines:
-	@python -m eval.scenario_runner \
+	@python3 -m eval.scenario_runner \
 		--scenario-dir "$(SCENARIO_DIR)" \
 		--mode baselines-only
 
 compare:
-	@python -m eval.compare
+	@python3 -m eval.compare
 
 # ── Dev ───────────────────────────────────────────────────────────────────
 test:
@@ -137,7 +137,7 @@ demo:
 	@LATEST=$$(ls -td snapshots/*/ground_truth.json 2>/dev/null | head -1 | xargs dirname); \
 	test -n "$$LATEST" || (echo "No snapshots found. Run: make fault SCENARIO=..." && exit 1); \
 	SCENARIO_ID=$$(basename $$LATEST); \
-	python -m eval.scenario_runner \
+	python3 -m eval.scenario_runner \
 		--snapshot-dir "$$LATEST" \
 		--mode single \
 		--print-report

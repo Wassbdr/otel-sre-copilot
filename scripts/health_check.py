@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-import sys
 import os
+import sys
+
 import httpx
 from dotenv import load_dotenv
 

@@ -103,7 +103,7 @@ def compress_loki(results: list[dict[str, object]]) -> str:
 
     for stream_result in results:
         values: list[list[str]] = stream_result.get("values", [])  # type: ignore[assignment]
-        for ts, line in values:
+        for _ts, line in values:
             lower = line.lower()
             if "error" in lower:
                 counts["error"] += 1

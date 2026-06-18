@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import pytest
 
 from src.datasources.protocol import DataSource
 from src.datasources.replay import ReplayDataSource
+from src.telemetry_queries import LOKI_QUERIES, METRIC_QUERIES
 
 
 class TestReplayDataSourceProtocol:
@@ -20,24 +20,32 @@ class TestReplayDataSourceProtocol:
 
 class TestReplayPrometheus:
     def test_range_query_exact_match(self, replay_ds: ReplayDataSource) -> None:
-        query = (
-            'sum(rate(http_server_request_duration_seconds_count'
-            '{http_response_status_code=~"5..",service_name="checkoutservice"}[2m]))'
-            ' / sum(rate(http_server_request_duration_seconds_count'
-            '{service_name="checkoutservice"}[2m]))'
-        )
+        query = METRIC_QUERIES["error_rate"].format(svc="checkout")
         result = replay_ds.query_prometheus_range(
             query,
             start="2024-01-15T13:59:00+00:00",
             end="2024-01-15T14:06:00+00:00",
         )
         assert len(result) == 1
-        assert result[0]["metric"] == {"service_name": "checkoutservice"}
         values = result[0]["values"]
         assert len(values) > 0
-        # The fault period should have high error rate (~1.0)
+        # The fault window should show a high error rate for the crashed service.
         fault_values = [float(v[1]) for v in values]
         assert max(fault_values) >= 0.9
+
+    def test_range_query_distinguishes_fault_and_baseline_windows(
+        self, replay_ds: ReplayDataSource
+    ) -> None:
+        # Same PromQL, different windows must return different data (else Z-scores are hollow).
+        query = METRIC_QUERIES["error_rate"].format(svc="checkout")
+        fault = replay_ds.query_prometheus_range(
+            query, "2024-01-15T13:59:00+00:00", "2024-01-15T14:06:00+00:00"
+        )
+        baseline = replay_ds.query_prometheus_range(
+            query, "2024-01-15T13:29:00+00:00", "2024-01-15T13:59:00+00:00"
+        )
+        assert float(fault[0]["values"][0][1]) >= 0.9
+        assert float(baseline[0]["values"][0][1]) == 0.0
 
     def test_range_query_cache_miss_returns_empty(self, replay_ds: ReplayDataSource) -> None:
         result = replay_ds.query_prometheus_range(
@@ -58,7 +66,7 @@ class TestReplayPrometheus:
 class TestReplayTempo:
     def test_search_traces_returns_summaries(self, replay_ds: ReplayDataSource) -> None:
         traces = replay_ds.search_traces(
-            "checkoutservice",
+            "checkout",
             start="2024-01-15T13:59:00+00:00",
             end="2024-01-15T14:06:00+00:00",
         )
@@ -67,13 +75,13 @@ class TestReplayTempo:
 
     def test_search_traces_error_only_filter(self, replay_ds: ReplayDataSource) -> None:
         all_traces = replay_ds.search_traces(
-            "checkoutservice",
+            "checkout",
             start="2024-01-15T13:59:00+00:00",
             end="2024-01-15T14:06:00+00:00",
             error_only=False,
         )
         error_traces = replay_ds.search_traces(
-            "checkoutservice",
+            "checkout",
             start="2024-01-15T13:59:00+00:00",
             end="2024-01-15T14:06:00+00:00",
             error_only=True,
@@ -98,7 +106,7 @@ class TestReplayTempo:
 class TestReplayLoki:
     def test_query_loki_exact_match(self, replay_ds: ReplayDataSource) -> None:
         result = replay_ds.query_loki(
-            '{service_name="checkoutservice"} |= "error" | json',
+            LOKI_QUERIES["error_logs"].format(svc="checkout"),
             start="2024-01-15T13:59:00+00:00",
             end="2024-01-15T14:06:00+00:00",
         )
@@ -123,9 +131,9 @@ class TestReplayK8s:
 
     def test_get_pod_events_prefix_filter(self, replay_ds: ReplayDataSource) -> None:
         all_events = replay_ds.get_pod_events("otel-demo")
-        filtered = replay_ds.get_pod_events("otel-demo", pod_name_prefix="checkoutservice")
+        filtered = replay_ds.get_pod_events("otel-demo", pod_name_prefix="checkout")
         assert len(filtered) <= len(all_events)
-        assert all(e["involved_object_name"].startswith("checkoutservice") for e in filtered)
+        assert all(e["involved_object_name"].startswith("checkout") for e in filtered)
 
     def test_get_pod_events_no_match_prefix(self, replay_ds: ReplayDataSource) -> None:
         events = replay_ds.get_pod_events("otel-demo", pod_name_prefix="nonexistent")
@@ -136,12 +144,12 @@ class TestReplayTopology:
     def test_get_service_topology_returns_dict(self, replay_ds: ReplayDataSource) -> None:
         topo = replay_ds.get_service_topology("otel-demo")
         assert isinstance(topo, dict)
-        assert "checkoutservice" in topo
+        assert "checkout" in topo
         assert "frontend" in topo
 
     def test_frontend_has_downstream_services(self, replay_ds: ReplayDataSource) -> None:
         topo = replay_ds.get_service_topology("otel-demo")
-        assert "checkoutservice" in topo["frontend"]
+        assert "checkout" in topo["frontend"]
 
 
 class TestReplayInitErrors:

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import httpx
 import structlog
@@ -12,32 +12,35 @@ from kubernetes import config as k8s_config
 
 log = structlog.get_logger()
 
+# OTel Astronomy Shop 2.x service names. These match `service.name` (set from the pod label
+# app.kubernetes.io/component) and the pod-name prefix `<svc>-<hash>`. The 1.x names
+# (checkoutservice, cartservice, …) are GONE — the demo renamed every service in 2.0.
 ASTRONOMY_SHOP_SERVICES = [
-    "frontend", "cartservice", "checkoutservice", "currencyservice",
-    "emailservice", "paymentservice", "productcatalogservice",
-    "recommendationservice", "shippingservice", "adservice",
-    "loadgenerator", "accountingservice", "frauddetectionservice",
-    "quoteservice", "flagd",
+    "frontend", "cart", "checkout", "currency",
+    "email", "payment", "product-catalog",
+    "recommendation", "shipping", "ad",
+    "load-generator", "accounting", "fraud-detection",
+    "quote", "flagd",
 ]
 
 # Static dependency graph for OTel Astronomy Shop (frontend → downstream calls)
 _STATIC_TOPOLOGY: dict[str, list[str]] = {
-    "frontend": ["checkoutservice", "recommendationservice", "productcatalogservice",
-                 "cartservice", "shippingservice", "currencyservice", "adservice"],
-    "checkoutservice": ["cartservice", "paymentservice", "emailservice",
-                        "shippingservice", "currencyservice", "productcatalogservice"],
-    "cartservice": [],
-    "paymentservice": [],
-    "emailservice": [],
-    "shippingservice": ["quoteservice"],
-    "quoteservice": [],
-    "productcatalogservice": [],
-    "recommendationservice": ["productcatalogservice"],
-    "currencyservice": [],
-    "adservice": [],
-    "loadgenerator": ["frontend"],
-    "accountingservice": ["checkoutservice"],
-    "frauddetectionservice": ["checkoutservice"],
+    "frontend": ["checkout", "recommendation", "product-catalog",
+                 "cart", "shipping", "currency", "ad"],
+    "checkout": ["cart", "payment", "email",
+                 "shipping", "currency", "product-catalog"],
+    "cart": [],
+    "payment": [],
+    "email": [],
+    "shipping": ["quote"],
+    "quote": [],
+    "product-catalog": [],
+    "recommendation": ["product-catalog"],
+    "currency": [],
+    "ad": [],
+    "load-generator": ["frontend"],
+    "accounting": ["checkout"],
+    "fraud-detection": ["checkout"],
     "flagd": [],
 }
 
@@ -60,8 +63,9 @@ class LiveDataSource:
 
     def _k8s_client(self) -> k8s_client.CoreV1Api:
         if self._k8s is None:
+            kube_context = os.getenv("KUBE_CONTEXT", "kind-otel-sre-copilot")
             try:
-                k8s_config.load_kube_config()
+                k8s_config.load_kube_config(context=kube_context)
             except Exception:
                 k8s_config.load_incluster_config()
             self._k8s = k8s_client.CoreV1Api()
@@ -98,8 +102,8 @@ class LiveDataSource:
     ) -> list[dict[str, object]]:
         params: dict[str, object] = {
             "service.name": service_name,
-            "start": _to_unix_ns(start),
-            "end": _to_unix_ns(end),
+            "start": _to_unix_s(start),
+            "end": _to_unix_s(end),
             "limit": limit,
         }
         if min_duration_ms is not None:
@@ -142,7 +146,7 @@ class LiveDataSource:
     ) -> list[dict[str, object]]:
         api = self._k8s_client()
         events = api.list_namespaced_event(namespace=namespace)
-        cutoff = datetime.now(timezone.utc).timestamp() - since_seconds
+        cutoff = datetime.now(UTC).timestamp() - since_seconds
         results: list[dict[str, object]] = []
         for ev in events.items:
             if ev.last_timestamp and ev.last_timestamp.timestamp() < cutoff:
@@ -169,9 +173,18 @@ class LiveDataSource:
 
 
 def _to_unix_ns(ts: str) -> str:
-    """Convert ISO-8601 string to nanosecond Unix timestamp string for Tempo/Loki."""
+    """Convert ISO-8601 to nanosecond Unix timestamp (Loki format)."""
     try:
         dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
         return str(int(dt.timestamp() * 1e9))
     except ValueError:
         return ts
+
+
+def _to_unix_s(ts: str) -> int:
+    """Convert ISO-8601 to second Unix timestamp (Tempo search format)."""
+    try:
+        dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+        return int(dt.timestamp())
+    except ValueError:
+        return 0

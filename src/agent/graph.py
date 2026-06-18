@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import json
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any, TypedDict
 
 import structlog
@@ -21,7 +21,7 @@ from pydantic import ValidationError
 
 from src.agent.context_manager import ContextBudget
 from src.agent.prompts import build_system_prompt
-from src.agent.schemas import InvestigationReport, initial_state
+from src.agent.schemas import InvestigationReport
 from src.agent.tools import make_tools
 from src.utils.cost import estimate_cost
 
@@ -48,9 +48,13 @@ class GraphState(TypedDict, total=False):
 log = structlog.get_logger()
 
 MAX_TOOL_ITERATIONS = int(os.getenv("MAX_TOOL_ITERATIONS", "8"))
+# Force at least this many tool iterations, and at least one Prometheus metric sweep, before
+# the agent is allowed to write a report. Without this the LLM tends to call get_service_topology
+# once and then fabricate evidence (grounding_score=0.0).
+MIN_TOOL_ITERATIONS = int(os.getenv("MIN_TOOL_ITERATIONS", "3"))
 
 
-def build_graph(ds: "DataSource") -> StateGraph:
+def build_graph(ds: DataSource) -> StateGraph:
     """Build and compile the investigation StateGraph for the given DataSource."""
 
     budget = ContextBudget()
@@ -88,6 +92,18 @@ def build_graph(ds: "DataSource") -> StateGraph:
                         "Identify the root cause and produce an InvestigationReport JSON."
             )
             messages = [system_msg, human_msg]
+
+        # If the LLM tried to stop early (last msg is an AIMessage with no tool calls) but we
+        # are forcing more investigation, nudge it to actually sweep metrics before concluding.
+        elif messages and isinstance(messages[-1], AIMessage) and not getattr(
+            messages[-1], "tool_calls", None
+        ):
+            messages = messages + [HumanMessage(content=(
+                "You have not gathered enough grounded evidence yet. Before concluding, call "
+                "query_prometheus_range to sweep error_rate, cpu_usage, memory_usage and "
+                "pod_restarts across the main services, then inspect the top anomalies with "
+                "search_traces / query_loki / get_pod_events. Do not fabricate evidence."
+            ))]
 
         # Call LLM
         response: AIMessage = llm_with_tools.invoke(messages)  # type: ignore[assignment]
@@ -136,7 +152,7 @@ def build_graph(ds: "DataSource") -> StateGraph:
     # ── Node: generate_report ──────────────────────────────────────────────
     def generate_report(state: GraphState) -> GraphState:
         messages: list = list(state.get("messages", []))
-        inv_start = state.get("_investigation_start_ts", datetime.now(timezone.utc).isoformat())
+        inv_start = state.get("_investigation_start_ts", datetime.now(UTC).isoformat())
 
         # Ask LLM to produce the final structured report
         finalize_msg = HumanMessage(
@@ -158,7 +174,7 @@ def build_graph(ds: "DataSource") -> StateGraph:
         )
 
         response: AIMessage = report_llm.invoke(messages_for_report)  # type: ignore[assignment]
-        inv_end = datetime.now(timezone.utc).isoformat()
+        inv_end = datetime.now(UTC).isoformat()
 
         # Parse and validate
         content = response.content if isinstance(response.content, str) else str(response.content)
@@ -212,8 +228,21 @@ def build_graph(ds: "DataSource") -> StateGraph:
             log.info("iteration_limit_reached", iteration=iteration)
             return "generate_report"
 
-        last_msg = messages[-1] if messages else None
-        if isinstance(last_msg, AIMessage) and getattr(last_msg, "tool_calls", None):
+        # Find last AIMessage — if it had tool_calls, they were just executed → keep looping.
+        for msg in reversed(messages):
+            if isinstance(msg, AIMessage):
+                if getattr(msg, "tool_calls", None):
+                    return "tool_call_loop"
+                break
+
+        # LLM wants to stop. Force more investigation if it hasn't met the minimum: at least
+        # MIN_TOOL_ITERATIONS iterations AND at least one Prometheus metric query.
+        metric_calls = sum(
+            1 for e in state.get("tool_calls_log", [])
+            if str(e.get("tool_name", "")).startswith("query_prometheus")
+        )
+        if iteration < MIN_TOOL_ITERATIONS or metric_calls < 1:
+            log.info("forcing_more_investigation", iteration=iteration, metric_calls=metric_calls)
             return "tool_call_loop"
         return "generate_report"
 

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import json
-
 import pytest
 
 from src.agent.context_manager import (
@@ -19,7 +17,7 @@ from src.agent.schemas import (
     initial_state,
 )
 from src.datasources.replay import ReplayDataSource
-
+from src.telemetry_queries import LOKI_QUERIES, METRIC_QUERIES
 
 # ── Schema tests ───────────────────────────────────────────────────────────────
 
@@ -119,36 +117,18 @@ class TestCompressPrometheus:
         result = compress_prometheus_range([], "up")
         assert "no data" in result
 
-    def test_compress_returns_stats(self, replay_ds: ReplayDataSource) -> None:
-        query = (
-            'sum(rate(http_server_request_duration_seconds_count'
-            '{http_response_status_code=~"5..",service_name="checkoutservice"}[2m]))'
-            ' / sum(rate(http_server_request_duration_seconds_count'
-            '{service_name="checkoutservice"}[2m]))'
-        )
-        raw = replay_ds.query_prometheus_range(
-            query,
-            start="2024-01-15T13:59:00+00:00",
-            end="2024-01-15T14:06:00+00:00",
-        )
-        result = compress_prometheus_range(raw, query)
+    def test_compress_returns_stats(self) -> None:
+        raw = [{"metric": {}, "values": [[1.0, "0.10"], [2.0, "0.20"], [3.0, "0.15"]]}]
+        result = compress_prometheus_range(raw, "error_rate_query")
         assert "mean=" in result
         assert "p99=" in result
         assert "max=" in result
 
-    def test_compress_detects_anomaly(self, replay_ds: ReplayDataSource) -> None:
-        query = (
-            'sum(rate(http_server_request_duration_seconds_count'
-            '{http_response_status_code=~"5..",service_name="checkoutservice"}[2m]))'
-            ' / sum(rate(http_server_request_duration_seconds_count'
-            '{service_name="checkoutservice"}[2m]))'
-        )
-        raw = replay_ds.query_prometheus_range(
-            query,
-            start="2024-01-15T13:59:00+00:00",
-            end="2024-01-15T14:06:00+00:00",
-        )
-        result = compress_prometheus_range(raw, query)
+    def test_compress_detects_anomaly(self) -> None:
+        # A late spike well above 3x the mean must be flagged as an anomaly window.
+        raw = [{"metric": {}, "values": [
+            [1.0, "0.01"], [2.0, "0.01"], [3.0, "0.01"], [4.0, "0.90"]]}]
+        result = compress_prometheus_range(raw, "error_rate_query")
         assert "anomaly" in result
 
 
@@ -159,7 +139,7 @@ class TestCompressTraces:
 
     def test_compress_returns_counts(self, replay_ds: ReplayDataSource) -> None:
         traces = replay_ds.search_traces(
-            "checkoutservice",
+            "checkout",
             start="2024-01-15T13:59:00+00:00",
             end="2024-01-15T14:06:00+00:00",
         )
@@ -175,7 +155,7 @@ class TestCompressLoki:
 
     def test_compress_counts_levels(self, replay_ds: ReplayDataSource) -> None:
         logs = replay_ds.query_loki(
-            '{service_name="checkoutservice"} |= "error" | json',
+            LOKI_QUERIES["error_logs"].format(svc="checkout"),
             start="2024-01-15T13:59:00+00:00",
             end="2024-01-15T14:06:00+00:00",
         )
@@ -202,12 +182,7 @@ class TestToolWrappers:
         from src.agent.tools import make_tools
         tools = {t.name: t for t in make_tools(replay_ds, budget)}
         result = tools["query_prometheus_range"].invoke({
-            "query": (
-                'sum(rate(http_server_request_duration_seconds_count'
-                '{http_response_status_code=~"5..",service_name="checkoutservice"}[2m]))'
-                ' / sum(rate(http_server_request_duration_seconds_count'
-                '{service_name="checkoutservice"}[2m]))'
-            ),
+            "query": METRIC_QUERIES["error_rate"].format(svc="checkout"),
             "start": "2024-01-15T13:59:00+00:00",
             "end": "2024-01-15T14:06:00+00:00",
         })
@@ -220,7 +195,7 @@ class TestToolWrappers:
         from src.agent.tools import make_tools
         tools = {t.name: t for t in make_tools(replay_ds, budget)}
         result = tools["search_traces"].invoke({
-            "service_name": "checkoutservice",
+            "service_name": "checkout",
             "start": "2024-01-15T13:59:00+00:00",
             "end": "2024-01-15T14:06:00+00:00",
             "error_only": True,
@@ -233,5 +208,5 @@ class TestToolWrappers:
         from src.agent.tools import make_tools
         tools = {t.name: t for t in make_tools(replay_ds, budget)}
         result = tools["get_service_topology"].invoke({"namespace": "otel-demo"})
-        assert "checkoutservice" in result
+        assert "checkout" in result
         assert "frontend" in result

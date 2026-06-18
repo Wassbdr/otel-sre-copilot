@@ -14,33 +14,14 @@ import numpy as np
 from src.agent.schemas import InvestigationReport, RootCauseHypothesis
 from src.datasources.live import ASTRONOMY_SHOP_SERVICES
 from src.datasources.protocol import DataSource
+from src.telemetry_queries import METRIC_QUERIES, SIGNAL_TO_FAULT
 
-_QUERIES = {
-    "error_rate": (
-        'sum(rate(http_server_request_duration_seconds_count'
-        '{{http_response_status_code=~"5..",service_name="{svc}"}}[2m]))'
-        ' / sum(rate(http_server_request_duration_seconds_count'
-        '{{service_name="{svc}"}}[2m]))'
-    ),
-    "p99_latency": (
-        'histogram_quantile(0.99, sum(rate('
-        'http_server_request_duration_seconds_bucket{{service_name="{svc}"}}[2m])) by (le))'
-    ),
-    "cpu_usage": (
-        'sum(rate(container_cpu_usage_seconds_total{{pod=~"{svc}.*"}}[2m]))'
-    ),
-    "memory_usage": (
-        'sum(container_memory_working_set_bytes{{pod=~"{svc}.*"}})'
-    ),
-}
+# Five anomaly signals (request_rate is excluded — it is not an anomaly direction on its own).
+_SIGNALS = ["error_rate", "p99_latency_ms", "cpu_usage", "memory_usage", "pod_restarts"]
+_QUERIES = {k: METRIC_QUERIES[k] for k in _SIGNALS}
 
-# Signal → fault_type mapping
-_SIGNAL_TO_FAULT: dict[str, str] = {
-    "error_rate": "http_abort",
-    "p99_latency": "high_latency",
-    "cpu_usage": "cpu_stress",
-    "memory_usage": "memory_stress",
-}
+# Signal → fault_type mapping (canonical, includes pod_restarts → pod_crash).
+_SIGNAL_TO_FAULT = SIGNAL_TO_FAULT
 
 
 class CompositeZScoreBaseline:
@@ -124,7 +105,7 @@ class CompositeZScoreBaseline:
 def _extract_values(series: list[dict[str, object]]) -> list[float]:
     values: list[float] = []
     for s in series:
-        for ts, val in s.get("values", []):
+        for _ts, val in s.get("values", []):
             try:
                 v = float(val)
                 if not (v != v):

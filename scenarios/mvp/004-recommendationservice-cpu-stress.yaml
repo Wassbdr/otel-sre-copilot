@@ -1,13 +1,13 @@
 metadata:
-  scenario_id: recommendationservice-cpu_stress-seed42
-  fault_service: recommendationservice
+  scenario_id: recommendation-cpu_stress-seed42
+  fault_service: recommendation
   fault_type: cpu_stress
   seed: 42
   fault_duration_s: 300
   window_extra_s: 60
   namespace: otel-demo
   description: >
-    CPU stress on recommendationservice (80% CPU usage on 1 core).
+    CPU stress on recommendation (80% CPU usage on 1 core).
     Expected signal: CPU usage spike, latency increase, possible timeout errors.
     Note: requires container_cpu_usage_seconds_total metric to be available.
 
@@ -15,7 +15,7 @@ chaos_manifest:
   apiVersion: chaos-mesh.org/v1alpha1
   kind: StressChaos
   metadata:
-    name: recommendationservice-cpu-stress-seed42
+    name: recommendation-cpu-stress-seed42
     namespace: chaos-mesh
   spec:
     mode: all
@@ -23,7 +23,7 @@ chaos_manifest:
       namespaces:
         - otel-demo
       labelSelectors:
-        app: recommendationservice
+        app.kubernetes.io/component: recommendation
     stressors:
       cpu:
         workers: 1

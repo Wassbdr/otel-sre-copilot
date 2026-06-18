@@ -17,7 +17,7 @@ import argparse
 import json
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import structlog
@@ -28,33 +28,15 @@ load_dotenv()
 # Ensure src is importable
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.datasources.live import LiveDataSource, ASTRONOMY_SHOP_SERVICES
+from src.datasources.live import ASTRONOMY_SHOP_SERVICES, LiveDataSource  # noqa: E402
+from src.telemetry_queries import LOKI_QUERIES, METRIC_QUERIES  # noqa: E402
 
 log = structlog.get_logger()
 
-# PromQL queries snapshotted for each service (parametrized by service name label)
-_METRIC_QUERIES = [
-    # Error rate (HTTP 5xx / total)
-    'sum(rate(http_server_request_duration_seconds_count{{http_response_status_code=~"5..",service_name="{svc}"}}[2m])) '
-    '/ sum(rate(http_server_request_duration_seconds_count{{service_name="{svc}"}}[2m]))',
-    # Request rate
-    'sum(rate(http_server_request_duration_seconds_count{{service_name="{svc}"}}[2m]))',
-    # P99 latency
-    'histogram_quantile(0.99, sum(rate(http_server_request_duration_seconds_bucket{{service_name="{svc}"}}[2m])) by (le))',
-    # CPU usage
-    'sum(rate(container_cpu_usage_seconds_total{{pod=~"{svc}.*"}}[2m]))',
-    # Memory usage
-    'sum(container_memory_working_set_bytes{{pod=~"{svc}.*"}})',
-    # Pod restarts
-    'sum(kube_pod_container_status_restarts_total{{pod=~"{svc}.*"}})',
-]
-
-_LOKI_QUERIES = [
-    # Error logs
-    '{{service_name="{svc}"}} |= "error" | json',
-    # Warning logs
-    '{{service_name="{svc}"}} |= "warn" | json',
-]
+# Snapshot exactly the canonical templates so baselines/agent replay them (see
+# src/telemetry_queries.py). Order is stable for reproducible snapshots.
+_METRIC_QUERIES = list(METRIC_QUERIES.values())
+_LOKI_QUERIES = list(LOKI_QUERIES.values())
 
 
 def snapshot(
@@ -146,7 +128,7 @@ def snapshot(
         json.dump(events, f, indent=2)
 
     metadata = {
-        "snapshot_ts": datetime.now(timezone.utc).isoformat(),
+        "snapshot_ts": datetime.now(UTC).isoformat(),
         "window_start": start,
         "window_end": end,
         "namespace": namespace,

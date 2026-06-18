@@ -15,13 +15,9 @@ import numpy as np
 from src.agent.schemas import InvestigationReport, RootCauseHypothesis
 from src.datasources.live import ASTRONOMY_SHOP_SERVICES
 from src.datasources.protocol import DataSource
+from src.telemetry_queries import METRIC_QUERIES
 
-_ERROR_RATE_TPL = (
-    'sum(rate(http_server_request_duration_seconds_count'
-    '{{http_response_status_code=~"5..",service_name="{svc}"}}[2m]))'
-    ' / sum(rate(http_server_request_duration_seconds_count'
-    '{{service_name="{svc}"}}[2m]))'
-)
+_ERROR_RATE_TPL = METRIC_QUERIES["error_rate"]
 
 
 class ZScoreBaseline:
@@ -88,7 +84,7 @@ class ZScoreBaseline:
 def _extract_values(series: list[dict[str, object]]) -> list[float]:
     values: list[float] = []
     for s in series:
-        for ts, val in s.get("values", []):
+        for _ts, val in s.get("values", []):
             try:
                 v = float(val)
                 if not (v != v):  # skip NaN

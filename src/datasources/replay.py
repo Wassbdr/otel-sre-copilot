@@ -62,18 +62,29 @@ class ReplayDataSource:
     def query_prometheus_range(
         self, query: str, start: str, end: str, step: str = "30s"
     ) -> list[dict[str, object]]:
+        # Exact match INCLUDING the time window. This is essential: the Z-score baselines
+        # query the same PromQL for both the fault window and the baseline window, so matching
+        # on query alone would return identical data for both → z=0 (a hollow baseline).
         for entry in self._prom_queries:  # type: ignore[union-attr]
             if (
                 entry.get("type") == "range"
                 and entry.get("query") == query
                 and entry.get("step", "30s") == step
+                and entry.get("start") == start
+                and entry.get("end") == end
             ):
                 return entry.get("result", [])  # type: ignore[return-value]
-        # Fall back: return any entry with the same PromQL (different time window)
-        for entry in self._prom_queries:  # type: ignore[union-attr]
-            if entry.get("query") == query:
-                log.warning("prom_range_window_mismatch", query=query[:80])
-                return entry.get("result", [])  # type: ignore[return-value]
+        # Fall back: same PromQL+step, any window (the agent's LLM may not echo the exact
+        # window). Prefer a non-baseline (fault-window) entry so the agent sees fault data.
+        candidates = [
+            e for e in self._prom_queries  # type: ignore[union-attr]
+            if e.get("type") == "range" and e.get("query") == query
+            and e.get("step", "30s") == step
+        ]
+        if candidates:
+            log.warning("prom_range_window_mismatch", query=query[:80])
+            best = next((e for e in candidates if not e.get("is_baseline")), candidates[0])
+            return best.get("result", [])  # type: ignore[return-value]
         log.warning("prom_range_cache_miss", query=query[:80])
         return []
 

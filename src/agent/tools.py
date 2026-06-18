@@ -26,7 +26,7 @@ log = structlog.get_logger()
 MAX_TOOL_ITERATIONS = int(os.getenv("MAX_TOOL_ITERATIONS", "8"))
 
 
-def make_tools(ds: "DataSource", budget: ContextBudget) -> list:  # type: ignore[type-arg]
+def make_tools(ds: DataSource, budget: ContextBudget) -> list:  # type: ignore[type-arg]
     """Return LangChain tool functions bound to a specific DataSource and budget."""
     from langchain_core.tools import tool
 

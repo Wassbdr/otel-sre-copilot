@@ -5,7 +5,6 @@ from __future__ import annotations
 from src.agent.schemas import EvidenceItem, InvestigationReport, RootCauseHypothesis
 from src.datasources.replay import ReplayDataSource
 
-
 # ── Grounding verifier tests ───────────────────────────────────────────────────
 
 class TestGroundingVerifier:
@@ -162,8 +161,7 @@ class TestMetrics:
         assert metrics.accuracy_at_1 == 0.0
 
     def test_mrr_rank_2(self) -> None:
-        from eval.metrics import ScenarioResult
-        from eval.metrics import compute_metrics
+        from eval.metrics import ScenarioResult, compute_metrics
         report = InvestigationReport(
             incident_id="test",
             investigation_start_ts="2024-01-15T14:00:00Z",
@@ -231,9 +229,9 @@ class TestZScoreBaseline:
             replay_ds, "2024-01-15T13:59:00+00:00", "2024-01-15T14:06:00+00:00",
             "otel-demo", "test-scenario",
         )
-        # Fixture has checkoutservice with high error_rate during fault window
+        # Fixture has checkout with a high error_rate during the fault window
         top_services = [rc.service for rc in report.root_causes]
-        assert "checkoutservice" in top_services
+        assert "checkout" in top_services
 
 
 class TestCompositeZScoreBaseline:

@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 from src.datasources.live import ASTRONOMY_SHOP_SERVICES
+from src.telemetry_queries import METRIC_QUERIES
 
 SYSTEM_PROMPT = """You are an SRE incident investigation agent for a Kubernetes microservices \
-cluster running the OpenTelemetry Astronomy Shop.
+cluster running the OpenTelemetry Astronomy Shop (v2 service names: checkout, cart, payment, \
+product-catalog, recommendation, shipping, frontend, …).
 
 ## Your Job
 Given an incident time window, use the available tools to identify the root cause and \
@@ -17,24 +19,28 @@ produce a structured InvestigationReport JSON.
 ## Investigation Window
 Start: {start}  |  End: {end}  |  Namespace: {namespace}
 
-## Investigation Protocol
-1. FIRST: call get_service_topology to understand dependencies.
-2. SECOND: query error_rate for ALL services using query_prometheus_range.
-   Use PromQL: sum(rate(http_server_request_duration_seconds_count\
-{{http_response_status_code=~"5..",service_name="<SVC>"}}[2m])) \
-/ sum(rate(http_server_request_duration_seconds_count{{service_name="<SVC>"}}[2m]))
-3. Identify the 2-3 services with the highest anomaly signal (error_rate spike, latency spike).
-4. For each anomalous service: fetch error traces (search_traces error_only=True), then error logs.
-5. Check pod events for crash-looping or OOMKilled evidence.
-6. After gathering evidence, produce your top-3 ranked hypotheses.
+## Investigation Protocol (you MUST gather evidence before concluding)
+1. Call get_service_topology to understand dependencies.
+2. Query metrics with query_prometheus_range. Substitute <SVC> with the service name in
+   these EXACT query strings — copy each verbatim (including "or vector(0)"); change only
+   <SVC>. Querying a different string returns no data.
+{query_catalog}
+   Sweep error_rate, cpu_usage, memory_usage and pod_restarts across the main services; the
+   faulted service shows an anomalous spike relative to the others.
+3. For the 2-3 most anomalous services, confirm the fault: error traces
+   (search_traces error_only=True), error logs (query_loki), pod events (get_pod_events).
+4. Map the dominant signal to a fault_type: error spike→http_abort, latency spike→high_latency,
+   cpu spike→cpu_stress, memory spike→memory_stress, restarts/pod kill events→pod_crash,
+   failing downstream dependency→dependency_failure.
+5. Produce your top-3 ranked hypotheses.
 
 ## Tool Call Budget
-Maximum {max_iterations} tool calls total. Prioritize: error_rate queries → traces → logs → pod events.
-Do NOT query more than 3 services in depth.
+Up to {max_iterations} tool calls. Do NOT conclude after a single call — sweep metrics first.
 
 ## Grounding Rule (CRITICAL)
 Every EvidenceItem.query_or_id MUST be the exact PromQL, LogQL, trace_id, or event message
-from a tool call you actually made. Fabricated evidence is a critical failure.
+from a tool call you actually made. Fabricated evidence is a critical failure, and any
+hypothesis whose evidence is not grounded in a real tool call is rejected by the harness.
 Use only what you observed in this session.
 
 ## Output
@@ -77,6 +83,19 @@ INVESTIGATION_REPORT_SCHEMA = """{
 }"""
 
 
+def _query_catalog() -> str:
+    """Render the canonical metric templates as copy-verbatim PromQL with a <SVC> placeholder.
+
+    Converts the `.format()` templates (which use `{{`/`}}` and `{svc}`) into the real PromQL
+    the LLM should emit, so the prompt stays in sync with src/telemetry_queries.py.
+    """
+    lines = []
+    for name, tpl in METRIC_QUERIES.items():
+        display = tpl.replace("{svc}", "<SVC>").replace("{{", "{").replace("}}", "}")
+        lines.append(f"   - {name}: {display}")
+    return "\n".join(lines)
+
+
 def build_system_prompt(
     start: str,
     end: str,
@@ -89,5 +108,6 @@ def build_system_prompt(
         end=end,
         namespace=namespace,
         max_iterations=max_iterations,
+        query_catalog=_query_catalog(),
         schema=INVESTIGATION_REPORT_SCHEMA,
     )

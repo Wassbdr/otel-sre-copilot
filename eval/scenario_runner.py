@@ -15,7 +15,7 @@ import argparse
 import json
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import structlog
@@ -36,10 +36,10 @@ def run_scenario(
     run_id: str = "",
 ) -> dict[str, object]:
     """Run one scenario: agent (or baseline) + grounding verify + per-scenario metrics."""
-    from src.agent.schemas import InvestigationReport
-    from src.datasources.replay import ReplayDataSource
     from eval.grounding_verifier import verify
     from eval.metrics import ScenarioResult, compute_per_scenario
+    from src.agent.schemas import InvestigationReport
+    from src.datasources.replay import ReplayDataSource
 
     gt_path = snapshot_dir / "ground_truth.json"
     if not gt_path.exists():
@@ -75,7 +75,7 @@ def run_scenario(
         incident_end_ts=end,
         affected_namespace=namespace,
     )
-    state["_investigation_start_ts"] = datetime.now(timezone.utc).isoformat()
+    state["_investigation_start_ts"] = datetime.now(UTC).isoformat()
 
     result = graph.invoke(state)
     report: InvestigationReport = result["final_report"]
@@ -127,10 +127,9 @@ def _run_baselines(
     scenario_id: str,
     run_id: str,
 ) -> dict[str, object]:
+    from eval.baselines.composite_zscore import CompositeZScoreBaseline
     from eval.baselines.random_baseline import RandomBaseline
     from eval.baselines.zscore_baseline import ZScoreBaseline
-    from eval.baselines.composite_zscore import CompositeZScoreBaseline
-    from eval.grounding_verifier import verify
     from eval.metrics import ScenarioResult, compute_per_scenario
 
     baselines = {
@@ -162,12 +161,18 @@ def run_all(
 ) -> None:
     """Run all scenarios in a directory and write aggregated results."""
     if not run_id:
-        run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        run_id = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
 
-    # Find snapshot directories
+    # Find snapshot directories — use scenario_id from YAML metadata, fallback to stem
     snapshot_dirs: list[Path] = []
     for scenario_yaml in sorted(scenario_dir.glob("*.yaml")):
-        scenario_id = scenario_yaml.stem
+        try:
+            import yaml as _yaml
+            with open(scenario_yaml) as f:
+                doc = _yaml.safe_load(f)
+            scenario_id = str(doc.get("metadata", {}).get("scenario_id", scenario_yaml.stem))
+        except Exception:
+            scenario_id = scenario_yaml.stem
         snap_dir = _SNAPSHOTS_DIR / scenario_id
         if snap_dir.exists() and (snap_dir / "ground_truth.json").exists():
             snapshot_dirs.append(snap_dir)
@@ -199,8 +204,6 @@ def _write_summary(
     run_id: str,
     mode: str,
 ) -> None:
-    from eval.metrics import EvalMetrics, ScenarioResult, compute_metrics
-    from src.agent.schemas import InvestigationReport
 
     artifact_dir = _ARTIFACTS_DIR / run_id
     artifact_dir.mkdir(parents=True, exist_ok=True)
@@ -224,7 +227,7 @@ def _write_summary(
         "seed": int(os.getenv("RANDOM_SEED", "42")),
         "agent_version": "0.1.0",
         "n_scenarios": len(all_results),
-        "ts": datetime.now(timezone.utc).isoformat(),
+        "ts": datetime.now(UTC).isoformat(),
     }
     with open(artifact_dir / "config.json", "w") as f:
         json.dump(config, f, indent=2)
@@ -270,7 +273,7 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.mode == "single" and args.snapshot_dir:
-        run_id = args.run_id or datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        run_id = args.run_id or datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
         result = run_scenario(args.snapshot_dir, mode="replay", run_id=run_id)
         if args.print_report:
             print(json.dumps(result, indent=2))

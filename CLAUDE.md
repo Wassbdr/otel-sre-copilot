@@ -94,12 +94,16 @@ make fmt            # ruff format
 
 ## Definition of Done par jalon
 
-| Jalon | Livrable principal           | DoD (critère binaire)                                                   |
-|-------|------------------------------|-------------------------------------------------------------------------|
-| M0    | Infra kind + backends        | `make health-check` exit 0, traces non-vides dans Tempo                 |
-| M1    | DataSource + snapshots       | `pytest tests/test_datasources.py` vert, 1 snapshot replay reproductible|
-| M2    | Agent LangGraph              | Agent produit InvestigationReport valide (Pydantic) sur 1 scénario live |
-| M3    | Harnais d'évaluation         | `make eval` produit results.json avec 7 métriques, 7 scénarios MVP      |
-| M4    | Baselines + résultats (MVP)  | `make compare` produit table complète, artifacts/ committé, README à jour|
-| M5    | 35 scénarios × 3 seeds       | results_full.json committé, tous scénarios passent le harnais           |
-| M6    | UI + déploiement             | `docker run otel-sre-copilot:latest` démarre en API mode                |
+> Statut réel daté dans `docs/PROGRESS.md`. **Code écrit ≠ éval validée** : à ce jour le code
+> M0-M4 existe mais l'éval est creuse (snapshot sans signal discriminant, run "Acc@1=1.0" =
+> hallucination flaggée à grounding=0.0). DoD considéré atteint seulement sur vrais signaux.
+
+| Jalon | Livrable principal           | DoD (critère binaire)                                                    | Statut 2026-06-14        |
+|-------|------------------------------|-------------------------------------------------------------------------|--------------------------|
+| M0    | Infra kind + backends        | `make health-check` exit 0, traces non-vides dans Tempo                 | code ✅ / cluster à relancer |
+| M1    | DataSource + snapshots       | `pytest tests/test_datasources.py` vert, 1 snapshot replay reproductible| code ✅ / live non validé |
+| M2    | Agent LangGraph              | Agent produit InvestigationReport valide (Pydantic) sur 1 scénario live | code ✅ / agent hallucine |
+| M3    | Harnais d'évaluation         | `make eval` produit results.json avec 7 métriques, 7 scénarios MVP      | code ✅ / éval creuse ❌   |
+| M4    | Baselines + résultats (MVP)  | `make compare` produit table complète, artifacts/ committé, README à jour| code ✅ / pas comparé ❌   |
+| M5    | 35 scénarios × 3 seeds       | results_full.json committé, tous scénarios passent le harnais           | bloqué (éval-first)      |
+| M6    | UI + déploiement             | `docker run otel-sre-copilot:latest` démarre en API mode                | non commencé             |

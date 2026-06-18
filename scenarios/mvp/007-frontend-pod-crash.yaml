@@ -24,7 +24,7 @@ chaos_manifest:
       namespaces:
         - otel-demo
       labelSelectors:
-        app: frontend
+        app.kubernetes.io/component: frontend
     scheduler:
       cron: "@every 60s"
     duration: "300s"
