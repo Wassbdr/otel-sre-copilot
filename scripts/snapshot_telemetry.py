@@ -54,7 +54,8 @@ def snapshot(
     (output_dir / "loki").mkdir(exist_ok=True)
     (output_dir / "k8s").mkdir(exist_ok=True)
 
-    ds = LiveDataSource()
+    # Longer timeout: range queries over a chaos-loaded kind cluster can be slow.
+    ds = LiveDataSource(timeout=30.0)
     prom_results: list[dict[str, object]] = []
     loki_results: list[dict[str, object]] = []
     trace_summaries: list[dict[str, object]] = []
@@ -66,12 +67,21 @@ def snapshot(
     for svc in ASTRONOMY_SHOP_SERVICES:
         for tpl in _METRIC_QUERIES:
             query = tpl.format(svc=svc)
-            # Fault window
-            result = ds.query_prometheus_range(query, start, end)
+            # A single slow/timed-out range query (cluster is under chaos load) must not
+            # discard every metric already captured — the gate scores the cross-service
+            # signal, which survives a few dropped queries. Degrade per query to empty.
+            try:
+                result = ds.query_prometheus_range(query, start, end)
+            except Exception as e:
+                log.warning("metric_query_failed", query=query, window="fault", error=str(e))
+                result = []
             prom_results.append({"type": "range", "query": query, "start": start,
                                   "end": end, "step": "30s", "result": result})
-            # Baseline window
-            bl_result = ds.query_prometheus_range(query, actual_baseline_start, start)
+            try:
+                bl_result = ds.query_prometheus_range(query, actual_baseline_start, start)
+            except Exception as e:
+                log.warning("metric_query_failed", query=query, window="baseline", error=str(e))
+                bl_result = []
             prom_results.append({"type": "range", "query": query,
                                   "start": actual_baseline_start, "end": start,
                                   "step": "30s", "result": bl_result,
@@ -79,11 +89,16 @@ def snapshot(
 
     log.info("snapshotting_traces", services=len(ASTRONOMY_SHOP_SERVICES))
     for svc in ASTRONOMY_SHOP_SERVICES:
-        traces = ds.search_traces(svc, start, end, error_only=True, limit=20)
-        trace_summaries.extend(traces)
-        # Also fetch a few slow traces
-        slow = ds.search_traces(svc, start, end, min_duration_ms=500, limit=5)
-        trace_summaries.extend(t for t in slow if t not in trace_summaries)
+        # Tempo search can time out under load — exactly when a latency fault is active.
+        # A slow trace query must not abort the whole snapshot; metrics (which the
+        # validation gate scores) are already captured. Degrade per-service instead.
+        try:
+            traces = ds.search_traces(svc, start, end, error_only=True, limit=20)
+            trace_summaries.extend(traces)
+            slow = ds.search_traces(svc, start, end, min_duration_ms=500, limit=5)
+            trace_summaries.extend(t for t in slow if t not in trace_summaries)
+        except Exception as e:
+            log.warning("trace_search_failed", service=svc, error=str(e))
 
     # Deduplicate traces by traceID and fetch full span trees for top 10
     seen: set[str] = set()
@@ -110,7 +125,11 @@ def snapshot(
     for svc in ASTRONOMY_SHOP_SERVICES:
         for tpl in _LOKI_QUERIES:
             query = tpl.format(svc=svc)
-            result = ds.query_loki(query, start, end, limit=100)
+            try:
+                result = ds.query_loki(query, start, end, limit=100)
+            except Exception as e:
+                log.warning("loki_query_failed", query=query, error=str(e))
+                result = []
             loki_results.append({"logql": query, "start": start, "end": end, "result": result})
 
     log.info("snapshotting_k8s_events", namespace=namespace)
