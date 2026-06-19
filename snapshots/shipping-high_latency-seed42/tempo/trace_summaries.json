@@ -1,0 +1,86 @@
+[
+  {
+    "traceID": "5db5c89a20688cdfdae0ee375b1111d",
+    "rootServiceName": "load-generator",
+    "rootTraceName": "user_checkout_single",
+    "startTimeUnixNano": "1781832655021041753",
+    "durationMs": 12209
+  },
+  {
+    "traceID": "871cbc351b192088305d229649bfd60d",
+    "rootServiceName": "load-generator",
+    "rootTraceName": "user_checkout_multi",
+    "startTimeUnixNano": "1781832541334779467",
+    "durationMs": 12736
+  },
+  {
+    "traceID": "93337ad71f670fa3a5a58ee3051d55d2",
+    "rootServiceName": "load-generator",
+    "rootTraceName": "user_checkout_single",
+    "startTimeUnixNano": "1781832450181478330",
+    "durationMs": 907
+  },
+  {
+    "traceID": "dce53c5b03cb75a21dc9dbc0d94fd359",
+    "rootServiceName": "load-generator",
+    "rootTraceName": "user_ask_product_ai_assistant",
+    "startTimeUnixNano": "1781832423832089296",
+    "durationMs": 1020
+  },
+  {
+    "traceID": "5a3af26f743807ca5e31ecdeb38fe1cd",
+    "rootServiceName": "load-generator",
+    "rootTraceName": "user_checkout_single",
+    "startTimeUnixNano": "1781832421754870405",
+    "durationMs": 5362
+  },
+  {
+    "traceID": "6b221988a51da0ec0f66d54fdc73f742",
+    "rootServiceName": "load-generator",
+    "rootTraceName": "user_get_product_reviews",
+    "startTimeUnixNano": "1781832421502952089",
+    "durationMs": 503
+  },
+  {
+    "traceID": "de8df763c9ddc8332b3a5c8826bc8394",
+    "rootServiceName": "load-generator",
+    "rootTraceName": "user_checkout_multi",
+    "startTimeUnixNano": "1781832418005888720",
+    "durationMs": 8371
+  },
+  {
+    "traceID": "25f83a4fde9fa80699a01ae9b870ad11",
+    "rootServiceName": "load-generator",
+    "rootTraceName": "user_get_recommendations",
+    "startTimeUnixNano": "1781832637001544810",
+    "durationMs": 848
+  },
+  {
+    "traceID": "9be6cca0f7bc04b8aabbed7ad6e5151",
+    "rootServiceName": "load-generator",
+    "rootTraceName": "user_browse_product",
+    "startTimeUnixNano": "1781832609290803485",
+    "durationMs": 877
+  },
+  {
+    "traceID": "e30c0a9dc5fbbe90ed865fe42c826699",
+    "rootServiceName": "load-generator",
+    "rootTraceName": "user_get_recommendations",
+    "startTimeUnixNano": "1781832604134085445",
+    "durationMs": 559
+  },
+  {
+    "traceID": "4b14dc02989f46fee1f489a75819e743",
+    "rootServiceName": "load-generator",
+    "rootTraceName": "user_checkout_single",
+    "startTimeUnixNano": "1781832580407357736",
+    "durationMs": 14901
+  },
+  {
+    "traceID": "545d3989a0ceb91916c84d81dda476a3",
+    "rootServiceName": "recommendation",
+    "rootTraceName": "/flagd.evaluation.v1.Service/EventStream",
+    "startTimeUnixNano": "1781831957713611655",
+    "durationMs": 668456
+  }
+]

@@ -40,24 +40,26 @@ mémoire affirmait à tort « M0-M4 COMPLETE, 50/50 tests ».
 
 ## ADR-004 (2026-06-18) — Gate spécifique pour les fautes de latence (rank-1 + saut vs baseline)
 
-**Décision.** Pour `high_latency`, la gate de validation snapshot ne teste PAS un outlier
-cross-service `|z|>=2` (comme les autres fautes). Elle exige : le service fauté est **rank-1**
-sur p99 (le pire) **ET** son p99 fenêtre-faute est **>= 2x son propre baseline** (la faute a
-démonstrablement explosé au-dessus de sa normale). Implémenté dans `_validate_latency`.
+**Décision.** Pour `high_latency`, la gate ne teste PAS un outlier cross-service `|z|>=2`. Elle
+exige : le service fauté est **top-3 par saut RELATIF de p99 (fault/baseline)** **ET** son saut
+est **>= 3x son propre baseline**. Classement par RATIO, pas par p99 absolu. Implémenté dans
+`_validate_latency`. (Révisé : la v1 « rank-1 absolu » échouait sur 006.)
 
-**Pourquoi.** Un délai injecté sur un service feuille **cascade** vers les SPAN SERVER de tous
-ses appelants (frontend/checkout/recommendation accumulent l'attente downstream). Culprit et
-appelants montent ensemble → l'écart-type cross-service explose et même le rang 1 n'atteint pas
-2σ (mesuré : product-catalog z=1.16 à 1.5s de délai, alors qu'il EST le pire à 7717ms = 23x son
-baseline de 329ms). Augmenter le délai pousse toute la cascade ensemble (treadmill). Le test
-honnête de « la faute de latence a fiéllement frappé ce service » est rank-1 + saut vs sa propre
-baseline, pas l'outlier de population. C'est le pendant latence du symptôme error_rate qui
-remonte chez l'appelant (cf. 001).
+**Pourquoi.** Un délai sur un service feuille **cascade** vers les SPAN SERVER de ses appelants ;
+culprit et appelants montent ensemble → l'écart-type cross-service explose (product-catalog
+z=1.16 alors qu'il est le pire à 23x son baseline). Mais le **p99 absolu** classe en tête les
+agrégateurs lents déjà à 2-3s de baseline (frontend, checkout), PAS le culprit : sur 006,
+shipping explose 129→5209ms (**40x**) mais n'est que rank-3 absolu derrière checkout (9347ms,
+3.2x) et frontend (8811ms, 4.0x). Le signal honnête du culprit est le **saut relatif** : par
+ratio, shipping est rank-1 (40x) et product-catalog rank-2 (23.5x, juste derrière recommendation
+31.6x qui l'appelle) — les deux sont top-3 + >=3x. Le ratio isole le culprit des agrégateurs à
+haut baseline. Pendant latence du symptôme error_rate qui remonte chez l'appelant (cf. 001).
 
-**Alternative écartée.** (a) Garder `|z|>=2` cross-service → exclurait toute faute de latence de
-l'éval (non-discriminative par construction en topologie microservices). (b) Signal de latence
-« self/exclusive » isolant le délai propre du culprit → plus fidèle mais nécessite une requête
-spanmetrics possiblement non exportée et plus de cycles de capture ; reporté.
+**Alternative écartée.** (a) `|z|>=2` cross-service → exclurait toute latence (non-discriminative
+par construction). (b) rank-1 sur p99 **absolu** → échoue quand un agrégateur lent dépasse le
+culprit en absolu (mesuré 006 : shipping rank-3 absolu mais rank-1 en ratio). (c) Signal
+« self/exclusive » isolant le délai propre → plus fidèle mais requête spanmetrics incertaine ;
+reporté.
 
 ## ADR-005 (2026-06-19) — Gate spécifique pour http_abort (collapse request_rate vs baseline)
 

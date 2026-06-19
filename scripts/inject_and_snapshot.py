@@ -394,36 +394,38 @@ def _validate_latency(
     by_query: dict[str, list],
     baseline_by_query: dict[str, list],
 ) -> bool:
-    """Gate for high_latency: culprit must be the #1 p99 service AND have spiked >=2x over
-    its own baseline. Avoids the cross-service-z treadmill caused by latency cascading to
-    callers' SERVER spans (the culprit and its callers rise together)."""
+    """Gate for high_latency: the culprit must be a top-3 service by *relative* p99 jump
+    (fault/baseline) AND have spiked >=3x over its own baseline. Ranking by relative jump (not
+    absolute p99) isolates the culprit from high-baseline aggregators: a delay cascades to
+    callers' SERVER spans, and slow aggregators (frontend/checkout, already at 2-3s baseline)
+    have the highest *absolute* p99 but only a small *relative* rise, while the culprit's p99
+    explodes from a low baseline (shipping 129->5209ms = 40x). See docs/DECISIONS.md ADR-004."""
     from src.datasources.live import ASTRONOMY_SHOP_SERVICES
 
     tpl = METRIC_QUERIES["p99_latency_ms"]
-    fault_means: dict[str, float] = {}
+    ratios: dict[str, float] = {}
     for svc in ASTRONOMY_SHOP_SERVICES:
-        m = _series_mean(by_query.get(tpl.format(svc=svc), []))
-        if m is not None:
-            fault_means[svc] = m
-    if fault_service not in fault_means or len(fault_means) < 3:
+        f = _series_mean(by_query.get(tpl.format(svc=svc), []))
+        b = _series_mean(baseline_by_query.get(tpl.format(svc=svc), []))
+        if f is not None and b and b > 0:
+            ratios[svc] = f / b
+    if fault_service not in ratios or len(ratios) < 3:
         log.warning("snapshot_validation_FAIL", service=fault_service, fault_type="high_latency",
-                    best=None, hint="no p99 signal for faulted service — fault may not have fired")
+                    best=None, hint="no p99 baseline+fault signal for faulted service")
         return False
 
-    rank = sorted(fault_means, key=lambda s: -fault_means[s]).index(fault_service) + 1
-    fault_p99 = fault_means[fault_service]
-    base_p99 = _series_mean(baseline_by_query.get(tpl.format(svc=fault_service), []))
-    ratio = (fault_p99 / base_p99) if base_p99 and base_p99 > 0 else float("inf")
-    cand = {"signal": "p99_latency_ms", "rank": rank,
-            "fault_value": round(fault_p99, 1),
-            "baseline_value": round(base_p99, 1) if base_p99 else None,
-            "fault_over_baseline": round(ratio, 2) if ratio != float("inf") else "inf"}
-    if rank == 1 and ratio >= 2.0:
+    rank = sorted(ratios, key=lambda s: -ratios[s]).index(fault_service) + 1
+    ratio = ratios[fault_service]
+    fault_p99 = _series_mean(by_query.get(tpl.format(svc=fault_service), []))
+    cand = {"signal": "p99_latency_ms", "rank_by_ratio": rank,
+            "fault_value": round(fault_p99, 1) if fault_p99 else None,
+            "fault_over_baseline": round(ratio, 2)}
+    if rank <= 3 and ratio >= 3.0:
         log.info("snapshot_validation_pass", service=fault_service,
                  fault_type="high_latency", **cand)
         return True
     log.warning("snapshot_validation_FAIL", service=fault_service, fault_type="high_latency",
-                best=cand, hint="culprit not rank-1 p99 or p99 not >=2x its own baseline")
+                best=cand, hint="culprit not top-3 by relative p99 jump or jump <3x its baseline")
     return False
 
 
