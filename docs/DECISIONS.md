@@ -77,3 +77,23 @@ abort est l'effondrement du trafic du service ciblé vs sa propre normale.
 (signal structurellement absent avec loss). (b) Remplacer loss par un mécanisme générant de
 vrais spans ERROR → risque de faire remonter l'erreur chez l'appelant (checkout) et coûte des
 cycles de capture sur ce cluster saturé ; rejeté.
+
+## ADR-006 (2026-06-19) — Gate self-relative pour cpu_stress / memory_stress
+
+**Décision.** Pour `cpu_stress` et `memory_stress`, la gate exige que l'usage du service fauté
+ait sauté **>= 3x son propre baseline** ET qu'il soit dans le **top-3 absolu** des consommateurs.
+Implémenté dans `_validate_self_relative`. Pas de test d'outlier z cross-service. Stresseur
+maintenu **modéré** (cpu : 2 workers @ 90%).
+
+**Pourquoi.** L'usage cpu/mem est pod-labellisé → isolé au culprit (pas de cascade), MAIS sur cet
+hôte WSL2 contraint **load-generator est le roi permanent des ressources** (cpu z=+3.49, 2.9
+cores) : le culprit ne peut pas atteindre |z|>=2 cross-service même quand la faute frappe fort.
+Mesuré 004 : 1 worker @ 80% → recommendation 0.93 cores = **30x son baseline** mais z=0.76,
+rank 2. Pire, monter à 4 workers @ 100% a **crashé Prometheus** (OOM/restart #316, plan
+d'observabilité indisponible ~2.5 min) → capture vide. Le signal honnête d'un stress est le saut
+vs sa propre normale + rang absolu élevé, pas l'outlier de population.
+
+**Alternative écartée.** (a) Exclure load-generator de la population z → garde le test de
+population mais ad hoc et fragile (généralisation non vérifiée). (b) Stresseur agressif pour
+forcer l'outlier → casse l'hôte (mesuré). (c) Exclure les fautes de stress de l'éval → réduit
+l'éval à ~4-5 scénarios. Le self-relative est cohérent avec ADR-004/005.

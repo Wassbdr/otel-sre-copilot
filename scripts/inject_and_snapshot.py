@@ -214,6 +214,16 @@ def inject(
     gt["window_start"] = snapshot_start
     gt["window_end"] = snapshot_end
 
+    # On a constrained host, resource-stress faults (cpu/memory) saturate the node so the
+    # ~180-query snapshot burst, fired at peak load, OOM-crashes Prometheus and yields an empty
+    # capture. Decouple the burst from peak stress: after recovery, let the node cool down, then
+    # query. The fault-window data is already retained in Prometheus, so a later query still sees
+    # the spike. Defaults to 0 (non-stress faults snapshot immediately, as before).
+    settle_s = int(meta.get("snapshot_settle_s", 0))
+    if not dry_run and settle_s > 0:
+        log.info("settling_before_snapshot", seconds=settle_s)
+        time.sleep(settle_s)
+
     if not dry_run:
         log.info("snapshotting_telemetry", start=snapshot_start, end=snapshot_end)
         from scripts.snapshot_telemetry import snapshot
@@ -289,6 +299,17 @@ def validate_snapshot(output_dir: Path, gt: dict[str, object]) -> bool:
     # OWN baseline. See docs/DECISIONS.md ADR-005.
     if fault_type == "http_abort":
         return _validate_abort(fault_service, by_query, baseline_by_query)
+
+    # cpu_stress / memory_stress: pod-labelled usage isolates the culprit (no cascade), but on
+    # this host load-generator is always the steady-state resource king (CPU z=+3.49), so the
+    # culprit can't reach |z|>=2 cross-service. The honest test is a large jump vs the culprit's
+    # OWN baseline while being among the top absolute consumers. See docs/DECISIONS.md ADR-006.
+    if fault_type in ("cpu_stress", "memory_stress"):
+        sig = "cpu_usage" if fault_type == "cpu_stress" else "memory_usage"
+        return _validate_self_relative(
+            fault_service, fault_type, sig, by_query, baseline_by_query,
+            min_ratio=3.0, max_rank=3,
+        )
 
     best: dict[str, object] | None = None
     for sig in _FAULT_SIGNALS.get(fault_type, list(METRIC_QUERIES.keys())):
@@ -382,6 +403,48 @@ def _validate_abort(
         return True
     log.warning("snapshot_validation_FAIL", service=fault_service, fault_type="http_abort",
                 best=cand, hint="culprit request_rate did not collapse to <=50% of its own baseline")
+    return False
+
+
+def _validate_self_relative(
+    fault_service: str,
+    fault_type: str,
+    signal: str,
+    by_query: dict[str, list],
+    baseline_by_query: dict[str, list],
+    min_ratio: float,
+    max_rank: int,
+) -> bool:
+    """Gate for faults whose signal is pod-isolated but dominated by a steady-state heavy
+    service (load-generator). PASS if the culprit's signal jumped >= min_ratio over its OWN
+    baseline AND it ranks in the top-`max_rank` absolute consumers (the fault demonstrably
+    fired and the culprit is among the loudest), rather than requiring a population z-outlier."""
+    from src.datasources.live import ASTRONOMY_SHOP_SERVICES
+
+    tpl = METRIC_QUERIES[signal]
+    fault_means: dict[str, float] = {}
+    for svc in ASTRONOMY_SHOP_SERVICES:
+        m = _series_mean(by_query.get(tpl.format(svc=svc), []))
+        if m is not None:
+            fault_means[svc] = m
+    if fault_service not in fault_means:
+        log.warning("snapshot_validation_FAIL", service=fault_service, fault_type=fault_type,
+                    best=None, hint=f"no {signal} for faulted service — fault may not have fired")
+        return False
+
+    rank = sorted(fault_means, key=lambda s: -fault_means[s]).index(fault_service) + 1
+    fault_val = fault_means[fault_service]
+    base_val = _series_mean(baseline_by_query.get(tpl.format(svc=fault_service), []))
+    ratio = (fault_val / base_val) if base_val and base_val > 0 else float("inf")
+    cand = {"signal": signal, "rank": rank, "fault_value": round(fault_val, 4),
+            "baseline_value": round(base_val, 4) if base_val else None,
+            "fault_over_baseline": round(ratio, 2) if ratio != float("inf") else "inf"}
+    if ratio >= min_ratio and rank <= max_rank:
+        log.info("snapshot_validation_pass", service=fault_service, fault_type=fault_type, **cand)
+        return True
+    log.warning("snapshot_validation_FAIL", service=fault_service, fault_type=fault_type,
+                best=cand,
+                hint=f"culprit {signal} not >={min_ratio}x its baseline or not top-{max_rank}")
     return False
 
 

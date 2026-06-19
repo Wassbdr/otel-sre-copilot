@@ -5,11 +5,13 @@ metadata:
   seed: 42
   fault_duration_s: 300
   window_extra_s: 60
+  # Stress saturates this host; snapshot at peak load OOM-crashes Prometheus. Settle after
+  # recovery before the query burst (data is retained). See ADR-006.
+  snapshot_settle_s: 90
   namespace: otel-demo
   description: >
-    Memory stress on cart (200MB allocation).
-    Expected signal: memory usage spike, possible OOMKilled events, cart errors.
-    Note: requires container_memory_working_set_bytes metric to be available.
+    Memory stress on cart (256MB allocation). Self-relative gate (ADR-006): cart memory
+    >=3x its own baseline AND top-3 absolute. container_memory_working_set_bytes is pod-labelled.
 
 chaos_manifest:
   apiVersion: chaos-mesh.org/v1alpha1
