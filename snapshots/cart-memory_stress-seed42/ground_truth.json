@@ -1,0 +1,13 @@
+{
+  "scenario_id": "cart-memory_stress-seed42",
+  "fault_service": "cart",
+  "fault_type": "memory_stress",
+  "chaos_kind": "StressChaos",
+  "injection_ts": "2026-06-19T01:12:43.705852+00:00",
+  "recovery_ts": "2026-06-19T01:18:17.744723+00:00",
+  "seed": 42,
+  "chaos_manifest_hash": "f118f19bea7ce1c0",
+  "window_start": "2026-06-19T01:11:43.705852+00:00",
+  "window_end": "2026-06-19T01:19:17.744723+00:00",
+  "validation_passed": true
+}

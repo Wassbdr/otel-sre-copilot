@@ -300,16 +300,29 @@ def validate_snapshot(output_dir: Path, gt: dict[str, object]) -> bool:
     if fault_type == "http_abort":
         return _validate_abort(fault_service, by_query, baseline_by_query)
 
-    # cpu_stress / memory_stress: pod-labelled usage isolates the culprit (no cascade), but on
-    # this host load-generator is always the steady-state resource king (CPU z=+3.49), so the
-    # culprit can't reach |z|>=2 cross-service. The honest test is a large jump vs the culprit's
-    # OWN baseline while being among the top absolute consumers. See docs/DECISIONS.md ADR-006.
-    if fault_type in ("cpu_stress", "memory_stress"):
-        sig = "cpu_usage" if fault_type == "cpu_stress" else "memory_usage"
+    # cpu_stress: pod-labelled usage isolates the culprit (no cascade), but on this host
+    # load-generator is always the steady-state resource king (CPU z=+3.49), so the culprit
+    # can't reach |z|>=2 cross-service. The honest test is a large jump vs the culprit's OWN
+    # baseline while being among the top absolute consumers. See docs/DECISIONS.md ADR-006.
+    if fault_type == "cpu_stress":
         return _validate_self_relative(
-            fault_service, fault_type, sig, by_query, baseline_by_query,
+            fault_service, "cpu_stress", "cpu_usage", by_query, baseline_by_query,
             min_ratio=3.0, max_rank=3,
         )
+
+    # memory_stress: a service with a tight memory limit (cart: 160Mi) cannot show a large
+    # working_set spike — the kernel caps it and pushing harder OOMKills the pod. And it can
+    # never be top-3 absolute against multi-GB infra pods (load-generator 2GB, opensearch,
+    # kafka). The honest signal of a memory fault that exceeds the limit is the OOMKill itself:
+    # a pod_restarts outlier (same as pod_crash). Accept EITHER a >=3x working_set jump OR a
+    # pod_restarts outlier. See docs/DECISIONS.md ADR-006 + ADR-007.
+    if fault_type == "memory_stress":
+        if _validate_self_relative(
+            fault_service, "memory_stress", "memory_usage", by_query, baseline_by_query,
+            min_ratio=3.0, max_rank=3,
+        ):
+            return True
+        return _validate_zscore_signal(fault_service, "memory_stress", "pod_restarts", by_query)
 
     best: dict[str, object] | None = None
     for sig in _FAULT_SIGNALS.get(fault_type, list(METRIC_QUERIES.keys())):
@@ -338,6 +351,41 @@ def validate_snapshot(output_dir: Path, gt: dict[str, object]) -> bool:
 
     log.warning("snapshot_validation_FAIL", service=fault_service, fault_type=fault_type,
                 best=best, hint="faulted service is not a clear outlier — fault may not have fired")
+    return False
+
+
+def _validate_zscore_signal(
+    fault_service: str,
+    fault_type: str,
+    signal: str,
+    by_query: dict[str, list],
+) -> bool:
+    """Standard cross-service test: the faulted service is a |z|>=2 outlier ranked top-3 on a
+    single signal. Used for pod_restarts (OOMKill / pod_crash), which IS a clean outlier."""
+    from src.datasources.live import ASTRONOMY_SHOP_SERVICES
+
+    tpl = METRIC_QUERIES[signal]
+    svc_means: dict[str, float] = {}
+    for svc in ASTRONOMY_SHOP_SERVICES:
+        m = _series_mean(by_query.get(tpl.format(svc=svc), []))
+        if m is not None:
+            svc_means[svc] = m
+    if fault_service not in svc_means or len(svc_means) < 3:
+        log.warning("snapshot_validation_FAIL", service=fault_service, fault_type=fault_type,
+                    best=None, hint=f"no {signal} for faulted service")
+        return False
+    vals = np.array(list(svc_means.values()))
+    mu, sigma = float(vals.mean()), float(vals.std()) + 1e-9
+    z = (svc_means[fault_service] - mu) / sigma
+    rank = sorted(svc_means, key=lambda s: -abs((svc_means[s] - mu) / sigma)).index(
+        fault_service) + 1
+    cand = {"signal": signal, "z": round(z, 2), "rank": rank,
+            "fault_value": round(svc_means[fault_service], 4)}
+    if abs(z) >= 2.0 and rank <= 3:
+        log.info("snapshot_validation_pass", service=fault_service, fault_type=fault_type, **cand)
+        return True
+    log.warning("snapshot_validation_FAIL", service=fault_service, fault_type=fault_type,
+                best=cand, hint=f"{signal} not a |z|>=2 top-3 outlier")
     return False
 
 

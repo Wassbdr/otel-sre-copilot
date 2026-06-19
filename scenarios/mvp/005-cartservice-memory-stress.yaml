@@ -10,8 +10,12 @@ metadata:
   snapshot_settle_s: 90
   namespace: otel-demo
   description: >
-    Memory stress on cart (256MB allocation). Self-relative gate (ADR-006): cart memory
-    >=3x its own baseline AND top-3 absolute. container_memory_working_set_bytes is pod-labelled.
+    Memory stress on cart (400MB allocation). cart's limit is 160Mi, so the allocation
+    exceeds it and triggers an OOMKill + restart. The honest signal of a memory fault that
+    hits the limit is the OOMKill, not a working_set spike (the kernel caps it, and cart can
+    never be top-3 absolute vs multi-GB infra pods). Gate (ADR-007): accept a >=3x working_set
+    jump OR a pod_restarts |z|>=2 outlier (the OOMKill). The container will keep being killed
+    for the fault duration, so restarts accumulate clearly on cart.
 
 chaos_manifest:
   apiVersion: chaos-mesh.org/v1alpha1
@@ -29,5 +33,5 @@ chaos_manifest:
     stressors:
       memory:
         workers: 1
-        size: "200MB"
+        size: "400MB"
     duration: "300s"

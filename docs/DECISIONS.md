@@ -97,3 +97,21 @@ vs sa propre normale + rang absolu élevé, pas l'outlier de population.
 population mais ad hoc et fragile (généralisation non vérifiée). (b) Stresseur agressif pour
 forcer l'outlier → casse l'hôte (mesuré). (c) Exclure les fautes de stress de l'éval → réduit
 l'éval à ~4-5 scénarios. Le self-relative est cohérent avec ADR-004/005.
+
+## ADR-007 (2026-06-19) — memory_stress validé par l'OOMKill (pod_restarts), pas le working_set
+
+**Décision.** Pour `memory_stress`, la gate accepte **soit** un saut working_set >= 3x baseline
+(ADR-006) **soit** un outlier `pod_restarts` |z|>=2 top-3 (l'OOMKill). Le scénario 005 alloue
+400MB sur cart dont la limite est **160Mi** → dépasse la limite → OOMKill + restart.
+
+**Pourquoi.** cart a une limite mémoire dure de 160Mi : le working_set ne peut PAS spiker (le
+noyau plafonne ; pousser plus fort ne fait qu'OOMKill). Mesuré 005 @256MB : working_set
+107→119 MB = 1.11x, rank 8. De plus cart (160MB max) ne peut JAMAIS être top-3 absolu face aux
+pods infra multi-Go (load-generator 2GB, opensearch 1.6GB, kafka 1.1GB). Le signal honnête d'une
+faute mémoire qui atteint la limite EST l'OOMKill : un outlier de redémarrages, exactement comme
+pod_crash. C'est plus fidèle au monde réel (un service qui fuit/sature sa RAM est OOMKillé).
+
+**Alternative écartée.** (a) Abaisser le seuil working_set à 1.3x → signal trop faible et non
+généralisable (dépend de la marge sous la limite). (b) Exclure memory_stress → l'OOMKill est un
+mode de panne réel et important à couvrir. (c) Augmenter la limite mémoire de cart via helm →
+modifie l'app cible, hors périmètre et fausse la repro.
