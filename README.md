@@ -4,7 +4,7 @@ An LLM agent that investigates incidents in Kubernetes microservices instrumente
 OpenTelemetry. Given an incident time window, the agent queries metrics, traces, and logs,
 then produces a ranked root-cause analysis with evidence and remediation steps.
 
-**Core value: rigorous, reproducible evaluation — not just a demo.**
+**Core value: rigorous, reproducible evaluation.**
 
 ## Quick Start
 
@@ -20,9 +20,9 @@ make eval                     # run 7 MVP scenarios, produce results
 make compare                  # agent vs 3 baselines
 ```
 
-## Results (MVP — seed=42)
+## Results (MVP: seed=42)
 
-Evaluation in progress — harness and 7 scenarios are implemented, full benchmark run pending cluster setup.
+Evaluation in progress. The harness and 7 scenarios are implemented, full benchmark run pending cluster setup.
 
 Metrics tracked: Acc@1, Acc@3, MRR, FaultType accuracy, grounding score, latency, cost/run.
 Baselines: Random, Z-score (error_rate), Composite Z-score.
@@ -55,7 +55,7 @@ All eval runs in `artifacts/` are bit-reproducible given the same `config.json`.
 
 ## Known Limitations
 
-- Requires a NVIDIA NIM API key (`NIM_API_KEY`) — no OpenAI fallback yet
+- Requires a NVIDIA NIM API key (`NIM_API_KEY`). No OpenAI fallback yet
 - Live mode needs a running kind cluster (~5 min setup via `make up`)
 - Replay mode works offline with the bundled telemetry snapshots
 
