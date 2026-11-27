@@ -39,18 +39,18 @@ Top-k is the fraction of true causes covered within the first k predictions. Str
 | ReAct without grounding verifier in the agent | 2/42 | 0.0% | 0.0% | 0.0% | 0.0% | 100.0% | 2 | 3.0 | 12,791 | 26.636 | 0.0000 |
 | SRE-Copilot without anomaly prior | 1/42 | 0.0% | 0.0% | 0.0% | 0.0% | 100.0% | 3 | 3.0 | 11,613 | 36.730 | 0.0000 |
 
-## Iteration 2: limit Nemotron reasoning and rank initiating faults (round2-iteration-2)
+## Iteration 2: limit Nemotron reasoning and rank initiating faults (stopped early) (round2-iteration-2)
 
 14 Astronomy Shop snapshots (development); 3 runs per method; nvidia/nemotron-3.5-lightning-30b-a3b; x86_64, 8 vCPU, Linux, no GPU.
 
 | Method | Runs | Top-1 | Top-3 | Service top-1 | Service top-3 | Grounding | Citations | Calls/run | Tokens/run | Seconds/run | USD/run |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| SRE-Copilot | 1/42 | 0.0% | 0.0% | 0.0% | 100.0% | 100.0% | 4 | 3.0 | 11,558 | 5.207 | 0.0000 |
-| ReAct without grounding verifier in the agent | 1/42 | 0.0% | 0.0% | 0.0% | 0.0% | 100.0% | 1 | 3.0 | 10,928 | 33.421 | 0.0000 |
+| SRE-Copilot | 2/42 | 0.0% | 0.0% | 50.0% | 100.0% | 87.5% | 8 | 3.0 | 11,318 | 9.160 | 0.0000 |
+| ReAct without grounding verifier in the agent | 2/42 | 0.0% | 0.0% | 0.0% | 0.0% | 100.0% | 2 | 3.0 | 11,982 | 26.660 | 0.0000 |
 | SRE-Copilot without anomaly prior | 1/42 | 0.0% | 0.0% | 0.0% | 0.0% | 66.7% | 6 | 3.0 | 9,215 | 6.388 | 0.0000 |
 | HolmesGPT 0.48.0 (1 run per snapshot) | 1/14 | 0.0% | 0.0% | 0.0% | 0.0% | n/a | 0 | 1.0 | 15,857 | 8.152 | 0.0000 |
-| RCAEval N-Sigma (metrics) | 1/42 | 100.0% | 100.0% | 100.0% | 100.0% | n/a | 0 | n/a | 0 | 0.006 | 0.0000 |
-| Composite z-score | 1/42 | 0.0% | 0.0% | 100.0% | 100.0% | n/a | 0 | n/a | 0 | 0.004 | 0.0000 |
-| RCAEval BARO (metrics) | 1/42 | 100.0% | 100.0% | 100.0% | 100.0% | n/a | 0 | n/a | 0 | 0.016 | 0.0000 |
-| Error-rate z-score | 1/42 | 0.0% | 0.0% | 0.0% | 100.0% | n/a | 0 | n/a | 0 | 0.001 | 0.0000 |
-| Random | 1/42 | 0.0% | 0.0% | 0.0% | 100.0% | n/a | 0 | n/a | 0 | 0.000 | 0.0000 |
+| RCAEval N-Sigma (metrics) | 2/42 | 100.0% | 100.0% | 100.0% | 100.0% | n/a | 0 | n/a | 0 | 0.006 | 0.0000 |
+| Composite z-score | 2/42 | 0.0% | 0.0% | 50.0% | 100.0% | n/a | 0 | n/a | 0 | 0.004 | 0.0000 |
+| RCAEval BARO (metrics) | 2/42 | 50.0% | 50.0% | 100.0% | 100.0% | n/a | 0 | n/a | 0 | 0.015 | 0.0000 |
+| Error-rate z-score | 2/42 | 0.0% | 0.0% | 0.0% | 100.0% | n/a | 0 | n/a | 0 | 0.001 | 0.0000 |
+| Random | 2/42 | 0.0% | 0.0% | 0.0% | 100.0% | n/a | 0 | n/a | 0 | 0.000 | 0.0000 |
