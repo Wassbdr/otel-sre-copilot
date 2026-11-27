@@ -1,7 +1,7 @@
 """Per-service anomaly scores over the canonical signals.
 
 Same statistic as the composite Z-score baseline (mean of the incident window against the
-30 minutes before it), exposed to the agent as a tool so it can sweep 15 services in one call
+pre-incident baseline), exposed to the agent as a tool so it can sweep 15 services in one call
 instead of spending its tool budget on one PromQL query per service.
 """
 
@@ -17,6 +17,8 @@ from src.datasources.live import ASTRONOMY_SHOP_SERVICES
 from src.datasources.protocol import DataSource
 from src.telemetry_queries import METRIC_QUERIES
 
+# Live mode reads 30 minutes before the window. Recorded snapshots hold a shorter baseline
+# (8 min by default); ReplayDataSource serves it because it matches on the window end.
 BASELINE_MINUTES = 30
 
 

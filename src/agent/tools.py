@@ -206,7 +206,7 @@ def make_tools(ds: DataSource, budget: ContextBudget) -> list:  # type: ignore[t
     def rank_services_by_signal(signal: str, start: str, end: str) -> str:
         """Rank ALL services by how anomalous one signal is in the window (Z-score).
 
-        Compares the window mean of the signal with the 30 minutes before `start`, for every
+        Compares the window mean of the signal with the minutes before `start`, for every
         service at once. Use it first to find suspects, then confirm with traces, logs and
         pod events. Cite the PromQL printed next to a service as metric evidence.
 
@@ -220,7 +220,7 @@ def make_tools(ds: DataSource, budget: ContextBudget) -> list:  # type: ignore[t
 
         try:
             scores = rank_services(ds, signal, start, end)
-            lines = [f"{signal}: window mean vs 30-min baseline, most anomalous first"]
+            lines = [f"{signal}: window mean vs pre-incident baseline, most anomalous first"]
             for sc in scores:
                 if not sc.has_data:
                     lines.append(f"  {sc.service:<16} no data")
