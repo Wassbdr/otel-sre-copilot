@@ -203,6 +203,9 @@ def _metrics_from_trace(trace_path: Path) -> dict[str, Any]:
     return {**trace["metrics"], **compute_per_scenario(sr)}
 
 
+EXCLUDED_SNAPSHOTS: list[str] = []
+
+
 def discover_snapshots(scenario_dir: Path) -> list[Path]:
     """All snapshots (every seed) of the scenarios defined in scenario_dir, sorted."""
     snapshot_dirs: list[Path] = []
@@ -222,7 +225,13 @@ def discover_snapshots(scenario_dir: Path) -> list[Path]:
         if not found:
             log.warning("snapshot_missing", scenario=scenario_id,
                         hint=f"Run: make fault SCENARIO={scenario_yaml}")
-        snapshot_dirs.extend(found)
+        for d in found:
+            # A capture whose fault never showed in its own signal has no answer to find.
+            if json.loads((d / "ground_truth.json").read_text()).get("validation_passed") is False:
+                log.warning("snapshot_excluded_failed_validation", snapshot=d.name)
+                EXCLUDED_SNAPSHOTS.append(str(d))
+                continue
+            snapshot_dirs.append(d)
     return snapshot_dirs
 
 
@@ -322,6 +331,7 @@ def _write_summary(
         "repeats": repeats,
         "seed": int(os.getenv("RANDOM_SEED", "42")),
         "snapshots": [r["snapshot_dir"] for r in all_results],
+        "excluded_snapshots_failed_validation": sorted(set(EXCLUDED_SNAPSHOTS)),
         "hardware": f"{platform.machine()} {os.cpu_count()} vCPU, {platform.system()}, no GPU",
         "python": platform.python_version(),
         "agent_version": "0.1.0",
