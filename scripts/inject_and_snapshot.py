@@ -283,14 +283,7 @@ def _series_mean(result: list) -> float | None:
 
 
 def validate_snapshot(output_dir: Path, gt: dict[str, object]) -> bool:
-    """Assert the faulted service is a discriminative outlier for its expected signal.
-
-    Reads the captured fault-window Prometheus results and z-scores each service's signal
-    mean against the population of services. Passes if, for at least one of the fault_type's
-    candidate signals, the faulted service is a |z|>=2 outlier ranked in the top-3. This
-    enforces the CLAUDE.md guard-rail: a scenario whose fault produced no signal must not be
-    silently committed as if it were a valid eval case.
-    """
+    """Check that the capture contains the expected fault signal before using it in evaluation."""
     from src.datasources.live import ASTRONOMY_SHOP_SERVICES
 
     fault_service = str(gt.get("fault_service"))
@@ -308,38 +301,18 @@ def validate_snapshot(output_dir: Path, gt: dict[str, object]) -> bool:
         str(e["query"]): e.get("result", []) for e in entries if e.get("is_baseline")
     }
 
-    # high_latency is special: a leaf-service delay cascades to every caller's SERVER span,
-    # so the culprit and its callers all spike together and the cross-service std explodes —
-    # even the rank-1 service cannot reach |z|>=2. The honest test for cascading latency is
-    # "culprit is the worst service AND its p99 jumped well above its OWN baseline" (the fault
-    # demonstrably fired), not "culprit is a population outlier". See docs/DECISIONS.md ADR-004.
     if fault_type == "high_latency":
         return _validate_latency(fault_service, by_query, baseline_by_query)
 
-    # http_abort via NetworkChaos loss is also non-discriminative cross-service: dropped
-    # packets mean the target emits NO server span (so spanmetrics SERVER-only error_rate
-    # stays ~0), and its request_rate collapse blends in with naturally-idle services
-    # (email/ad/accounting sit at 0). The honest signal is a traffic collapse vs the target's
-    # OWN baseline. See docs/DECISIONS.md ADR-005.
     if fault_type == "http_abort":
         return _validate_abort(fault_service, by_query, baseline_by_query)
 
-    # cpu_stress: pod-labelled usage isolates the culprit (no cascade), but on this host
-    # load-generator is always the steady-state resource king (CPU z=+3.49), so the culprit
-    # can't reach |z|>=2 cross-service. The honest test is a large jump vs the culprit's OWN
-    # baseline while being among the top absolute consumers. See docs/DECISIONS.md ADR-006.
     if fault_type == "cpu_stress":
         return _validate_self_relative(
             fault_service, "cpu_stress", "cpu_usage", by_query, baseline_by_query,
             min_ratio=3.0, max_rank=3,
         )
 
-    # memory_stress: a service with a tight memory limit (cart: 160Mi) cannot show a large
-    # working_set spike — the kernel caps it and pushing harder OOMKills the pod. And it can
-    # never be top-3 absolute against multi-GB infra pods (load-generator 2GB, opensearch,
-    # kafka). The honest signal of a memory fault that exceeds the limit is the OOMKill itself:
-    # a pod_restarts outlier (same as pod_crash). Accept EITHER a >=3x working_set jump OR a
-    # pod_restarts outlier. See docs/DECISIONS.md ADR-006 + ADR-007.
     if fault_type == "memory_stress":
         if _validate_self_relative(
             fault_service, "memory_stress", "memory_usage", by_query, baseline_by_query,
@@ -418,12 +391,7 @@ def _validate_latency(
     by_query: dict[str, list],
     baseline_by_query: dict[str, list],
 ) -> bool:
-    """Gate for high_latency: the culprit must be a top-3 service by *relative* p99 jump
-    (fault/baseline) AND have spiked >=3x over its own baseline. Ranking by relative jump (not
-    absolute p99) isolates the culprit from high-baseline aggregators: a delay cascades to
-    callers' SERVER spans, and slow aggregators (frontend/checkout, already at 2-3s baseline)
-    have the highest *absolute* p99 but only a small *relative* rise, while the culprit's p99
-    explodes from a low baseline (shipping 129->5209ms = 40x). See docs/DECISIONS.md ADR-004."""
+    """Validate relative latency growth rather than absolute latency, which includes callers."""
     from src.datasources.live import ASTRONOMY_SHOP_SERVICES
 
     tpl = METRIC_QUERIES["p99_latency_ms"]

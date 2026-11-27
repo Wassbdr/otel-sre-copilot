@@ -33,3 +33,13 @@ kubeconfig-otel-sre-copilot.yaml
 
 # Scratch eval runs (the committed benchmark run is listed in results/RUN_ID)
 artifacts/verify-*/
+
+CLAUDE.md
+AGENTS.md
+agents.md
+GEMINI.md
+.claude/
+.cursor/
+.cursorrules
+STATUS.md
+PROGRESS.md
