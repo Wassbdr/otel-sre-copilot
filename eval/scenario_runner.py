@@ -12,6 +12,7 @@ Usage (via Makefile):
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import sys
@@ -29,6 +30,11 @@ log = structlog.get_logger()
 
 _ARTIFACTS_DIR = Path("artifacts")
 _SNAPSHOTS_DIR = Path("snapshots")
+
+
+def opaque_incident_id(scenario_id: str) -> str:
+    """Hide the answer: snapshot ids name the faulty service and fault type."""
+    return "INC-" + hashlib.sha256(scenario_id.encode()).hexdigest()[:8]
 
 
 def run_scenario(
@@ -73,7 +79,7 @@ def run_scenario(
     graph = build_graph(ds)
     from src.agent.llm import llm_settings
     state = initial_state(
-        incident_id=scenario_id,
+        incident_id=opaque_incident_id(scenario_id),
         incident_start_ts=start,
         incident_end_ts=end,
         affected_namespace=namespace,

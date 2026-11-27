@@ -162,6 +162,7 @@ def replay(trace_path: Path, delay: float, console: Console) -> int:
 
 def live(snapshot_dir: Path, console: Console) -> int:
     from eval.grounding_verifier import verify
+    from eval.scenario_runner import opaque_incident_id
     from src.agent.graph import build_graph
     from src.agent.llm import llm_settings
     from src.agent.schemas import initial_state
@@ -189,7 +190,8 @@ def live(snapshot_dir: Path, console: Console) -> int:
                                style="dim"))
 
     graph = build_graph(ReplayDataSource(snapshot_dir), on_event=on_event)
-    state = initial_state(str(gt.get("scenario_id")), window["start"], window["end"],
+    state = initial_state(opaque_incident_id(str(gt.get("scenario_id"))), window["start"],
+                          window["end"],
                           window["namespace"])
     state["_investigation_start_ts"] = datetime.now(UTC).isoformat()
     with console.status("investigating…"):

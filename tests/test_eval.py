@@ -251,3 +251,12 @@ class TestCompositeZScoreBaseline:
         assert report.fault_type_classification in [
             "pod_crash", "high_latency", "cpu_stress", "memory_stress", "http_abort"
         ]
+
+
+def test_incident_id_given_to_agent_does_not_leak_the_answer() -> None:
+    from eval.scenario_runner import opaque_incident_id
+
+    iid = opaque_incident_id("checkout-pod_crash-seed42")
+    assert iid.startswith("INC-")
+    assert "checkout" not in iid and "crash" not in iid
+    assert iid == opaque_incident_id("checkout-pod_crash-seed42")
