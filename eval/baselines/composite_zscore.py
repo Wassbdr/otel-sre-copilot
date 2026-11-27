@@ -9,6 +9,8 @@ This is the strongest non-LLM baseline. The agent must beat it to justify LLM co
 
 from __future__ import annotations
 
+from typing import Any
+
 import numpy as np
 
 from src.agent.schemas import InvestigationReport, RootCauseHypothesis
@@ -21,7 +23,7 @@ _SIGNALS = ["error_rate", "p99_latency_ms", "cpu_usage", "memory_usage", "pod_re
 _QUERIES = {k: METRIC_QUERIES[k] for k in _SIGNALS}
 
 # Signal → fault_type mapping (canonical, includes pod_restarts → pod_crash).
-_SIGNAL_TO_FAULT = SIGNAL_TO_FAULT
+_SIGNAL_TO_FAULT: dict[str, Any] = SIGNAL_TO_FAULT
 
 
 class CompositeZScoreBaseline:
@@ -102,13 +104,13 @@ class CompositeZScoreBaseline:
         )
 
 
-def _extract_values(series: list[dict[str, object]]) -> list[float]:
+def _extract_values(series: list[dict[str, Any]]) -> list[float]:
     values: list[float] = []
     for s in series:
         for _ts, val in s.get("values", []):
             try:
                 v = float(val)
-                if not (v != v):
+                if v == v:  # skip NaN
                     values.append(v)
             except (ValueError, TypeError):
                 pass

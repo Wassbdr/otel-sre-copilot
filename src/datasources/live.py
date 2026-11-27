@@ -55,9 +55,11 @@ class LiveDataSource:
         loki_url: str | None = None,
         timeout: float = 10.0,
     ) -> None:
-        self._prom = (prometheus_url or os.getenv("PROMETHEUS_URL", "http://localhost:9090")).rstrip("/")
-        self._tempo = (tempo_url or os.getenv("TEMPO_URL", "http://localhost:3200")).rstrip("/")
-        self._loki = (loki_url or os.getenv("LOKI_URL", "http://localhost:3100")).rstrip("/")
+        self._prom = (prometheus_url or os.getenv("PROMETHEUS_URL") or "http://localhost:9090").rstrip(
+            "/"
+        )
+        self._tempo = (tempo_url or os.getenv("TEMPO_URL") or "http://localhost:3200").rstrip("/")
+        self._loki = (loki_url or os.getenv("LOKI_URL") or "http://localhost:3100").rstrip("/")
         self._client = httpx.Client(timeout=timeout)
         self._k8s: k8s_client.CoreV1Api | None = None
 
@@ -65,9 +67,9 @@ class LiveDataSource:
         if self._k8s is None:
             kube_context = os.getenv("KUBE_CONTEXT", "kind-otel-sre-copilot")
             try:
-                k8s_config.load_kube_config(context=kube_context)
+                k8s_config.load_kube_config(context=kube_context)  # type: ignore[no-untyped-call]
             except Exception:
-                k8s_config.load_incluster_config()
+                k8s_config.load_incluster_config()  # type: ignore[no-untyped-call]
             self._k8s = k8s_client.CoreV1Api()
         return self._k8s
 
@@ -89,7 +91,7 @@ class LiveDataSource:
             params={"query": query, "start": start, "end": end, "step": step},
         )
         resp.raise_for_status()
-        return resp.json().get("data", {}).get("result", [])
+        return list(resp.json().get("data", {}).get("result", []))
 
     def search_traces(
         self,
@@ -100,7 +102,7 @@ class LiveDataSource:
         error_only: bool = False,
         limit: int = 20,
     ) -> list[dict[str, object]]:
-        params: dict[str, object] = {
+        params: dict[str, str | int] = {
             "service.name": service_name,
             "start": _to_unix_s(start),
             "end": _to_unix_s(end),
@@ -112,12 +114,12 @@ class LiveDataSource:
             params["tags"] = "error=true"
         resp = self._client.get(f"{self._tempo}/api/search", params=params)
         resp.raise_for_status()
-        return resp.json().get("traces", [])
+        return list(resp.json().get("traces", []))
 
     def get_trace(self, trace_id: str) -> dict[str, object]:
         resp = self._client.get(f"{self._tempo}/api/traces/{trace_id}")
         resp.raise_for_status()
-        return resp.json()  # type: ignore[return-value]
+        return dict(resp.json())
 
     def query_loki(
         self,
@@ -127,7 +129,7 @@ class LiveDataSource:
         limit: int = 100,
         direction: str = "backward",
     ) -> list[dict[str, object]]:
-        params = {
+        params: dict[str, str | int] = {
             "query": logql,
             "start": _to_unix_ns(start),
             "end": _to_unix_ns(end),
@@ -136,7 +138,7 @@ class LiveDataSource:
         }
         resp = self._client.get(f"{self._loki}/loki/api/v1/query_range", params=params)
         resp.raise_for_status()
-        return resp.json().get("data", {}).get("result", [])
+        return list(resp.json().get("data", {}).get("result", []))
 
     def get_pod_events(
         self,

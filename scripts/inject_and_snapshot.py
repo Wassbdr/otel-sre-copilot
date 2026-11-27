@@ -465,8 +465,13 @@ def _validate_abort(
     tpl = METRIC_QUERIES["request_rate"]
     fault_rate = _series_mean(by_query.get(tpl.format(svc=fault_service), []))
     base_rate = _series_mean(baseline_by_query.get(tpl.format(svc=fault_service), []))
-    ratio = (fault_rate / base_rate) if (base_rate and base_rate > 0 and fault_rate is not None) else None
-    cand = {"signal": "request_rate", "fault_value": round(fault_rate, 4) if fault_rate is not None else None,
+    ratio = (
+        (fault_rate / base_rate)
+        if (base_rate and base_rate > 0 and fault_rate is not None)
+        else None
+    )
+    cand = {"signal": "request_rate",
+            "fault_value": round(fault_rate, 4) if fault_rate is not None else None,
             "baseline_value": round(base_rate, 4) if base_rate else None,
             "fault_over_baseline": round(ratio, 3) if ratio is not None else None}
     # Require a real baseline (the service was actually serving traffic before the fault) and a
@@ -476,7 +481,8 @@ def _validate_abort(
                  fault_type="http_abort", **cand)
         return True
     log.warning("snapshot_validation_FAIL", service=fault_service, fault_type="http_abort",
-                best=cand, hint="culprit request_rate did not collapse to <=50% of its own baseline")
+                best=cand,
+                hint="culprit request_rate did not collapse to <=50% of its own baseline")
     return False
 
 

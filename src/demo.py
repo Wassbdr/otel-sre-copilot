@@ -25,7 +25,9 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 
-DEFAULT_TRACE = Path(__file__).resolve().parent.parent / "examples" / "checkout-pod-crash.trace.json"
+DEFAULT_TRACE = (
+    Path(__file__).resolve().parent.parent / "examples" / "checkout-pod-crash.trace.json"
+)
 
 _TOOL_ARG_KEYS = ("query", "logql", "service_name", "trace_id", "pod_name", "namespace")
 
@@ -129,7 +131,9 @@ class Renderer:
             top = causes[0] if causes else {}
             hit = top.get("service") == ground_truth.get("fault_service")
             truth = Text("Chaos Mesh ground truth: ", style="bold")
-            truth.append(f"{ground_truth.get('fault_service')} / {ground_truth.get('fault_type')}  ")
+            truth.append(
+                f"{ground_truth.get('fault_service')} / {ground_truth.get('fault_type')}  "
+            )
             truth.append("→ top-1 correct" if hit else "→ top-1 wrong",
                          style="bold green" if hit else "bold red")
             self.c.print(truth)

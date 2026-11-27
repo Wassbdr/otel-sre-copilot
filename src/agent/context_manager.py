@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import os
+from typing import Any
 
 import numpy as np
 import structlog
@@ -20,7 +21,7 @@ CONTEXT_BUDGET_TOKENS = int(os.getenv("CONTEXT_BUDGET_TOKENS", "28000"))
 
 
 def compress_prometheus_range(
-    results: list[dict[str, object]],
+    results: list[dict[str, Any]],
     query: str,
 ) -> str:
     """Layer 2: Convert a list of time-series into a compact summary string.
@@ -33,7 +34,7 @@ def compress_prometheus_range(
     summaries: list[str] = []
     for series in results:
         metric_labels = series.get("metric", {})
-        values_raw: list[list[object]] = series.get("values", [])  # type: ignore[assignment]
+        values_raw: list[list[Any]] = series.get("values", [])
         if not values_raw:
             continue
         floats = [float(v[1]) for v in values_raw if v[1] not in ("NaN", "+Inf", "-Inf", None)]
@@ -65,7 +66,7 @@ def compress_prometheus_range(
     return f"PromQL: {query[:100]}\n" + "\n".join(summaries)
 
 
-def compress_traces(traces: list[dict[str, object]]) -> str:
+def compress_traces(traces: list[dict[str, Any]]) -> str:
     """Layer 2: Summarize trace list into compact text."""
     if not traces:
         return "[no traces found]"
@@ -90,7 +91,7 @@ def compress_traces(traces: list[dict[str, object]]) -> str:
     )
 
 
-def compress_loki(results: list[dict[str, object]]) -> str:
+def compress_loki(results: list[dict[str, Any]]) -> str:
     """Layer 2: Deduplicate and summarize Loki log results.
 
     Deduplicates by first 100 chars of each log line, keeps max 5 unique error patterns.
@@ -102,7 +103,7 @@ def compress_loki(results: list[dict[str, object]]) -> str:
     unique_patterns: dict[str, str] = {}  # prefix → full line
 
     for stream_result in results:
-        values: list[list[str]] = stream_result.get("values", [])  # type: ignore[assignment]
+        values: list[list[str]] = stream_result.get("values", [])
         for _ts, line in values:
             lower = line.lower()
             if "error" in lower:

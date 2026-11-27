@@ -17,6 +17,7 @@ import os
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 import structlog
 from dotenv import load_dotenv
@@ -81,7 +82,7 @@ def run_scenario(
 
     result = graph.invoke(state, {"recursion_limit": 100})
     report: InvestigationReport = result["final_report"]
-    tool_calls_log: list[dict] = result.get("tool_calls_log", [])
+    tool_calls_log: list[dict[str, Any]] = result.get("tool_calls_log", [])
 
     # Grounding verification (harness, not self-reported)
     grounding_result = verify(report, tool_calls_log)
@@ -155,7 +156,7 @@ def _run_baselines(
     from eval.baselines.zscore_baseline import ZScoreBaseline
     from eval.metrics import ScenarioResult, compute_per_scenario
 
-    baselines = {
+    baselines: dict[str, Any] = {
         "random": RandomBaseline(seed=int(os.getenv("RANDOM_SEED", "42"))),
         "zscore": ZScoreBaseline(),
         "composite_zscore": CompositeZScoreBaseline(),
@@ -163,7 +164,7 @@ def _run_baselines(
 
     results: dict[str, object] = {}
     for name, baseline in baselines.items():
-        report = baseline.predict(ds, start, end, namespace, scenario_id)  # type: ignore[arg-type]
+        report = baseline.predict(ds, start, end, namespace, scenario_id)
         # Baselines have no tool_calls_log — grounding_score is 0 (they don't produce evidence)
         report.grounding_score = 0.0
         sr = ScenarioResult(
@@ -278,8 +279,8 @@ def _write_summary(
     # If agent mode: rehydrate ScenarioResult objects for aggregate metrics
     # (simplified: read grounding from per-scenario files)
     if mode != "baselines-only" and not quiet:
-        scenario_results: list[dict] = [
-            r.get("agent", {}) for r in all_results if "agent" in r
+        scenario_results: list[dict[str, Any]] = [
+            r["agent"] for r in all_results if isinstance(r.get("agent"), dict)  # type: ignore[misc]
         ]
         _print_table(scenario_results, "Agent", run_id)
 
@@ -305,7 +306,7 @@ def _write_summary(
         print(f"\nArtifacts written to: artifacts/{run_id}/")
 
 
-def _print_table(results: list[dict], label: str, run_id: str) -> None:
+def _print_table(results: list[dict[str, Any]], label: str, run_id: str) -> None:
     if not results:
         return
     n = len(results)

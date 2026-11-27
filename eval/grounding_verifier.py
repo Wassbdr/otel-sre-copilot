@@ -13,6 +13,7 @@ A scenario with grounding_score < 0.8 is flagged [HALLUCINATION WARNING].
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 from src.agent.schemas import EvidenceItem, InvestigationReport
 
@@ -49,7 +50,7 @@ def verify(
         all_executed.extend(qids)
 
         # Also index args directly
-        args: dict = entry.get("args", {})  # type: ignore[assignment]
+        args: dict[str, Any] = entry.get("args", {})  # type: ignore[assignment]
         for v in args.values():
             if isinstance(v, str) and len(v) > 4:
                 all_executed.append(v)
@@ -80,11 +81,8 @@ def verify(
                     "reason": "no matching tool call found",
                 })
 
-    if total == 0:
-        # No evidence items — neither verified nor hallucinated
-        score = 1.0
-    else:
-        score = verified / total
+    # No evidence items — neither verified nor hallucinated
+    score = 1.0 if total == 0 else verified / total
 
     return GroundingResult(
         grounding_score=round(score, 4),
@@ -121,17 +119,10 @@ def _check_evidence(ev: EvidenceItem, executed_lower: list[str]) -> bool:
 
     if ev.signal_type == "log":
         # Match LogQL string
-        for executed in executed_lower:
-            # At least the service_name portion should match
-            if qid[:40] in executed or executed[:40] in qid:
-                return True
-        return False
+        return any(qid[:40] in executed or executed[:40] in qid for executed in executed_lower)
 
     if ev.signal_type == "k8s_event":
         # Match against event result preview or pod_events args
-        for executed in executed_lower:
-            if qid[:30] in executed:
-                return True
-        return False
+        return any(qid[:30] in executed for executed in executed_lower)
 
     return False

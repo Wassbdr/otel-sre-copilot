@@ -173,7 +173,10 @@ def make_tools(ds: DataSource, budget: ContextBudget) -> list:  # type: ignore[t
             events = ds.get_pod_events(namespace, pod_name_prefix or None, since_seconds)
             if not events:
                 return "[no K8s events found]"
-            lines = [f"  {e['reason']}: {e['message'][:120]} (count={e['count']})" for e in events[:10]]
+            lines = [
+                f"  {e.get('reason')}: {str(e.get('message', ''))[:120]} (count={e.get('count')})"
+                for e in events[:10]
+            ]
             return budget.consume("K8s events:\n" + "\n".join(lines))
         except Exception as e:
             log.warning("tool_error", tool="get_pod_events", error=str(e))
@@ -191,7 +194,9 @@ def make_tools(ds: DataSource, budget: ContextBudget) -> list:  # type: ignore[t
         """
         try:
             topo = ds.get_service_topology(namespace)
-            lines = [f"  {svc} → {', '.join(deps) or '(leaf)'}" for svc, deps in sorted(topo.items())]
+            lines = [
+                f"  {svc} → {', '.join(deps) or '(leaf)'}" for svc, deps in sorted(topo.items())
+            ]
             return budget.consume("Service topology:\n" + "\n".join(lines))
         except Exception as e:
             log.warning("tool_error", tool="get_service_topology", error=str(e))

@@ -70,7 +70,7 @@ def _add_usage(totals: dict[str, int], response: AIMessage) -> dict[str, int]:
     }
 
 
-def build_graph(ds: DataSource, on_event: EventCallback | None = None) -> StateGraph:
+def build_graph(ds: DataSource, on_event: EventCallback | None = None) -> Any:  # noqa: ANN401
     """Build and compile the investigation StateGraph for the given DataSource.
 
     ``on_event`` receives every LLM step and tool call as it happens (used by the live demo).
@@ -91,8 +91,8 @@ def build_graph(ds: DataSource, on_event: EventCallback | None = None) -> StateG
     # ── Node: tool_call_loop ───────────────────────────────────────────────
     def tool_call_loop(state: GraphState) -> GraphState:
         iteration = state.get("iteration_count", 0)
-        tool_calls_log: list[dict] = list(state.get("tool_calls_log", []))
-        messages: list = list(state.get("messages", []))
+        tool_calls_log: list[dict[str, Any]] = list(state.get("tool_calls_log", []))
+        messages: list[Any] = list(state.get("messages", []))
 
         # First iteration: inject system + human messages
         if iteration == 0:
@@ -124,7 +124,7 @@ def build_graph(ds: DataSource, on_event: EventCallback | None = None) -> StateG
 
         # Call LLM
         t0 = time.perf_counter()
-        response: AIMessage = llm_with_tools.invoke(messages)  # type: ignore[assignment]
+        response: AIMessage = llm_with_tools.invoke(messages)
         token_usage = _add_usage(state.get("token_usage", {}), response)
         emit({"type": "llm", "iteration": iteration,
               "elapsed_s": round(time.perf_counter() - t0, 2),
@@ -181,7 +181,7 @@ def build_graph(ds: DataSource, on_event: EventCallback | None = None) -> StateG
 
     # ── Node: generate_report ──────────────────────────────────────────────
     def generate_report(state: GraphState) -> GraphState:
-        messages: list = list(state.get("messages", []))
+        messages: list[Any] = list(state.get("messages", []))
         inv_start = state.get("_investigation_start_ts", datetime.now(UTC).isoformat())
 
         # Ask LLM to produce the final structured report
@@ -197,7 +197,7 @@ def build_graph(ds: DataSource, on_event: EventCallback | None = None) -> StateG
         report_llm = make_chat_model(max_tokens=int(os.getenv("LLM_REPORT_MAX_TOKENS", "4096")),
                                      json_mode=True)
 
-        response: AIMessage = report_llm.invoke(messages_for_report)  # type: ignore[assignment]
+        response: AIMessage = report_llm.invoke(messages_for_report)
         inv_end = datetime.now(UTC).isoformat()
 
         # Parse and validate
@@ -255,7 +255,7 @@ def build_graph(ds: DataSource, on_event: EventCallback | None = None) -> StateG
 
     # ── Conditional edge ───────────────────────────────────────────────────
     def should_continue(state: GraphState) -> str:
-        messages: list = state.get("messages", [])
+        messages: list[Any] = state.get("messages", [])
         iteration = state.get("iteration_count", 0)
 
         if iteration >= MAX_TOOL_ITERATIONS:

@@ -14,6 +14,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -33,7 +34,7 @@ _METRIC_HEADERS = [
 _METHODS = ["random", "zscore", "composite_zscore", "agent"]
 
 
-def load_results(run_id: str) -> dict[str, list[dict]]:
+def load_results(run_id: str) -> dict[str, list[dict[str, Any]]]:
     """Load per-scenario results for all methods from a run."""
     raw_path = _ARTIFACTS_DIR / run_id / "raw_results.json"
     if not raw_path.exists():
@@ -42,7 +43,7 @@ def load_results(run_id: str) -> dict[str, list[dict]]:
     with open(raw_path) as f:
         raw = json.load(f)
 
-    methods: dict[str, list[dict]] = {m: [] for m in _METHODS}
+    methods: dict[str, list[dict[str, Any]]] = {m: [] for m in _METHODS}
     for scenario in raw:
         if "error" in scenario:
             continue
@@ -57,7 +58,7 @@ def load_results(run_id: str) -> dict[str, list[dict]]:
     return methods
 
 
-def aggregate(results: list[dict]) -> dict[str, float]:
+def aggregate(results: list[dict[str, Any]]) -> dict[str, float]:
     if not results:
         return {}
     n = len(results)

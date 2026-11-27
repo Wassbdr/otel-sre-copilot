@@ -8,7 +8,9 @@ from src.datasources.replay import ReplayDataSource
 # ── Grounding verifier tests ───────────────────────────────────────────────────
 
 class TestGroundingVerifier:
-    def _make_report_with_evidence(self, query_or_id: str, signal_type: str = "metric") -> InvestigationReport:
+    def _make_report_with_evidence(
+        self, query_or_id: str, signal_type: str = "metric"
+    ) -> InvestigationReport:
         return InvestigationReport(
             incident_id="test",
             investigation_start_ts="2024-01-15T14:00:00Z",
@@ -34,7 +36,10 @@ class TestGroundingVerifier:
 
     def test_verified_evidence_scores_1(self) -> None:
         from eval.grounding_verifier import verify
-        query = 'sum(rate(http_server_request_duration_seconds_count{service_name="checkoutservice"}[2m]))'
+        query = (
+            'sum(rate(http_server_request_duration_seconds_count{service_name="checkoutservice"}'
+            "[2m]))"
+        )
         report = self._make_report_with_evidence(query, "metric")
         tool_log = [{"tool_name": "query_prometheus_range", "args": {"query": query},
                      "query_or_id": [query], "result_preview": "mean=0.95"}]

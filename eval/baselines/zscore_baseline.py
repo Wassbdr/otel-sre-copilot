@@ -10,6 +10,8 @@ with a simple statistical heuristic.
 
 from __future__ import annotations
 
+from typing import Any
+
 import numpy as np
 
 from src.agent.schemas import InvestigationReport, RootCauseHypothesis
@@ -81,13 +83,13 @@ class ZScoreBaseline:
         )
 
 
-def _extract_values(series: list[dict[str, object]]) -> list[float]:
+def _extract_values(series: list[dict[str, Any]]) -> list[float]:
     values: list[float] = []
     for s in series:
         for _ts, val in s.get("values", []):
             try:
                 v = float(val)
-                if not (v != v):  # skip NaN
+                if v == v:  # skip NaN
                     values.append(v)
             except (ValueError, TypeError):
                 pass
