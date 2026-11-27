@@ -1,0 +1,2486 @@
+[
+  {
+    "type": "Normal",
+    "reason": "Pulling",
+    "message": "Pulling image \"busybox:latest\"",
+    "count": 3,
+    "first_time": "2026-11-27 14:57:43+00:00",
+    "last_time": "2026-11-27 14:59:53+00:00",
+    "involved_object_name": "accounting-645d99d98c-rztrp"
+  },
+  {
+    "type": "Warning",
+    "reason": "Failed",
+    "message": "Failed to pull image \"busybox:latest\": failed to pull and unpack image \"docker.io/library/busybox:latest\": failed to resolve reference \"docker.io/library/busybox:latest\": unexpected status from HEAD request to https://registry-1.docker.io/v2/library/busybox/manifests/latest: 429 Too Many Requests",
+    "count": 2,
+    "first_time": "2026-11-27 14:58:02+00:00",
+    "last_time": "2026-11-27 14:59:23+00:00",
+    "involved_object_name": "accounting-645d99d98c-rztrp"
+  },
+  {
+    "type": "Warning",
+    "reason": "Failed",
+    "message": "Error: ErrImagePull",
+    "count": 2,
+    "first_time": "2026-11-27 14:58:02+00:00",
+    "last_time": "2026-11-27 14:59:23+00:00",
+    "involved_object_name": "accounting-645d99d98c-rztrp"
+  },
+  {
+    "type": "Normal",
+    "reason": "BackOff",
+    "message": "Back-off pulling image \"busybox:latest\"",
+    "count": 2,
+    "first_time": "2026-11-27 14:58:03+00:00",
+    "last_time": "2026-11-27 14:59:38+00:00",
+    "involved_object_name": "accounting-645d99d98c-rztrp"
+  },
+  {
+    "type": "Warning",
+    "reason": "Failed",
+    "message": "Error: ImagePullBackOff",
+    "count": 2,
+    "first_time": "2026-11-27 14:58:03+00:00",
+    "last_time": "2026-11-27 14:59:38+00:00",
+    "involved_object_name": "accounting-645d99d98c-rztrp"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"busybox:latest\" in 467ms (54.999s including waiting). Image size: 2236767 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:48+00:00",
+    "last_time": "2026-11-27 15:00:48+00:00",
+    "involved_object_name": "accounting-645d99d98c-rztrp"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: wait-for-kafka",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:48+00:00",
+    "last_time": "2026-11-27 15:00:48+00:00",
+    "involved_object_name": "accounting-645d99d98c-rztrp"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container wait-for-kafka",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:48+00:00",
+    "last_time": "2026-11-27 15:00:48+00:00",
+    "involved_object_name": "accounting-645d99d98c-rztrp"
+  },
+  {
+    "type": "Normal",
+    "reason": "SuccessfulDelete",
+    "message": "Deleted pod: accounting-645d99d98c-rztrp",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:15+00:00",
+    "last_time": "2026-11-27 15:00:15+00:00",
+    "involved_object_name": "accounting-645d99d98c"
+  },
+  {
+    "type": "Normal",
+    "reason": "Scheduled",
+    "message": "Successfully assigned otel-demo/accounting-d9cd4657-pth8p to otel-sre-copilot-control-plane",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:05+00:00",
+    "last_time": "2026-11-27 14:59:05+00:00",
+    "involved_object_name": "accounting-d9cd4657-pth8p"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulling",
+    "message": "Pulling image \"mirror.gcr.io/library/busybox:latest\"",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:06+00:00",
+    "last_time": "2026-11-27 14:59:06+00:00",
+    "involved_object_name": "accounting-d9cd4657-pth8p"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"mirror.gcr.io/library/busybox:latest\" in 2.407s (23.299s including waiting). Image size: 2236767 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:29+00:00",
+    "last_time": "2026-11-27 14:59:29+00:00",
+    "involved_object_name": "accounting-d9cd4657-pth8p"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: wait-for-kafka",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:29+00:00",
+    "last_time": "2026-11-27 14:59:29+00:00",
+    "involved_object_name": "accounting-d9cd4657-pth8p"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container wait-for-kafka",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:29+00:00",
+    "last_time": "2026-11-27 14:59:29+00:00",
+    "involved_object_name": "accounting-d9cd4657-pth8p"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulling",
+    "message": "Pulling image \"ghcr.io/open-telemetry/demo:3.1.0-accounting\"",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:29+00:00",
+    "last_time": "2026-11-27 14:59:29+00:00",
+    "involved_object_name": "accounting-d9cd4657-pth8p"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"ghcr.io/open-telemetry/demo:3.1.0-accounting\" in 12.329s (44.422s including waiting). Image size: 115765262 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:14+00:00",
+    "last_time": "2026-11-27 15:00:14+00:00",
+    "involved_object_name": "accounting-d9cd4657-pth8p"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: accounting",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:14+00:00",
+    "last_time": "2026-11-27 15:00:14+00:00",
+    "involved_object_name": "accounting-d9cd4657-pth8p"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container accounting",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:14+00:00",
+    "last_time": "2026-11-27 15:00:14+00:00",
+    "involved_object_name": "accounting-d9cd4657-pth8p"
+  },
+  {
+    "type": "Normal",
+    "reason": "SuccessfulCreate",
+    "message": "Created pod: accounting-d9cd4657-pth8p",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:05+00:00",
+    "last_time": "2026-11-27 14:59:05+00:00",
+    "involved_object_name": "accounting-d9cd4657"
+  },
+  {
+    "type": "Normal",
+    "reason": "ScalingReplicaSet",
+    "message": "Scaled up replica set accounting-d9cd4657 from 0 to 1",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:05+00:00",
+    "last_time": "2026-11-27 14:59:05+00:00",
+    "involved_object_name": "accounting"
+  },
+  {
+    "type": "Normal",
+    "reason": "ScalingReplicaSet",
+    "message": "Scaled down replica set accounting-645d99d98c from 1 to 0",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:15+00:00",
+    "last_time": "2026-11-27 15:00:15+00:00",
+    "involved_object_name": "accounting"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"ghcr.io/open-telemetry/demo:3.1.0-ad\" in 3.907s (18.124s including waiting). Image size: 193981367 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 14:58:01+00:00",
+    "last_time": "2026-11-27 14:58:01+00:00",
+    "involved_object_name": "ad-56f65f5659-zwtdr"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: ad",
+    "count": 1,
+    "first_time": "2026-11-27 14:58:01+00:00",
+    "last_time": "2026-11-27 14:58:01+00:00",
+    "involved_object_name": "ad-56f65f5659-zwtdr"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container ad",
+    "count": 1,
+    "first_time": "2026-11-27 14:58:01+00:00",
+    "last_time": "2026-11-27 14:58:01+00:00",
+    "involved_object_name": "ad-56f65f5659-zwtdr"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"ghcr.io/open-telemetry/demo:3.1.0-agent\" in 9.985s (14.217s including waiting). Image size: 224295151 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 14:57:57+00:00",
+    "last_time": "2026-11-27 14:57:57+00:00",
+    "involved_object_name": "agent-9c7447489-4bm7d"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: agent",
+    "count": 1,
+    "first_time": "2026-11-27 14:57:57+00:00",
+    "last_time": "2026-11-27 14:57:57+00:00",
+    "involved_object_name": "agent-9c7447489-4bm7d"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container agent",
+    "count": 1,
+    "first_time": "2026-11-27 14:57:57+00:00",
+    "last_time": "2026-11-27 14:57:57+00:00",
+    "involved_object_name": "agent-9c7447489-4bm7d"
+  },
+  {
+    "type": "Normal",
+    "reason": "Scheduled",
+    "message": "Successfully assigned otel-demo/astronomy-db-79948c54b9-kjmkb to otel-sre-copilot-control-plane",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:05+00:00",
+    "last_time": "2026-11-27 14:59:05+00:00",
+    "involved_object_name": "astronomy-db-79948c54b9-kjmkb"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulling",
+    "message": "Pulling image \"mirror.gcr.io/library/postgres:18.4\"",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:06+00:00",
+    "last_time": "2026-11-27 14:59:06+00:00",
+    "involved_object_name": "astronomy-db-79948c54b9-kjmkb"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"mirror.gcr.io/library/postgres:18.4\" in 6.578s (29.861s including waiting). Image size: 162375656 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:36+00:00",
+    "last_time": "2026-11-27 14:59:36+00:00",
+    "involved_object_name": "astronomy-db-79948c54b9-kjmkb"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: astronomy-db",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:36+00:00",
+    "last_time": "2026-11-27 14:59:36+00:00",
+    "involved_object_name": "astronomy-db-79948c54b9-kjmkb"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container astronomy-db",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:36+00:00",
+    "last_time": "2026-11-27 14:59:36+00:00",
+    "involved_object_name": "astronomy-db-79948c54b9-kjmkb"
+  },
+  {
+    "type": "Normal",
+    "reason": "SuccessfulCreate",
+    "message": "Created pod: astronomy-db-79948c54b9-kjmkb",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:05+00:00",
+    "last_time": "2026-11-27 14:59:05+00:00",
+    "involved_object_name": "astronomy-db-79948c54b9"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulling",
+    "message": "Pulling image \"postgres:18.4\"",
+    "count": 2,
+    "first_time": "2026-11-27 14:57:43+00:00",
+    "last_time": "2026-11-27 14:58:56+00:00",
+    "involved_object_name": "astronomy-db-7cb9b5dc67-2rvmf"
+  },
+  {
+    "type": "Warning",
+    "reason": "Failed",
+    "message": "Failed to pull image \"postgres:18.4\": failed to pull and unpack image \"docker.io/library/postgres:18.4\": failed to resolve reference \"docker.io/library/postgres:18.4\": unexpected status from HEAD request to https://registry-1.docker.io/v2/library/postgres/manifests/18.4: 429 Too Many Requests",
+    "count": 2,
+    "first_time": "2026-11-27 14:58:41+00:00",
+    "last_time": "2026-11-27 14:59:27+00:00",
+    "involved_object_name": "astronomy-db-7cb9b5dc67-2rvmf"
+  },
+  {
+    "type": "Warning",
+    "reason": "Failed",
+    "message": "Error: ErrImagePull",
+    "count": 2,
+    "first_time": "2026-11-27 14:58:41+00:00",
+    "last_time": "2026-11-27 14:59:27+00:00",
+    "involved_object_name": "astronomy-db-7cb9b5dc67-2rvmf"
+  },
+  {
+    "type": "Normal",
+    "reason": "BackOff",
+    "message": "Back-off pulling image \"postgres:18.4\"",
+    "count": 1,
+    "first_time": "2026-11-27 14:58:42+00:00",
+    "last_time": "2026-11-27 14:58:42+00:00",
+    "involved_object_name": "astronomy-db-7cb9b5dc67-2rvmf"
+  },
+  {
+    "type": "Warning",
+    "reason": "Failed",
+    "message": "Error: ImagePullBackOff",
+    "count": 1,
+    "first_time": "2026-11-27 14:58:42+00:00",
+    "last_time": "2026-11-27 14:58:42+00:00",
+    "involved_object_name": "astronomy-db-7cb9b5dc67-2rvmf"
+  },
+  {
+    "type": "Normal",
+    "reason": "SuccessfulDelete",
+    "message": "Deleted pod: astronomy-db-7cb9b5dc67-2rvmf",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:36+00:00",
+    "last_time": "2026-11-27 14:59:36+00:00",
+    "involved_object_name": "astronomy-db-7cb9b5dc67"
+  },
+  {
+    "type": "Normal",
+    "reason": "ScalingReplicaSet",
+    "message": "Scaled up replica set astronomy-db-79948c54b9 from 0 to 1",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:05+00:00",
+    "last_time": "2026-11-27 14:59:05+00:00",
+    "involved_object_name": "astronomy-db"
+  },
+  {
+    "type": "Normal",
+    "reason": "ScalingReplicaSet",
+    "message": "Scaled down replica set astronomy-db-7cb9b5dc67 from 1 to 0",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:36+00:00",
+    "last_time": "2026-11-27 14:59:36+00:00",
+    "involved_object_name": "astronomy-db"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulling",
+    "message": "Pulling image \"busybox:latest\"",
+    "count": 3,
+    "first_time": "2026-11-27 14:57:43+00:00",
+    "last_time": "2026-11-27 14:59:49+00:00",
+    "involved_object_name": "cart-778c6b6b99-fwb4g"
+  },
+  {
+    "type": "Warning",
+    "reason": "Failed",
+    "message": "Failed to pull image \"busybox:latest\": failed to pull and unpack image \"docker.io/library/busybox:latest\": failed to resolve reference \"docker.io/library/busybox:latest\": unexpected status from HEAD request to https://registry-1.docker.io/v2/library/busybox/manifests/latest: 429 Too Many Requests",
+    "count": 2,
+    "first_time": "2026-11-27 14:58:03+00:00",
+    "last_time": "2026-11-27 14:59:24+00:00",
+    "involved_object_name": "cart-778c6b6b99-fwb4g"
+  },
+  {
+    "type": "Warning",
+    "reason": "Failed",
+    "message": "Error: ErrImagePull",
+    "count": 2,
+    "first_time": "2026-11-27 14:58:03+00:00",
+    "last_time": "2026-11-27 14:59:24+00:00",
+    "involved_object_name": "cart-778c6b6b99-fwb4g"
+  },
+  {
+    "type": "Normal",
+    "reason": "BackOff",
+    "message": "Back-off pulling image \"busybox:latest\"",
+    "count": 2,
+    "first_time": "2026-11-27 14:58:04+00:00",
+    "last_time": "2026-11-27 14:59:35+00:00",
+    "involved_object_name": "cart-778c6b6b99-fwb4g"
+  },
+  {
+    "type": "Warning",
+    "reason": "Failed",
+    "message": "Error: ImagePullBackOff",
+    "count": 2,
+    "first_time": "2026-11-27 14:58:04+00:00",
+    "last_time": "2026-11-27 14:59:35+00:00",
+    "involved_object_name": "cart-778c6b6b99-fwb4g"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"busybox:latest\" in 521ms (57.583s including waiting). Image size: 2236767 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:47+00:00",
+    "last_time": "2026-11-27 15:00:47+00:00",
+    "involved_object_name": "cart-778c6b6b99-fwb4g"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: wait-for-valkey-cart",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:47+00:00",
+    "last_time": "2026-11-27 15:00:47+00:00",
+    "involved_object_name": "cart-778c6b6b99-fwb4g"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container wait-for-valkey-cart",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:47+00:00",
+    "last_time": "2026-11-27 15:00:47+00:00",
+    "involved_object_name": "cart-778c6b6b99-fwb4g"
+  },
+  {
+    "type": "Normal",
+    "reason": "SuccessfulDelete",
+    "message": "Deleted pod: cart-778c6b6b99-fwb4g",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:31+00:00",
+    "last_time": "2026-11-27 15:00:31+00:00",
+    "involved_object_name": "cart-778c6b6b99"
+  },
+  {
+    "type": "Normal",
+    "reason": "Scheduled",
+    "message": "Successfully assigned otel-demo/cart-7ff5444c9c-mfwf7 to otel-sre-copilot-control-plane",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:05+00:00",
+    "last_time": "2026-11-27 14:59:05+00:00",
+    "involved_object_name": "cart-7ff5444c9c-mfwf7"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulling",
+    "message": "Pulling image \"mirror.gcr.io/library/busybox:latest\"",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:06+00:00",
+    "last_time": "2026-11-27 14:59:06+00:00",
+    "involved_object_name": "cart-7ff5444c9c-mfwf7"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"mirror.gcr.io/library/busybox:latest\" in 569ms (30.374s including waiting). Image size: 2236767 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:36+00:00",
+    "last_time": "2026-11-27 14:59:36+00:00",
+    "involved_object_name": "cart-7ff5444c9c-mfwf7"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: wait-for-valkey-cart",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:36+00:00",
+    "last_time": "2026-11-27 14:59:36+00:00",
+    "involved_object_name": "cart-7ff5444c9c-mfwf7"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container wait-for-valkey-cart",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:36+00:00",
+    "last_time": "2026-11-27 14:59:36+00:00",
+    "involved_object_name": "cart-7ff5444c9c-mfwf7"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulling",
+    "message": "Pulling image \"ghcr.io/open-telemetry/demo:3.1.0-cart\"",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:37+00:00",
+    "last_time": "2026-11-27 14:59:37+00:00",
+    "involved_object_name": "cart-7ff5444c9c-mfwf7"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"ghcr.io/open-telemetry/demo:3.1.0-cart\" in 15.623s (52.518s including waiting). Image size: 61339307 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:30+00:00",
+    "last_time": "2026-11-27 15:00:30+00:00",
+    "involved_object_name": "cart-7ff5444c9c-mfwf7"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: cart",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:30+00:00",
+    "last_time": "2026-11-27 15:00:30+00:00",
+    "involved_object_name": "cart-7ff5444c9c-mfwf7"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container cart",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:30+00:00",
+    "last_time": "2026-11-27 15:00:30+00:00",
+    "involved_object_name": "cart-7ff5444c9c-mfwf7"
+  },
+  {
+    "type": "Normal",
+    "reason": "SuccessfulCreate",
+    "message": "Created pod: cart-7ff5444c9c-mfwf7",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:05+00:00",
+    "last_time": "2026-11-27 14:59:05+00:00",
+    "involved_object_name": "cart-7ff5444c9c"
+  },
+  {
+    "type": "Normal",
+    "reason": "ScalingReplicaSet",
+    "message": "Scaled up replica set cart-7ff5444c9c from 0 to 1",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:05+00:00",
+    "last_time": "2026-11-27 14:59:05+00:00",
+    "involved_object_name": "cart"
+  },
+  {
+    "type": "Normal",
+    "reason": "ScalingReplicaSet",
+    "message": "Scaled down replica set cart-778c6b6b99 from 1 to 0",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:31+00:00",
+    "last_time": "2026-11-27 15:00:31+00:00",
+    "involved_object_name": "cart"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"ghcr.io/open-telemetry/demo:3.1.0-chatbot\" in 10.637s (31.077s including waiting). Image size: 268141365 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 14:58:14+00:00",
+    "last_time": "2026-11-27 14:58:14+00:00",
+    "involved_object_name": "chatbot-556666c788-6lwzg"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: chatbot",
+    "count": 1,
+    "first_time": "2026-11-27 14:58:14+00:00",
+    "last_time": "2026-11-27 14:58:14+00:00",
+    "involved_object_name": "chatbot-556666c788-6lwzg"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container chatbot",
+    "count": 1,
+    "first_time": "2026-11-27 14:58:14+00:00",
+    "last_time": "2026-11-27 14:58:14+00:00",
+    "involved_object_name": "chatbot-556666c788-6lwzg"
+  },
+  {
+    "type": "Normal",
+    "reason": "Scheduled",
+    "message": "Successfully assigned otel-demo/checkout-5c88fd48b9-qdvv5 to otel-sre-copilot-control-plane",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:40+00:00",
+    "last_time": "2026-11-27 15:00:40+00:00",
+    "involved_object_name": "checkout-5c88fd48b9-qdvv5"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulling",
+    "message": "Pulling image \"mirror.gcr.io/library/busybox:latest\"",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:40+00:00",
+    "last_time": "2026-11-27 15:00:40+00:00",
+    "involved_object_name": "checkout-5c88fd48b9-qdvv5"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"mirror.gcr.io/library/busybox:latest\" in 634ms (15.378s including waiting). Image size: 2236767 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:55+00:00",
+    "last_time": "2026-11-27 15:00:55+00:00",
+    "involved_object_name": "checkout-5c88fd48b9-qdvv5"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: wait-for-kafka",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:55+00:00",
+    "last_time": "2026-11-27 15:00:55+00:00",
+    "involved_object_name": "checkout-5c88fd48b9-qdvv5"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container wait-for-kafka",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:56+00:00",
+    "last_time": "2026-11-27 15:00:56+00:00",
+    "involved_object_name": "checkout-5c88fd48b9-qdvv5"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Container image \"ghcr.io/open-telemetry/demo:3.1.0-checkout\" already present on machine",
+    "count": 2,
+    "first_time": "2026-11-27 15:00:56+00:00",
+    "last_time": "2026-11-27 15:06:41+00:00",
+    "involved_object_name": "checkout-5c88fd48b9-qdvv5"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: checkout",
+    "count": 3,
+    "first_time": "2026-11-27 15:00:56+00:00",
+    "last_time": "2026-11-27 15:06:41+00:00",
+    "involved_object_name": "checkout-5c88fd48b9-qdvv5"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container checkout",
+    "count": 3,
+    "first_time": "2026-11-27 15:00:56+00:00",
+    "last_time": "2026-11-27 15:06:41+00:00",
+    "involved_object_name": "checkout-5c88fd48b9-qdvv5"
+  },
+  {
+    "type": "Normal",
+    "reason": "Killing",
+    "message": "Container checkout definition changed, will be restarted",
+    "count": 2,
+    "first_time": "2026-11-27 15:01:41+00:00",
+    "last_time": "2026-11-27 15:06:41+00:00",
+    "involved_object_name": "checkout-5c88fd48b9-qdvv5"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulling",
+    "message": "Pulling image \"gcr.io/google-containers/pause:latest\"",
+    "count": 1,
+    "first_time": "2026-11-27 15:01:41+00:00",
+    "last_time": "2026-11-27 15:01:41+00:00",
+    "involved_object_name": "checkout-5c88fd48b9-qdvv5"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"gcr.io/google-containers/pause:latest\" in 910ms (910ms including waiting). Image size: 72335 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 15:01:42+00:00",
+    "last_time": "2026-11-27 15:01:42+00:00",
+    "involved_object_name": "checkout-5c88fd48b9-qdvv5"
+  },
+  {
+    "type": "Normal",
+    "reason": "SuccessfulCreate",
+    "message": "Created pod: checkout-5c88fd48b9-qdvv5",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:40+00:00",
+    "last_time": "2026-11-27 15:00:40+00:00",
+    "involved_object_name": "checkout-5c88fd48b9"
+  },
+  {
+    "type": "Normal",
+    "reason": "Scheduled",
+    "message": "Successfully assigned otel-demo/checkout-7558d8db79-v74jn to otel-sre-copilot-control-plane",
+    "count": 1,
+    "first_time": "2026-11-27 14:57:45+00:00",
+    "last_time": "2026-11-27 14:57:45+00:00",
+    "involved_object_name": "checkout-7558d8db79-v74jn"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulling",
+    "message": "Pulling image \"busybox:latest\"",
+    "count": 2,
+    "first_time": "2026-11-27 14:57:45+00:00",
+    "last_time": "2026-11-27 14:59:30+00:00",
+    "involved_object_name": "checkout-7558d8db79-v74jn"
+  },
+  {
+    "type": "Warning",
+    "reason": "Failed",
+    "message": "Failed to pull image \"busybox:latest\": failed to pull and unpack image \"docker.io/library/busybox:latest\": failed to resolve reference \"docker.io/library/busybox:latest\": unexpected status from HEAD request to https://registry-1.docker.io/v2/library/busybox/manifests/latest: 429 Too Many Requests",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:19+00:00",
+    "last_time": "2026-11-27 14:59:19+00:00",
+    "involved_object_name": "checkout-7558d8db79-v74jn"
+  },
+  {
+    "type": "Warning",
+    "reason": "Failed",
+    "message": "Error: ErrImagePull",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:19+00:00",
+    "last_time": "2026-11-27 14:59:19+00:00",
+    "involved_object_name": "checkout-7558d8db79-v74jn"
+  },
+  {
+    "type": "Normal",
+    "reason": "BackOff",
+    "message": "Back-off pulling image \"busybox:latest\"",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:19+00:00",
+    "last_time": "2026-11-27 14:59:19+00:00",
+    "involved_object_name": "checkout-7558d8db79-v74jn"
+  },
+  {
+    "type": "Warning",
+    "reason": "Failed",
+    "message": "Error: ImagePullBackOff",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:19+00:00",
+    "last_time": "2026-11-27 14:59:19+00:00",
+    "involved_object_name": "checkout-7558d8db79-v74jn"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"busybox:latest\" in 506ms (43.854s including waiting). Image size: 2236767 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:14+00:00",
+    "last_time": "2026-11-27 15:00:14+00:00",
+    "involved_object_name": "checkout-7558d8db79-v74jn"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: wait-for-kafka",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:14+00:00",
+    "last_time": "2026-11-27 15:00:14+00:00",
+    "involved_object_name": "checkout-7558d8db79-v74jn"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container wait-for-kafka",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:14+00:00",
+    "last_time": "2026-11-27 15:00:14+00:00",
+    "involved_object_name": "checkout-7558d8db79-v74jn"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulling",
+    "message": "Pulling image \"ghcr.io/open-telemetry/demo:3.1.0-checkout\"",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:14+00:00",
+    "last_time": "2026-11-27 15:00:14+00:00",
+    "involved_object_name": "checkout-7558d8db79-v74jn"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"ghcr.io/open-telemetry/demo:3.1.0-checkout\" in 6.037s (40.304s including waiting). Image size: 14703807 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:55+00:00",
+    "last_time": "2026-11-27 15:00:55+00:00",
+    "involved_object_name": "checkout-7558d8db79-v74jn"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: checkout",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:55+00:00",
+    "last_time": "2026-11-27 15:00:55+00:00",
+    "involved_object_name": "checkout-7558d8db79-v74jn"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container checkout",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:55+00:00",
+    "last_time": "2026-11-27 15:00:55+00:00",
+    "involved_object_name": "checkout-7558d8db79-v74jn"
+  },
+  {
+    "type": "Normal",
+    "reason": "Killing",
+    "message": "Stopping container checkout",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:57+00:00",
+    "last_time": "2026-11-27 15:00:57+00:00",
+    "involved_object_name": "checkout-7558d8db79-v74jn"
+  },
+  {
+    "type": "Normal",
+    "reason": "SuccessfulCreate",
+    "message": "Created pod: checkout-7558d8db79-v74jn",
+    "count": 1,
+    "first_time": "2026-11-27 14:57:45+00:00",
+    "last_time": "2026-11-27 14:57:45+00:00",
+    "involved_object_name": "checkout-7558d8db79"
+  },
+  {
+    "type": "Normal",
+    "reason": "SuccessfulDelete",
+    "message": "Deleted pod: checkout-7558d8db79-v74jn",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:57+00:00",
+    "last_time": "2026-11-27 15:00:57+00:00",
+    "involved_object_name": "checkout-7558d8db79"
+  },
+  {
+    "type": "Normal",
+    "reason": "ScalingReplicaSet",
+    "message": "Scaled up replica set checkout-7558d8db79 from 0 to 1",
+    "count": 1,
+    "first_time": "2026-11-27 14:57:45+00:00",
+    "last_time": "2026-11-27 14:57:45+00:00",
+    "involved_object_name": "checkout"
+  },
+  {
+    "type": "Normal",
+    "reason": "ScalingReplicaSet",
+    "message": "Scaled up replica set checkout-5c88fd48b9 from 0 to 1",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:40+00:00",
+    "last_time": "2026-11-27 15:00:40+00:00",
+    "involved_object_name": "checkout"
+  },
+  {
+    "type": "Normal",
+    "reason": "ScalingReplicaSet",
+    "message": "Scaled down replica set checkout-7558d8db79 from 1 to 0",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:57+00:00",
+    "last_time": "2026-11-27 15:00:57+00:00",
+    "involved_object_name": "checkout"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"ghcr.io/open-telemetry/demo:3.1.0-currency\" in 2.181s (1m0.513s including waiting). Image size: 41347032 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 14:58:44+00:00",
+    "last_time": "2026-11-27 14:58:44+00:00",
+    "involved_object_name": "currency-56894488c9-5spdb"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: currency",
+    "count": 1,
+    "first_time": "2026-11-27 14:58:44+00:00",
+    "last_time": "2026-11-27 14:58:44+00:00",
+    "involved_object_name": "currency-56894488c9-5spdb"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container currency",
+    "count": 1,
+    "first_time": "2026-11-27 14:58:44+00:00",
+    "last_time": "2026-11-27 14:58:44+00:00",
+    "involved_object_name": "currency-56894488c9-5spdb"
+  },
+  {
+    "type": "Normal",
+    "reason": "Scheduled",
+    "message": "Successfully assigned otel-demo/email-865d8ffcc9-9mcj9 to otel-sre-copilot-control-plane",
+    "count": 1,
+    "first_time": "2026-11-27 14:57:45+00:00",
+    "last_time": "2026-11-27 14:57:45+00:00",
+    "involved_object_name": "email-865d8ffcc9-9mcj9"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulling",
+    "message": "Pulling image \"ghcr.io/open-telemetry/demo:3.1.0-email\"",
+    "count": 1,
+    "first_time": "2026-11-27 14:57:46+00:00",
+    "last_time": "2026-11-27 14:57:46+00:00",
+    "involved_object_name": "email-865d8ffcc9-9mcj9"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"ghcr.io/open-telemetry/demo:3.1.0-email\" in 3.51s (1m36.523s including waiting). Image size: 103773021 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:22+00:00",
+    "last_time": "2026-11-27 14:59:22+00:00",
+    "involved_object_name": "email-865d8ffcc9-9mcj9"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: email",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:22+00:00",
+    "last_time": "2026-11-27 14:59:22+00:00",
+    "involved_object_name": "email-865d8ffcc9-9mcj9"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container email",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:22+00:00",
+    "last_time": "2026-11-27 14:59:22+00:00",
+    "involved_object_name": "email-865d8ffcc9-9mcj9"
+  },
+  {
+    "type": "Normal",
+    "reason": "SuccessfulCreate",
+    "message": "Created pod: email-865d8ffcc9-9mcj9",
+    "count": 1,
+    "first_time": "2026-11-27 14:57:45+00:00",
+    "last_time": "2026-11-27 14:57:45+00:00",
+    "involved_object_name": "email-865d8ffcc9"
+  },
+  {
+    "type": "Normal",
+    "reason": "ScalingReplicaSet",
+    "message": "Scaled up replica set email-865d8ffcc9 from 0 to 1",
+    "count": 1,
+    "first_time": "2026-11-27 14:57:45+00:00",
+    "last_time": "2026-11-27 14:57:45+00:00",
+    "involved_object_name": "email"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulling",
+    "message": "Pulling image \"busybox\"",
+    "count": 3,
+    "first_time": "2026-11-27 14:57:43+00:00",
+    "last_time": "2026-11-27 14:59:53+00:00",
+    "involved_object_name": "flagd-56f68dbd69-hcfxw"
+  },
+  {
+    "type": "Warning",
+    "reason": "Failed",
+    "message": "Failed to pull image \"busybox\": failed to pull and unpack image \"docker.io/library/busybox:latest\": failed to resolve reference \"docker.io/library/busybox:latest\": unexpected status from HEAD request to https://registry-1.docker.io/v2/library/busybox/manifests/latest: 429 Too Many Requests",
+    "count": 2,
+    "first_time": "2026-11-27 14:58:42+00:00",
+    "last_time": "2026-11-27 14:59:26+00:00",
+    "involved_object_name": "flagd-56f68dbd69-hcfxw"
+  },
+  {
+    "type": "Warning",
+    "reason": "Failed",
+    "message": "Error: ErrImagePull",
+    "count": 2,
+    "first_time": "2026-11-27 14:58:42+00:00",
+    "last_time": "2026-11-27 14:59:26+00:00",
+    "involved_object_name": "flagd-56f68dbd69-hcfxw"
+  },
+  {
+    "type": "Normal",
+    "reason": "BackOff",
+    "message": "Back-off pulling image \"busybox\"",
+    "count": 2,
+    "first_time": "2026-11-27 14:58:42+00:00",
+    "last_time": "2026-11-27 14:59:39+00:00",
+    "involved_object_name": "flagd-56f68dbd69-hcfxw"
+  },
+  {
+    "type": "Warning",
+    "reason": "Failed",
+    "message": "Error: ImagePullBackOff",
+    "count": 2,
+    "first_time": "2026-11-27 14:58:42+00:00",
+    "last_time": "2026-11-27 14:59:39+00:00",
+    "involved_object_name": "flagd-56f68dbd69-hcfxw"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"busybox\" in 510ms (54.532s including waiting). Image size: 2236767 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:48+00:00",
+    "last_time": "2026-11-27 15:00:48+00:00",
+    "involved_object_name": "flagd-56f68dbd69-hcfxw"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: init-config",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:48+00:00",
+    "last_time": "2026-11-27 15:00:48+00:00",
+    "involved_object_name": "flagd-56f68dbd69-hcfxw"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container init-config",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:48+00:00",
+    "last_time": "2026-11-27 15:00:48+00:00",
+    "involved_object_name": "flagd-56f68dbd69-hcfxw"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Container image \"ghcr.io/open-feature/flagd:v0.16.0\" already present on machine",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:49+00:00",
+    "last_time": "2026-11-27 15:00:49+00:00",
+    "involved_object_name": "flagd-56f68dbd69-hcfxw"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: flagd",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:49+00:00",
+    "last_time": "2026-11-27 15:00:49+00:00",
+    "involved_object_name": "flagd-56f68dbd69-hcfxw"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container flagd",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:49+00:00",
+    "last_time": "2026-11-27 15:00:49+00:00",
+    "involved_object_name": "flagd-56f68dbd69-hcfxw"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulling",
+    "message": "Pulling image \"ghcr.io/open-telemetry/demo:3.1.0-flagd-ui\"",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:49+00:00",
+    "last_time": "2026-11-27 15:00:49+00:00",
+    "involved_object_name": "flagd-56f68dbd69-hcfxw"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"ghcr.io/open-telemetry/demo:3.1.0-flagd-ui\" in 333ms (20.567s including waiting). Image size: 59002035 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 15:01:09+00:00",
+    "last_time": "2026-11-27 15:01:09+00:00",
+    "involved_object_name": "flagd-56f68dbd69-hcfxw"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: flagd-ui",
+    "count": 1,
+    "first_time": "2026-11-27 15:01:09+00:00",
+    "last_time": "2026-11-27 15:01:09+00:00",
+    "involved_object_name": "flagd-56f68dbd69-hcfxw"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container flagd-ui",
+    "count": 1,
+    "first_time": "2026-11-27 15:01:09+00:00",
+    "last_time": "2026-11-27 15:01:09+00:00",
+    "involved_object_name": "flagd-56f68dbd69-hcfxw"
+  },
+  {
+    "type": "Normal",
+    "reason": "Killing",
+    "message": "Stopping container flagd",
+    "count": 1,
+    "first_time": "2026-11-27 15:01:10+00:00",
+    "last_time": "2026-11-27 15:01:10+00:00",
+    "involved_object_name": "flagd-56f68dbd69-hcfxw"
+  },
+  {
+    "type": "Normal",
+    "reason": "Killing",
+    "message": "Stopping container flagd-ui",
+    "count": 1,
+    "first_time": "2026-11-27 15:01:10+00:00",
+    "last_time": "2026-11-27 15:01:10+00:00",
+    "involved_object_name": "flagd-56f68dbd69-hcfxw"
+  },
+  {
+    "type": "Normal",
+    "reason": "SuccessfulDelete",
+    "message": "Deleted pod: flagd-56f68dbd69-hcfxw",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:59+00:00",
+    "last_time": "2026-11-27 15:00:59+00:00",
+    "involved_object_name": "flagd-56f68dbd69"
+  },
+  {
+    "type": "Normal",
+    "reason": "Scheduled",
+    "message": "Successfully assigned otel-demo/flagd-5f67cd745d-mz2xk to otel-sre-copilot-control-plane",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:05+00:00",
+    "last_time": "2026-11-27 14:59:05+00:00",
+    "involved_object_name": "flagd-5f67cd745d-mz2xk"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulling",
+    "message": "Pulling image \"mirror.gcr.io/library/busybox:latest\"",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:06+00:00",
+    "last_time": "2026-11-27 14:59:06+00:00",
+    "involved_object_name": "flagd-5f67cd745d-mz2xk"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"mirror.gcr.io/library/busybox:latest\" in 573ms (30.882s including waiting). Image size: 2236767 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:37+00:00",
+    "last_time": "2026-11-27 14:59:37+00:00",
+    "involved_object_name": "flagd-5f67cd745d-mz2xk"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: init-config",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:37+00:00",
+    "last_time": "2026-11-27 14:59:37+00:00",
+    "involved_object_name": "flagd-5f67cd745d-mz2xk"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container init-config",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:37+00:00",
+    "last_time": "2026-11-27 14:59:37+00:00",
+    "involved_object_name": "flagd-5f67cd745d-mz2xk"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulling",
+    "message": "Pulling image \"ghcr.io/open-feature/flagd:v0.16.0\"",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:37+00:00",
+    "last_time": "2026-11-27 14:59:37+00:00",
+    "involved_object_name": "flagd-5f67cd745d-mz2xk"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"ghcr.io/open-feature/flagd:v0.16.0\" in 12.072s (1m4.589s including waiting). Image size: 46074624 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:42+00:00",
+    "last_time": "2026-11-27 15:00:42+00:00",
+    "involved_object_name": "flagd-5f67cd745d-mz2xk"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: flagd",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:42+00:00",
+    "last_time": "2026-11-27 15:00:42+00:00",
+    "involved_object_name": "flagd-5f67cd745d-mz2xk"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container flagd",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:42+00:00",
+    "last_time": "2026-11-27 15:00:42+00:00",
+    "involved_object_name": "flagd-5f67cd745d-mz2xk"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulling",
+    "message": "Pulling image \"ghcr.io/open-telemetry/demo:3.1.0-flagd-ui\"",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:42+00:00",
+    "last_time": "2026-11-27 15:00:42+00:00",
+    "involved_object_name": "flagd-5f67cd745d-mz2xk"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"ghcr.io/open-telemetry/demo:3.1.0-flagd-ui\" in 3.117s (16.575s including waiting). Image size: 59002035 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:59+00:00",
+    "last_time": "2026-11-27 15:00:59+00:00",
+    "involved_object_name": "flagd-5f67cd745d-mz2xk"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: flagd-ui",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:59+00:00",
+    "last_time": "2026-11-27 15:00:59+00:00",
+    "involved_object_name": "flagd-5f67cd745d-mz2xk"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container flagd-ui",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:59+00:00",
+    "last_time": "2026-11-27 15:00:59+00:00",
+    "involved_object_name": "flagd-5f67cd745d-mz2xk"
+  },
+  {
+    "type": "Normal",
+    "reason": "SuccessfulCreate",
+    "message": "Created pod: flagd-5f67cd745d-mz2xk",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:05+00:00",
+    "last_time": "2026-11-27 14:59:05+00:00",
+    "involved_object_name": "flagd-5f67cd745d"
+  },
+  {
+    "type": "Normal",
+    "reason": "ScalingReplicaSet",
+    "message": "Scaled up replica set flagd-5f67cd745d from 0 to 1",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:05+00:00",
+    "last_time": "2026-11-27 14:59:05+00:00",
+    "involved_object_name": "flagd"
+  },
+  {
+    "type": "Normal",
+    "reason": "ScalingReplicaSet",
+    "message": "Scaled down replica set flagd-56f68dbd69 from 1 to 0",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:59+00:00",
+    "last_time": "2026-11-27 15:00:59+00:00",
+    "involved_object_name": "flagd"
+  },
+  {
+    "type": "Normal",
+    "reason": "Scheduled",
+    "message": "Successfully assigned otel-demo/fraud-detection-d88bcb778-ztr46 to otel-sre-copilot-control-plane",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:40+00:00",
+    "last_time": "2026-11-27 14:59:40+00:00",
+    "involved_object_name": "fraud-detection-d88bcb778-ztr46"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulling",
+    "message": "Pulling image \"mirror.gcr.io/library/busybox:latest\"",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:41+00:00",
+    "last_time": "2026-11-27 14:59:41+00:00",
+    "involved_object_name": "fraud-detection-d88bcb778-ztr46"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"mirror.gcr.io/library/busybox:latest\" in 606ms (1m5.406s including waiting). Image size: 2236767 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:46+00:00",
+    "last_time": "2026-11-27 15:00:46+00:00",
+    "involved_object_name": "fraud-detection-d88bcb778-ztr46"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: wait-for-kafka",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:46+00:00",
+    "last_time": "2026-11-27 15:00:46+00:00",
+    "involved_object_name": "fraud-detection-d88bcb778-ztr46"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container wait-for-kafka",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:46+00:00",
+    "last_time": "2026-11-27 15:00:46+00:00",
+    "involved_object_name": "fraud-detection-d88bcb778-ztr46"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulling",
+    "message": "Pulling image \"ghcr.io/open-telemetry/demo:3.1.0-fraud-detection\"",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:47+00:00",
+    "last_time": "2026-11-27 15:00:47+00:00",
+    "involved_object_name": "fraud-detection-d88bcb778-ztr46"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"ghcr.io/open-telemetry/demo:3.1.0-fraud-detection\" in 10.424s (22.377s including waiting). Image size: 159216424 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 15:01:09+00:00",
+    "last_time": "2026-11-27 15:01:09+00:00",
+    "involved_object_name": "fraud-detection-d88bcb778-ztr46"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: fraud-detection",
+    "count": 1,
+    "first_time": "2026-11-27 15:01:09+00:00",
+    "last_time": "2026-11-27 15:01:09+00:00",
+    "involved_object_name": "fraud-detection-d88bcb778-ztr46"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container fraud-detection",
+    "count": 1,
+    "first_time": "2026-11-27 15:01:09+00:00",
+    "last_time": "2026-11-27 15:01:09+00:00",
+    "involved_object_name": "fraud-detection-d88bcb778-ztr46"
+  },
+  {
+    "type": "Normal",
+    "reason": "SuccessfulCreate",
+    "message": "Created pod: fraud-detection-d88bcb778-ztr46",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:40+00:00",
+    "last_time": "2026-11-27 14:59:40+00:00",
+    "involved_object_name": "fraud-detection-d88bcb778"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulling",
+    "message": "Pulling image \"busybox:latest\"",
+    "count": 3,
+    "first_time": "2026-11-27 14:57:44+00:00",
+    "last_time": "2026-11-27 15:00:04+00:00",
+    "involved_object_name": "fraud-detection-f78b7bd76-7xr8d"
+  },
+  {
+    "type": "Warning",
+    "reason": "Failed",
+    "message": "Failed to pull image \"busybox:latest\": failed to pull and unpack image \"docker.io/library/busybox:latest\": failed to resolve reference \"docker.io/library/busybox:latest\": unexpected status from HEAD request to https://registry-1.docker.io/v2/library/busybox/manifests/latest: 429 Too Many Requests",
+    "count": 2,
+    "first_time": "2026-11-27 14:58:56+00:00",
+    "last_time": "2026-11-27 14:59:39+00:00",
+    "involved_object_name": "fraud-detection-f78b7bd76-7xr8d"
+  },
+  {
+    "type": "Warning",
+    "reason": "Failed",
+    "message": "Error: ErrImagePull",
+    "count": 2,
+    "first_time": "2026-11-27 14:58:56+00:00",
+    "last_time": "2026-11-27 14:59:39+00:00",
+    "involved_object_name": "fraud-detection-f78b7bd76-7xr8d"
+  },
+  {
+    "type": "Normal",
+    "reason": "BackOff",
+    "message": "Back-off pulling image \"busybox:latest\"",
+    "count": 2,
+    "first_time": "2026-11-27 14:58:56+00:00",
+    "last_time": "2026-11-27 14:59:50+00:00",
+    "involved_object_name": "fraud-detection-f78b7bd76-7xr8d"
+  },
+  {
+    "type": "Warning",
+    "reason": "Failed",
+    "message": "Error: ImagePullBackOff",
+    "count": 2,
+    "first_time": "2026-11-27 14:58:56+00:00",
+    "last_time": "2026-11-27 14:59:50+00:00",
+    "involved_object_name": "fraud-detection-f78b7bd76-7xr8d"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"busybox:latest\" in 430ms (44.43s including waiting). Image size: 2236767 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:49+00:00",
+    "last_time": "2026-11-27 15:00:49+00:00",
+    "involved_object_name": "fraud-detection-f78b7bd76-7xr8d"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: wait-for-kafka",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:49+00:00",
+    "last_time": "2026-11-27 15:00:49+00:00",
+    "involved_object_name": "fraud-detection-f78b7bd76-7xr8d"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container wait-for-kafka",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:49+00:00",
+    "last_time": "2026-11-27 15:00:49+00:00",
+    "involved_object_name": "fraud-detection-f78b7bd76-7xr8d"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulling",
+    "message": "Pulling image \"ghcr.io/open-telemetry/demo:3.1.0-fraud-detection\"",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:50+00:00",
+    "last_time": "2026-11-27 15:00:50+00:00",
+    "involved_object_name": "fraud-detection-f78b7bd76-7xr8d"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"ghcr.io/open-telemetry/demo:3.1.0-fraud-detection\" in 365ms (20.048s including waiting). Image size: 159216424 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 15:01:10+00:00",
+    "last_time": "2026-11-27 15:01:10+00:00",
+    "involved_object_name": "fraud-detection-f78b7bd76-7xr8d"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: fraud-detection",
+    "count": 1,
+    "first_time": "2026-11-27 15:01:10+00:00",
+    "last_time": "2026-11-27 15:01:10+00:00",
+    "involved_object_name": "fraud-detection-f78b7bd76-7xr8d"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container fraud-detection",
+    "count": 1,
+    "first_time": "2026-11-27 15:01:10+00:00",
+    "last_time": "2026-11-27 15:01:10+00:00",
+    "involved_object_name": "fraud-detection-f78b7bd76-7xr8d"
+  },
+  {
+    "type": "Normal",
+    "reason": "Killing",
+    "message": "Stopping container fraud-detection",
+    "count": 1,
+    "first_time": "2026-11-27 15:01:11+00:00",
+    "last_time": "2026-11-27 15:01:11+00:00",
+    "involved_object_name": "fraud-detection-f78b7bd76-7xr8d"
+  },
+  {
+    "type": "Normal",
+    "reason": "SuccessfulDelete",
+    "message": "Deleted pod: fraud-detection-f78b7bd76-7xr8d",
+    "count": 1,
+    "first_time": "2026-11-27 15:01:10+00:00",
+    "last_time": "2026-11-27 15:01:10+00:00",
+    "involved_object_name": "fraud-detection-f78b7bd76"
+  },
+  {
+    "type": "Normal",
+    "reason": "ScalingReplicaSet",
+    "message": "Scaled up replica set fraud-detection-d88bcb778 from 0 to 1",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:40+00:00",
+    "last_time": "2026-11-27 14:59:40+00:00",
+    "involved_object_name": "fraud-detection"
+  },
+  {
+    "type": "Normal",
+    "reason": "ScalingReplicaSet",
+    "message": "Scaled down replica set fraud-detection-f78b7bd76 from 1 to 0",
+    "count": 1,
+    "first_time": "2026-11-27 15:01:10+00:00",
+    "last_time": "2026-11-27 15:01:10+00:00",
+    "involved_object_name": "fraud-detection"
+  },
+  {
+    "type": "Normal",
+    "reason": "Scheduled",
+    "message": "Successfully assigned otel-demo/frontend-5bd88c6fd9-9dhgg to otel-sre-copilot-control-plane",
+    "count": 1,
+    "first_time": "2026-11-27 14:57:45+00:00",
+    "last_time": "2026-11-27 14:57:45+00:00",
+    "involved_object_name": "frontend-5bd88c6fd9-9dhgg"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulling",
+    "message": "Pulling image \"ghcr.io/open-telemetry/demo:3.1.0-frontend\"",
+    "count": 1,
+    "first_time": "2026-11-27 14:57:45+00:00",
+    "last_time": "2026-11-27 14:57:45+00:00",
+    "involved_object_name": "frontend-5bd88c6fd9-9dhgg"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"ghcr.io/open-telemetry/demo:3.1.0-frontend\" in 8.089s (1m27.487s including waiting). Image size: 195388017 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:12+00:00",
+    "last_time": "2026-11-27 14:59:12+00:00",
+    "involved_object_name": "frontend-5bd88c6fd9-9dhgg"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: frontend",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:12+00:00",
+    "last_time": "2026-11-27 14:59:12+00:00",
+    "involved_object_name": "frontend-5bd88c6fd9-9dhgg"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container frontend",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:12+00:00",
+    "last_time": "2026-11-27 14:59:12+00:00",
+    "involved_object_name": "frontend-5bd88c6fd9-9dhgg"
+  },
+  {
+    "type": "Normal",
+    "reason": "SuccessfulCreate",
+    "message": "Created pod: frontend-5bd88c6fd9-9dhgg",
+    "count": 1,
+    "first_time": "2026-11-27 14:57:45+00:00",
+    "last_time": "2026-11-27 14:57:45+00:00",
+    "involved_object_name": "frontend-5bd88c6fd9"
+  },
+  {
+    "type": "Normal",
+    "reason": "Scheduled",
+    "message": "Successfully assigned otel-demo/frontend-proxy-7cbc68799d-xz46n to otel-sre-copilot-control-plane",
+    "count": 1,
+    "first_time": "2026-11-27 14:57:45+00:00",
+    "last_time": "2026-11-27 14:57:45+00:00",
+    "involved_object_name": "frontend-proxy-7cbc68799d-xz46n"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulling",
+    "message": "Pulling image \"ghcr.io/open-telemetry/demo:3.1.0-frontend-proxy\"",
+    "count": 1,
+    "first_time": "2026-11-27 14:57:45+00:00",
+    "last_time": "2026-11-27 14:57:45+00:00",
+    "involved_object_name": "frontend-proxy-7cbc68799d-xz46n"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"ghcr.io/open-telemetry/demo:3.1.0-frontend-proxy\" in 2.944s (1m32.709s including waiting). Image size: 73820071 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:18+00:00",
+    "last_time": "2026-11-27 14:59:18+00:00",
+    "involved_object_name": "frontend-proxy-7cbc68799d-xz46n"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: frontend-proxy",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:18+00:00",
+    "last_time": "2026-11-27 14:59:18+00:00",
+    "involved_object_name": "frontend-proxy-7cbc68799d-xz46n"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container frontend-proxy",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:18+00:00",
+    "last_time": "2026-11-27 14:59:18+00:00",
+    "involved_object_name": "frontend-proxy-7cbc68799d-xz46n"
+  },
+  {
+    "type": "Normal",
+    "reason": "SuccessfulCreate",
+    "message": "Created pod: frontend-proxy-7cbc68799d-xz46n",
+    "count": 1,
+    "first_time": "2026-11-27 14:57:45+00:00",
+    "last_time": "2026-11-27 14:57:45+00:00",
+    "involved_object_name": "frontend-proxy-7cbc68799d"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"ghcr.io/open-telemetry/demo:3.1.0-image-provider\" in 1.974s (4.275s including waiting). Image size: 38106938 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 14:57:47+00:00",
+    "last_time": "2026-11-27 14:57:47+00:00",
+    "involved_object_name": "image-provider-7f564477d5-kkl2q"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: image-provider",
+    "count": 1,
+    "first_time": "2026-11-27 14:57:47+00:00",
+    "last_time": "2026-11-27 14:57:47+00:00",
+    "involved_object_name": "image-provider-7f564477d5-kkl2q"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container image-provider",
+    "count": 1,
+    "first_time": "2026-11-27 14:57:47+00:00",
+    "last_time": "2026-11-27 14:57:47+00:00",
+    "involved_object_name": "image-provider-7f564477d5-kkl2q"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"ghcr.io/open-telemetry/demo:3.1.0-kafka\" in 11.366s (46.212s including waiting). Image size: 260393698 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 14:58:29+00:00",
+    "last_time": "2026-11-27 14:58:29+00:00",
+    "involved_object_name": "kafka-fb7b4f7d-bw5lf"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: kafka",
+    "count": 1,
+    "first_time": "2026-11-27 14:58:29+00:00",
+    "last_time": "2026-11-27 14:58:29+00:00",
+    "involved_object_name": "kafka-fb7b4f7d-bw5lf"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container kafka",
+    "count": 1,
+    "first_time": "2026-11-27 14:58:29+00:00",
+    "last_time": "2026-11-27 14:58:29+00:00",
+    "involved_object_name": "kafka-fb7b4f7d-bw5lf"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"ghcr.io/open-telemetry/demo:3.1.0-load-generator\" in 11.111s (57.56s including waiting). Image size: 551806073 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 14:58:41+00:00",
+    "last_time": "2026-11-27 14:58:41+00:00",
+    "involved_object_name": "load-generator-f7f759dd4-j2ckl"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: load-generator",
+    "count": 1,
+    "first_time": "2026-11-27 14:58:41+00:00",
+    "last_time": "2026-11-27 14:58:41+00:00",
+    "involved_object_name": "load-generator-f7f759dd4-j2ckl"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container load-generator",
+    "count": 1,
+    "first_time": "2026-11-27 14:58:41+00:00",
+    "last_time": "2026-11-27 14:58:41+00:00",
+    "involved_object_name": "load-generator-f7f759dd4-j2ckl"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulling",
+    "message": "Pulling image \"ghcr.io/open-telemetry/demo:3.1.0-mcp\"",
+    "count": 1,
+    "first_time": "2026-11-27 14:57:45+00:00",
+    "last_time": "2026-11-27 14:57:45+00:00",
+    "involved_object_name": "mcp-78f87dbcd6-vv678"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"ghcr.io/open-telemetry/demo:3.1.0-mcp\" in 8.724s (1m19.616s including waiting). Image size: 216967956 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:04+00:00",
+    "last_time": "2026-11-27 14:59:04+00:00",
+    "involved_object_name": "mcp-78f87dbcd6-vv678"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: mcp",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:04+00:00",
+    "last_time": "2026-11-27 14:59:04+00:00",
+    "involved_object_name": "mcp-78f87dbcd6-vv678"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container mcp",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:04+00:00",
+    "last_time": "2026-11-27 14:59:04+00:00",
+    "involved_object_name": "mcp-78f87dbcd6-vv678"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"ghcr.io/open-telemetry/demo:3.1.0-opamp-server\" in 2.321s (2.321s including waiting). Image size: 9332975 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 14:57:45+00:00",
+    "last_time": "2026-11-27 14:57:45+00:00",
+    "involved_object_name": "opamp-server-77995fb66f-bqlpj"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: opamp-server",
+    "count": 1,
+    "first_time": "2026-11-27 14:57:45+00:00",
+    "last_time": "2026-11-27 14:57:45+00:00",
+    "involved_object_name": "opamp-server-77995fb66f-bqlpj"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container opamp-server",
+    "count": 1,
+    "first_time": "2026-11-27 14:57:45+00:00",
+    "last_time": "2026-11-27 14:57:45+00:00",
+    "involved_object_name": "opamp-server-77995fb66f-bqlpj"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulling",
+    "message": "Pulling image \"opensearchproject/opensearch:3.8.0\"",
+    "count": 2,
+    "first_time": "2026-11-27 14:57:43+00:00",
+    "last_time": "2026-11-27 14:58:13+00:00",
+    "involved_object_name": "opensearch-0"
+  },
+  {
+    "type": "Warning",
+    "reason": "Failed",
+    "message": "Failed to pull image \"opensearchproject/opensearch:3.8.0\": failed to pull and unpack image \"docker.io/opensearchproject/opensearch:3.8.0\": failed to resolve reference \"docker.io/opensearchproject/opensearch:3.8.0\": unexpected status from HEAD request to https://registry-1.docker.io/v2/opensearchproject/opensearch/manifests/3.8.0: 429 Too Many Requests",
+    "count": 2,
+    "first_time": "2026-11-27 14:58:01+00:00",
+    "last_time": "2026-11-27 14:59:23+00:00",
+    "involved_object_name": "opensearch-0"
+  },
+  {
+    "type": "Warning",
+    "reason": "Failed",
+    "message": "Error: ErrImagePull",
+    "count": 2,
+    "first_time": "2026-11-27 14:58:01+00:00",
+    "last_time": "2026-11-27 14:59:23+00:00",
+    "involved_object_name": "opensearch-0"
+  },
+  {
+    "type": "Normal",
+    "reason": "BackOff",
+    "message": "Back-off pulling image \"opensearchproject/opensearch:3.8.0\"",
+    "count": 1,
+    "first_time": "2026-11-27 14:58:02+00:00",
+    "last_time": "2026-11-27 14:58:02+00:00",
+    "involved_object_name": "opensearch-0"
+  },
+  {
+    "type": "Warning",
+    "reason": "Failed",
+    "message": "Error: ImagePullBackOff",
+    "count": 1,
+    "first_time": "2026-11-27 14:58:02+00:00",
+    "last_time": "2026-11-27 14:58:02+00:00",
+    "involved_object_name": "opensearch-0"
+  },
+  {
+    "type": "Normal",
+    "reason": "Scheduled",
+    "message": "Successfully assigned otel-demo/opensearch-0 to otel-sre-copilot-control-plane",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:27+00:00",
+    "last_time": "2026-11-27 14:59:27+00:00",
+    "involved_object_name": "opensearch-0"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulling",
+    "message": "Pulling image \"mirror.gcr.io/opensearchproject/opensearch:3.8.0\"",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:28+00:00",
+    "last_time": "2026-11-27 14:59:28+00:00",
+    "involved_object_name": "opensearch-0"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"mirror.gcr.io/opensearchproject/opensearch:3.8.0\" in 22.804s (33.678s including waiting). Image size: 1136738082 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:01+00:00",
+    "last_time": "2026-11-27 15:00:01+00:00",
+    "involved_object_name": "opensearch-0"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: configfile",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:01+00:00",
+    "last_time": "2026-11-27 15:00:01+00:00",
+    "involved_object_name": "opensearch-0"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container configfile",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:01+00:00",
+    "last_time": "2026-11-27 15:00:01+00:00",
+    "involved_object_name": "opensearch-0"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Container image \"mirror.gcr.io/opensearchproject/opensearch:3.8.0\" already present on machine",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:02+00:00",
+    "last_time": "2026-11-27 15:00:02+00:00",
+    "involved_object_name": "opensearch-0"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: opensearch",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:02+00:00",
+    "last_time": "2026-11-27 15:00:02+00:00",
+    "involved_object_name": "opensearch-0"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container opensearch",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:03+00:00",
+    "last_time": "2026-11-27 15:00:03+00:00",
+    "involved_object_name": "opensearch-0"
+  },
+  {
+    "type": "Warning",
+    "reason": "Unhealthy",
+    "message": "Startup probe failed: dial tcp 10.244.0.43:9200: connect: connection refused",
+    "count": 2,
+    "first_time": "2026-11-27 15:00:08+00:00",
+    "last_time": "2026-11-27 15:00:18+00:00",
+    "involved_object_name": "opensearch-0"
+  },
+  {
+    "type": "Normal",
+    "reason": "NoPods",
+    "message": "No matching pods found",
+    "count": 4,
+    "first_time": "2026-11-27 14:57:42+00:00",
+    "last_time": "2026-11-27 14:59:27+00:00",
+    "involved_object_name": "opensearch-pdb"
+  },
+  {
+    "type": "Normal",
+    "reason": "SuccessfulCreate",
+    "message": "create Pod opensearch-0 in StatefulSet opensearch successful",
+    "count": 2,
+    "first_time": "2026-11-27 14:57:42+00:00",
+    "last_time": "2026-11-27 14:59:27+00:00",
+    "involved_object_name": "opensearch"
+  },
+  {
+    "type": "Normal",
+    "reason": "SuccessfulDelete",
+    "message": "delete Pod opensearch-0 in StatefulSet opensearch successful",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:05+00:00",
+    "last_time": "2026-11-27 14:59:05+00:00",
+    "involved_object_name": "opensearch"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"ghcr.io/open-telemetry/demo:3.1.0-payment\" in 6.095s (1m8.459s including waiting). Image size: 71511458 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 14:58:53+00:00",
+    "last_time": "2026-11-27 14:58:53+00:00",
+    "involved_object_name": "payment-77df8cddcd-5kmw2"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: payment",
+    "count": 1,
+    "first_time": "2026-11-27 14:58:53+00:00",
+    "last_time": "2026-11-27 14:58:53+00:00",
+    "involved_object_name": "payment-77df8cddcd-5kmw2"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container payment",
+    "count": 1,
+    "first_time": "2026-11-27 14:58:53+00:00",
+    "last_time": "2026-11-27 14:58:53+00:00",
+    "involved_object_name": "payment-77df8cddcd-5kmw2"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulling",
+    "message": "Pulling image \"busybox:latest\"",
+    "count": 3,
+    "first_time": "2026-11-27 14:57:43+00:00",
+    "last_time": "2026-11-27 14:59:52+00:00",
+    "involved_object_name": "product-catalog-5b4d8cc5f9-dh8h4"
+  },
+  {
+    "type": "Warning",
+    "reason": "Failed",
+    "message": "Failed to pull image \"busybox:latest\": failed to pull and unpack image \"docker.io/library/busybox:latest\": failed to resolve reference \"docker.io/library/busybox:latest\": unexpected status from HEAD request to https://registry-1.docker.io/v2/library/busybox/manifests/latest: 429 Too Many Requests",
+    "count": 2,
+    "first_time": "2026-11-27 14:58:30+00:00",
+    "last_time": "2026-11-27 14:59:25+00:00",
+    "involved_object_name": "product-catalog-5b4d8cc5f9-dh8h4"
+  },
+  {
+    "type": "Warning",
+    "reason": "Failed",
+    "message": "Error: ErrImagePull",
+    "count": 2,
+    "first_time": "2026-11-27 14:58:30+00:00",
+    "last_time": "2026-11-27 14:59:25+00:00",
+    "involved_object_name": "product-catalog-5b4d8cc5f9-dh8h4"
+  },
+  {
+    "type": "Normal",
+    "reason": "BackOff",
+    "message": "Back-off pulling image \"busybox:latest\"",
+    "count": 2,
+    "first_time": "2026-11-27 14:58:30+00:00",
+    "last_time": "2026-11-27 14:59:39+00:00",
+    "involved_object_name": "product-catalog-5b4d8cc5f9-dh8h4"
+  },
+  {
+    "type": "Warning",
+    "reason": "Failed",
+    "message": "Error: ImagePullBackOff",
+    "count": 2,
+    "first_time": "2026-11-27 14:58:30+00:00",
+    "last_time": "2026-11-27 14:59:39+00:00",
+    "involved_object_name": "product-catalog-5b4d8cc5f9-dh8h4"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"busybox:latest\" in 438ms (55.012s including waiting). Image size: 2236767 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:47+00:00",
+    "last_time": "2026-11-27 15:00:47+00:00",
+    "involved_object_name": "product-catalog-5b4d8cc5f9-dh8h4"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: wait-for-astronomy-db",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:47+00:00",
+    "last_time": "2026-11-27 15:00:47+00:00",
+    "involved_object_name": "product-catalog-5b4d8cc5f9-dh8h4"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container wait-for-astronomy-db",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:47+00:00",
+    "last_time": "2026-11-27 15:00:47+00:00",
+    "involved_object_name": "product-catalog-5b4d8cc5f9-dh8h4"
+  },
+  {
+    "type": "Normal",
+    "reason": "SuccessfulDelete",
+    "message": "Deleted pod: product-catalog-5b4d8cc5f9-dh8h4",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:46+00:00",
+    "last_time": "2026-11-27 15:00:46+00:00",
+    "involved_object_name": "product-catalog-5b4d8cc5f9"
+  },
+  {
+    "type": "Normal",
+    "reason": "Scheduled",
+    "message": "Successfully assigned otel-demo/product-catalog-7c489b5f49-fhzd5 to otel-sre-copilot-control-plane",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:06+00:00",
+    "last_time": "2026-11-27 14:59:06+00:00",
+    "involved_object_name": "product-catalog-7c489b5f49-fhzd5"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulling",
+    "message": "Pulling image \"mirror.gcr.io/library/busybox:latest\"",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:06+00:00",
+    "last_time": "2026-11-27 14:59:06+00:00",
+    "involved_object_name": "product-catalog-7c489b5f49-fhzd5"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"mirror.gcr.io/library/busybox:latest\" in 616ms (31.453s including waiting). Image size: 2236767 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:37+00:00",
+    "last_time": "2026-11-27 14:59:37+00:00",
+    "involved_object_name": "product-catalog-7c489b5f49-fhzd5"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: wait-for-astronomy-db",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:37+00:00",
+    "last_time": "2026-11-27 14:59:37+00:00",
+    "involved_object_name": "product-catalog-7c489b5f49-fhzd5"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container wait-for-astronomy-db",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:37+00:00",
+    "last_time": "2026-11-27 14:59:37+00:00",
+    "involved_object_name": "product-catalog-7c489b5f49-fhzd5"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulling",
+    "message": "Pulling image \"ghcr.io/open-telemetry/demo:3.1.0-product-catalog\"",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:38+00:00",
+    "last_time": "2026-11-27 14:59:38+00:00",
+    "involved_object_name": "product-catalog-7c489b5f49-fhzd5"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"ghcr.io/open-telemetry/demo:3.1.0-product-catalog\" in 3.493s (1m7.075s including waiting). Image size: 14351998 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:45+00:00",
+    "last_time": "2026-11-27 15:00:45+00:00",
+    "involved_object_name": "product-catalog-7c489b5f49-fhzd5"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: product-catalog",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:45+00:00",
+    "last_time": "2026-11-27 15:00:45+00:00",
+    "involved_object_name": "product-catalog-7c489b5f49-fhzd5"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container product-catalog",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:45+00:00",
+    "last_time": "2026-11-27 15:00:45+00:00",
+    "involved_object_name": "product-catalog-7c489b5f49-fhzd5"
+  },
+  {
+    "type": "Normal",
+    "reason": "SuccessfulCreate",
+    "message": "Created pod: product-catalog-7c489b5f49-fhzd5",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:06+00:00",
+    "last_time": "2026-11-27 14:59:06+00:00",
+    "involved_object_name": "product-catalog-7c489b5f49"
+  },
+  {
+    "type": "Normal",
+    "reason": "ScalingReplicaSet",
+    "message": "Scaled up replica set product-catalog-7c489b5f49 from 0 to 1",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:06+00:00",
+    "last_time": "2026-11-27 14:59:06+00:00",
+    "involved_object_name": "product-catalog"
+  },
+  {
+    "type": "Normal",
+    "reason": "ScalingReplicaSet",
+    "message": "Scaled down replica set product-catalog-5b4d8cc5f9 from 1 to 0",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:46+00:00",
+    "last_time": "2026-11-27 15:00:46+00:00",
+    "involved_object_name": "product-catalog"
+  },
+  {
+    "type": "Normal",
+    "reason": "Scheduled",
+    "message": "Successfully assigned otel-demo/quote-c999b8cc8-gwnjq to otel-sre-copilot-control-plane",
+    "count": 1,
+    "first_time": "2026-11-27 14:57:45+00:00",
+    "last_time": "2026-11-27 14:57:45+00:00",
+    "involved_object_name": "quote-c999b8cc8-gwnjq"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulling",
+    "message": "Pulling image \"ghcr.io/open-telemetry/demo:3.1.0-quote\"",
+    "count": 1,
+    "first_time": "2026-11-27 14:57:45+00:00",
+    "last_time": "2026-11-27 14:57:45+00:00",
+    "involved_object_name": "quote-c999b8cc8-gwnjq"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"ghcr.io/open-telemetry/demo:3.1.0-quote\" in 2.632s (1m29.959s including waiting). Image size: 48971303 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:15+00:00",
+    "last_time": "2026-11-27 14:59:15+00:00",
+    "involved_object_name": "quote-c999b8cc8-gwnjq"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: quote",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:15+00:00",
+    "last_time": "2026-11-27 14:59:15+00:00",
+    "involved_object_name": "quote-c999b8cc8-gwnjq"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container quote",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:15+00:00",
+    "last_time": "2026-11-27 14:59:15+00:00",
+    "involved_object_name": "quote-c999b8cc8-gwnjq"
+  },
+  {
+    "type": "Normal",
+    "reason": "SuccessfulCreate",
+    "message": "Created pod: quote-c999b8cc8-gwnjq",
+    "count": 1,
+    "first_time": "2026-11-27 14:57:45+00:00",
+    "last_time": "2026-11-27 14:57:45+00:00",
+    "involved_object_name": "quote-c999b8cc8"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"ghcr.io/open-telemetry/demo:3.1.0-recommendation\" in 2.386s (1m2.552s including waiting). Image size: 37452281 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 14:58:46+00:00",
+    "last_time": "2026-11-27 14:58:46+00:00",
+    "involved_object_name": "recommendation-5ffcf69d9d-bhlcq"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: recommendation",
+    "count": 1,
+    "first_time": "2026-11-27 14:58:46+00:00",
+    "last_time": "2026-11-27 14:58:46+00:00",
+    "involved_object_name": "recommendation-5ffcf69d9d-bhlcq"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container recommendation",
+    "count": 1,
+    "first_time": "2026-11-27 14:58:47+00:00",
+    "last_time": "2026-11-27 14:58:47+00:00",
+    "involved_object_name": "recommendation-5ffcf69d9d-bhlcq"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulling",
+    "message": "Pulling image \"busybox:latest\"",
+    "count": 3,
+    "first_time": "2026-11-27 14:57:43+00:00",
+    "last_time": "2026-11-27 14:59:48+00:00",
+    "involved_object_name": "shipping-6c7f5568f9-k2lzh"
+  },
+  {
+    "type": "Warning",
+    "reason": "Failed",
+    "message": "Failed to pull image \"busybox:latest\": failed to pull and unpack image \"docker.io/library/busybox:latest\": failed to resolve reference \"docker.io/library/busybox:latest\": unexpected status from HEAD request to https://registry-1.docker.io/v2/library/busybox/manifests/latest: 429 Too Many Requests",
+    "count": 2,
+    "first_time": "2026-11-27 14:58:03+00:00",
+    "last_time": "2026-11-27 14:59:25+00:00",
+    "involved_object_name": "shipping-6c7f5568f9-k2lzh"
+  },
+  {
+    "type": "Warning",
+    "reason": "Failed",
+    "message": "Error: ErrImagePull",
+    "count": 2,
+    "first_time": "2026-11-27 14:58:03+00:00",
+    "last_time": "2026-11-27 14:59:25+00:00",
+    "involved_object_name": "shipping-6c7f5568f9-k2lzh"
+  },
+  {
+    "type": "Normal",
+    "reason": "BackOff",
+    "message": "Back-off pulling image \"busybox:latest\"",
+    "count": 2,
+    "first_time": "2026-11-27 14:58:03+00:00",
+    "last_time": "2026-11-27 14:59:37+00:00",
+    "involved_object_name": "shipping-6c7f5568f9-k2lzh"
+  },
+  {
+    "type": "Warning",
+    "reason": "Failed",
+    "message": "Error: ImagePullBackOff",
+    "count": 2,
+    "first_time": "2026-11-27 14:58:03+00:00",
+    "last_time": "2026-11-27 14:59:37+00:00",
+    "involved_object_name": "shipping-6c7f5568f9-k2lzh"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"busybox:latest\" in 412ms (58.062s including waiting). Image size: 2236767 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:46+00:00",
+    "last_time": "2026-11-27 15:00:46+00:00",
+    "involved_object_name": "shipping-6c7f5568f9-k2lzh"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: wait-for-flagd",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:46+00:00",
+    "last_time": "2026-11-27 15:00:46+00:00",
+    "involved_object_name": "shipping-6c7f5568f9-k2lzh"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container wait-for-flagd",
+    "count": 1,
+    "first_time": "2026-11-27 15:00:46+00:00",
+    "last_time": "2026-11-27 15:00:46+00:00",
+    "involved_object_name": "shipping-6c7f5568f9-k2lzh"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulling",
+    "message": "Pulling image \"ghcr.io/open-telemetry/demo:3.1.0-shipping\"",
+    "count": 1,
+    "first_time": "2026-11-27 15:01:00+00:00",
+    "last_time": "2026-11-27 15:01:00+00:00",
+    "involved_object_name": "shipping-6c7f5568f9-k2lzh"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"ghcr.io/open-telemetry/demo:3.1.0-shipping\" in 1.451s (11.455s including waiting). Image size: 18357444 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 15:01:11+00:00",
+    "last_time": "2026-11-27 15:01:11+00:00",
+    "involved_object_name": "shipping-6c7f5568f9-k2lzh"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: shipping",
+    "count": 1,
+    "first_time": "2026-11-27 15:01:11+00:00",
+    "last_time": "2026-11-27 15:01:11+00:00",
+    "involved_object_name": "shipping-6c7f5568f9-k2lzh"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container shipping",
+    "count": 1,
+    "first_time": "2026-11-27 15:01:11+00:00",
+    "last_time": "2026-11-27 15:01:11+00:00",
+    "involved_object_name": "shipping-6c7f5568f9-k2lzh"
+  },
+  {
+    "type": "Normal",
+    "reason": "Killing",
+    "message": "Stopping container shipping",
+    "count": 1,
+    "first_time": "2026-11-27 15:01:13+00:00",
+    "last_time": "2026-11-27 15:01:13+00:00",
+    "involved_object_name": "shipping-6c7f5568f9-k2lzh"
+  },
+  {
+    "type": "Normal",
+    "reason": "SuccessfulDelete",
+    "message": "Deleted pod: shipping-6c7f5568f9-k2lzh",
+    "count": 1,
+    "first_time": "2026-11-27 15:01:12+00:00",
+    "last_time": "2026-11-27 15:01:12+00:00",
+    "involved_object_name": "shipping-6c7f5568f9"
+  },
+  {
+    "type": "Normal",
+    "reason": "Scheduled",
+    "message": "Successfully assigned otel-demo/shipping-7d584ccbcc-bwkml to otel-sre-copilot-control-plane",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:06+00:00",
+    "last_time": "2026-11-27 14:59:06+00:00",
+    "involved_object_name": "shipping-7d584ccbcc-bwkml"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulling",
+    "message": "Pulling image \"mirror.gcr.io/library/busybox:latest\"",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:06+00:00",
+    "last_time": "2026-11-27 14:59:06+00:00",
+    "involved_object_name": "shipping-7d584ccbcc-bwkml"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"mirror.gcr.io/library/busybox:latest\" in 579ms (31.952s including waiting). Image size: 2236767 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:38+00:00",
+    "last_time": "2026-11-27 14:59:38+00:00",
+    "involved_object_name": "shipping-7d584ccbcc-bwkml"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: wait-for-flagd",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:38+00:00",
+    "last_time": "2026-11-27 14:59:38+00:00",
+    "involved_object_name": "shipping-7d584ccbcc-bwkml"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container wait-for-flagd",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:38+00:00",
+    "last_time": "2026-11-27 14:59:38+00:00",
+    "involved_object_name": "shipping-7d584ccbcc-bwkml"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulling",
+    "message": "Pulling image \"ghcr.io/open-telemetry/demo:3.1.0-shipping\"",
+    "count": 1,
+    "first_time": "2026-11-27 15:01:00+00:00",
+    "last_time": "2026-11-27 15:01:00+00:00",
+    "involved_object_name": "shipping-7d584ccbcc-bwkml"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"ghcr.io/open-telemetry/demo:3.1.0-shipping\" in 370ms (11.823s including waiting). Image size: 18357444 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 15:01:11+00:00",
+    "last_time": "2026-11-27 15:01:11+00:00",
+    "involved_object_name": "shipping-7d584ccbcc-bwkml"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: shipping",
+    "count": 1,
+    "first_time": "2026-11-27 15:01:12+00:00",
+    "last_time": "2026-11-27 15:01:12+00:00",
+    "involved_object_name": "shipping-7d584ccbcc-bwkml"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container shipping",
+    "count": 1,
+    "first_time": "2026-11-27 15:01:12+00:00",
+    "last_time": "2026-11-27 15:01:12+00:00",
+    "involved_object_name": "shipping-7d584ccbcc-bwkml"
+  },
+  {
+    "type": "Normal",
+    "reason": "SuccessfulCreate",
+    "message": "Created pod: shipping-7d584ccbcc-bwkml",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:06+00:00",
+    "last_time": "2026-11-27 14:59:06+00:00",
+    "involved_object_name": "shipping-7d584ccbcc"
+  },
+  {
+    "type": "Normal",
+    "reason": "ScalingReplicaSet",
+    "message": "Scaled up replica set shipping-7d584ccbcc from 0 to 1",
+    "count": 1,
+    "first_time": "2026-11-27 14:59:06+00:00",
+    "last_time": "2026-11-27 14:59:06+00:00",
+    "involved_object_name": "shipping"
+  },
+  {
+    "type": "Normal",
+    "reason": "ScalingReplicaSet",
+    "message": "Scaled down replica set shipping-6c7f5568f9 from 1 to 0",
+    "count": 1,
+    "first_time": "2026-11-27 15:01:12+00:00",
+    "last_time": "2026-11-27 15:01:12+00:00",
+    "involved_object_name": "shipping"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"ghcr.io/open-telemetry/demo:3.1.0-telemetry-docs\" in 2.479s (1m10.683s including waiting). Image size: 40402209 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 14:58:55+00:00",
+    "last_time": "2026-11-27 14:58:55+00:00",
+    "involved_object_name": "telemetry-docs-67d8cdfdb9-qz96s"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: telemetry-docs",
+    "count": 1,
+    "first_time": "2026-11-27 14:58:55+00:00",
+    "last_time": "2026-11-27 14:58:55+00:00",
+    "involved_object_name": "telemetry-docs-67d8cdfdb9-qz96s"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container telemetry-docs",
+    "count": 1,
+    "first_time": "2026-11-27 14:58:55+00:00",
+    "last_time": "2026-11-27 14:58:55+00:00",
+    "involved_object_name": "telemetry-docs-67d8cdfdb9-qz96s"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"ghcr.io/valkey-io/valkey:9.0.4-alpine3.23\" in 3.778s (34.851s including waiting). Image size: 18098443 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 14:58:18+00:00",
+    "last_time": "2026-11-27 14:58:18+00:00",
+    "involved_object_name": "valkey-cart-58d745bb96-r4mbq"
+  },
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: valkey-cart",
+    "count": 1,
+    "first_time": "2026-11-27 14:58:18+00:00",
+    "last_time": "2026-11-27 14:58:18+00:00",
+    "involved_object_name": "valkey-cart-58d745bb96-r4mbq"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container valkey-cart",
+    "count": 1,
+    "first_time": "2026-11-27 14:58:18+00:00",
+    "last_time": "2026-11-27 14:58:18+00:00",
+    "involved_object_name": "valkey-cart-58d745bb96-r4mbq"
+  }
+]
