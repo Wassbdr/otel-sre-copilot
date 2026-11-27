@@ -174,6 +174,13 @@ class TestMetrics:
         assert metrics.accuracy_at_1 == 0.0   # both must match
         assert metrics.fault_type_accuracy == 0.0
 
+    def test_recorded_service_alias(self) -> None:
+        from eval.metrics import compute_per_scenario
+        sr = self._make_sr("checkout", "pod_crash")
+        row = compute_per_scenario(sr)
+        assert row["accuracy_at_1"] == row["service_at_1"] == 1.0
+        assert row["predicted_service"] == "checkout"
+
     def test_empty_results(self) -> None:
         from eval.metrics import compute_metrics
         metrics = compute_metrics([])

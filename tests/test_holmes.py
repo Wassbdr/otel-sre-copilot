@@ -26,9 +26,14 @@ def test_holmes_scores_via_paced_cache_and_observed_replay_queries(
     query = METRIC_QUERIES["memory_usage"].format(svc="cart")
 
     def worker(args: list[str], *, env: dict[str, str], **_kwargs: object) -> None:
-        _, _, url, model, _, output = args
+        _, _, url, model, prompt, output, mode = args
         assert "LLM_API_KEY" not in env
-        body = {"model": model, "messages": [{"role": "user", "content": "incident"}]}
+        assert mode == "--investigate"
+        assert "Pass explicit start=" in prompt
+        body = {
+            "model": model, "messages": [{"role": "user", "content": "incident"}],
+            "tools": [{"type": "function", "function": {"name": "prometheus_range_query"}}],
+        }
         with httpx.Client(base_url=url) as client:
             assert client.post("/v1/chat/completions", json=body).status_code == 401
             for _ in range(2):
@@ -53,4 +58,23 @@ def test_holmes_scores_via_paced_cache_and_observed_replay_queries(
     result = holmes.run_holmes(SNAPSHOT, tmp_path / "trace.json", "benchmark")
     assert upstream.call_count == result["cached_requests"] == 1
     assert upstream.call_args.args[0].headers["Authorization"] == "Bearer example-upstream"
+    assert json.loads(upstream.call_args.args[0].content)["tool_choice"] == "required"
     assert result["accuracy_at_1"] == result["verified_evidence_count"] == 1
+
+
+def test_holmes_maps_reported_aliases_without_guessing_from_prose() -> None:
+    metadata = {"incident_id": "incident", "investigation_start_ts": "start",
+                "investigation_end_ts": "end"}
+    answer = json.dumps({"root_causes": [
+        {"rank": 2, "service": "ProductCatalogService", "fault_type": "latency injection"},
+        {"rank": 1, "service": "checkoutservice", "fault_type": "OOMKilled"},
+        {"rank": 3, "service": "cart", "fault_type": "ambiguous failure"},
+    ]})
+    report, status = holmes._diagnosis(f"Diagnosis:\n```json\n{answer}\n```", metadata)
+    assert status == "ok"
+    assert [(h.service, h.fault_type) for h in report.root_causes] == [
+        ("checkout", "memory_stress"), ("product-catalog", "high_latency"), ("cart", "unknown"),
+    ]
+    report, status = holmes._diagnosis("Maybe the checkout service crashed.", metadata)
+    assert status == "invalid_answer"
+    assert report.root_causes == []

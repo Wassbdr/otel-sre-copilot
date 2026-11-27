@@ -20,6 +20,7 @@ def main() -> None:
     parser.add_argument("model")
     parser.add_argument("prompt")
     parser.add_argument("output", type=Path)
+    parser.add_argument("--investigate", action="store_true")
     args = parser.parse_args()
 
     tools = [PrometheusToolset(), GrafanaLokiToolset(), GrafanaTempoToolset()]
@@ -41,10 +42,13 @@ def main() -> None:
         args={"num_retries": 0, "max_tokens": 8192, "temperature": 0},
     )
     worker = ToolCallingLLM(
-        tool_executor=executor, max_steps=4, llm=llm, tool_results_dir=None,
+        tool_executor=executor, max_steps=10 if args.investigate else 4,
+        llm=llm, tool_results_dir=None,
     )
     messages = build_initial_ask_messages(args.prompt, None, executor)
-    result = worker.call(messages, response_format={"type": "json_object"})
+    result = worker.call(
+        messages, response_format=None if args.investigate else {"type": "json_object"},
+    )
     args.output.write_text(result.model_dump_json())
 
 

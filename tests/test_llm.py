@@ -181,11 +181,15 @@ def test_fast_graph_limits_llm_calls_and_seeds_only_available_prior(
     graph = build_graph(ReplayDataSource(snapshot), improved=not react, react=react, prior=prior)
     state = initial_state("fixture", start, end, "otel-demo")
     result = graph.invoke(state)
-    assert result["token_usage"]["llm_calls"] == 3
+    assert result["token_usage"]["llm_calls"] == (5 if react else 3)
     assert [call["tool_name"] for call in result["tool_calls_log"]] == [
         *seeded, "get_service_topology", "query_prometheus_range",
+        *(["search_traces"] if react else []),
     ]
     assert "query_prometheus_range" in bound_tools
+    assert "summarize_trace_latency" in bound_tools
+    if react:
+        assert "rank_request_rate_drops" in bound_tools
     assert set(seeded).isdisjoint(bound_tools)
     report = result["final_report"]
     if prior and not react:

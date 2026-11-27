@@ -97,11 +97,11 @@ def build_graph(
             on_event(event)
 
     budget = ContextBudget()
-    max_rounds = min(MAX_TOOL_ITERATIONS, FAST_TOOL_ROUNDS) if improved or react else (
+    max_rounds = min(MAX_TOOL_ITERATIONS, FAST_TOOL_ROUNDS) if improved and not react else (
         MAX_TOOL_ITERATIONS
     )
     tools = make_tools(
-        ds, budget, improved=improved,
+        ds, budget, improved=improved or react,
         services=services, namespace=namespace,
     )
     rerank = improved and prior and not react

@@ -114,7 +114,8 @@ def build_system_prompt(
         return (
             f"Investigate the incident in {namespace} between {start} and {end}. "
             f"Use up to {max_iterations} tool steps. Choose each next action from the "
-            "observations so far. When ready, return up to three ranked root causes "
+            "observations so far. Use the recorded service names "
+            f"({', '.join(ASTRONOMY_SHOP_SERVICES)}). When ready, return up to three ranked causes "
             "with evidence and remediation. Output JSON matching this schema:\n"
             f"{INVESTIGATION_REPORT_SCHEMA}\n"
             "On snapshots, use these metric query templates, substituting <SVC>:\n"

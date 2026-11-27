@@ -35,9 +35,35 @@ and adaptive limiter as the other benchmark methods. The standalone HolmesGPT
 CLI does not use that limiter. The scorer checks citations against successful
 replay queries and trace IDs, not against the model's account of its calls.
 
+HolmesGPT has ten model steps. Its first model request with tools requires a
+tool call; later steps can choose to stop. The prompt supplies the snapshot
+timestamps, recorded service names, and query templates. Tool discovery and
+readiness checks do not count as incident evidence. Successful replay calls
+record their time parameters in the trace.
+
+The scorer reads ranked pairs from the result JSON, including a JSON block in
+prose. It does not infer a diagnosis from unlabeled prose. Service aliases such
+as `checkoutservice` and `productcatalog` map to the telemetry names
+`checkout` and `product-catalog` for all methods. HolmesGPT fault labels are
+case and separator insensitive. Explicit aliases map pod kill and
+CrashLoopBackOff to `pod_crash`, latency injection to `high_latency`, CPU
+throttling to `cpu_stress`, OOMKilled to `memory_stress`, request abort to
+`http_abort`, and network loss or dependency timeout to `dependency_failure`.
+Other labels are scored as `unknown`. The results retain the original HolmesGPT
+answer separately and distinguish a malformed answer from an empty diagnosis.
+
 For a first pass on four development snapshots, add `BENCH_MAX_SNAPSHOTS=4`
 and `BENCH_MAX_REPEATS=1`. Resume the full cohort with the same run ID and
 without those limits. The table keeps the full expected sample size.
+
+## ReAct and no-prior
+
+ReAct has access to the full observation tool set, including request-rate
+comparison and exclusive span timing, and can use up to ten tool rounds before
+the report call. It receives no seeded hypotheses and has no in-agent grounding
+filter or fallback. The no-prior ablation shares the full agent's short tool
+budget and can see request-rate observations, but gets no candidate list or
+fallback. The external scorer uses the same accuracy and citation checks for both.
 
 ## k8sgpt v0.4.41
 

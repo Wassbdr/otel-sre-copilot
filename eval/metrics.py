@@ -18,6 +18,18 @@ from dataclasses import dataclass
 from typing import Any
 
 from src.agent.schemas import InvestigationReport
+from src.datasources.live import ASTRONOMY_SHOP_SERVICES
+
+_SERVICE_ALIASES = {
+    compact: service
+    for service in ASTRONOMY_SHOP_SERVICES
+    for compact in (service.replace("-", ""), service.replace("-", "") + "service")
+}
+
+
+def canonical_service(service: str) -> str:
+    label = service.strip().lower().replace("-", "").replace("_", "").replace(" ", "")
+    return _SERVICE_ALIASES.get(label, service)
 
 
 @dataclass
@@ -97,16 +109,19 @@ def compute_per_scenario(sr: ScenarioResult) -> dict[str, Any]:
     gt_service = sr.ground_truth.get("fault_service", "")
     gt_fault = sr.ground_truth.get("fault_type", "")
     faults = sr.ground_truth.get("faults") or [sr.ground_truth]
-    true_pairs = {(fault.get("fault_service", ""), fault.get("fault_type", "")) for fault in faults}
+    true_pairs = {
+        (canonical_service(fault.get("fault_service", "")), fault.get("fault_type", ""))
+        for fault in faults
+    }
     true_services = {service for service, _ in true_pairs}
     rc = sr.report.root_causes or []
-    pairs = [(h.service, h.fault_type) for h in rc[:3]]
-    services = [h.service for h in rc[:3]]
+    pairs = [(canonical_service(h.service), h.fault_type) for h in rc[:3]]
+    services = [service for service, _ in pairs]
     return {
         "scenario_id": sr.scenario_id,
         "ground_truth_service": gt_service,
         "ground_truth_fault_type": gt_fault,
-        "predicted_service": rc[0].service if rc else "none",
+        "predicted_service": services[0] if services else "none",
         "predicted_fault_type": rc[0].fault_type if rc else "unknown",
         "accuracy_at_1": len(true_pairs.intersection(pairs[:1])) / len(true_pairs),
         "accuracy_at_3": len(true_pairs.intersection(pairs)) / len(true_pairs),

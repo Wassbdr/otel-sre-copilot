@@ -10,19 +10,21 @@ from datetime import UTC, datetime
 from pathlib import Path
 from threading import Thread
 from time import perf_counter
-from typing import Any
+from typing import Any, get_args
 
 import httpx
 
 from eval.grounding_verifier import verify
-from eval.metrics import ScenarioResult, compute_per_scenario
+from eval.metrics import ScenarioResult, canonical_service, compute_per_scenario
 from eval.scenario_runner import opaque_incident_id, write_json_atomic
 from src.agent.graph import _strip_json_fences
 from src.agent.llm import DEFAULT_BASE_URL, llm_settings
 from src.agent.llm_cache import CachedChatClient, request_scope
-from src.agent.prompts import INVESTIGATION_REPORT_SCHEMA, _query_catalog
-from src.agent.schemas import InvestigationReport
+from src.agent.prompts import _query_catalog
+from src.agent.schemas import InvestigationReport, RootCauseHypothesis
+from src.datasources.live import ASTRONOMY_SHOP_SERVICES
 from src.replay_server import make_server
+from src.telemetry_queries import LOKI_QUERIES
 from src.utils.cost import estimate_cost
 
 
@@ -41,7 +43,51 @@ def _replay_evidence(
     if not traces and not queries:
         return None
     return {"tool_name": path, "query_or_id": queries + traces,
+            "window": {key: params[key] for key in ("start", "end", "time") if key in params},
             "evidence_ids": [f"trace:{trace}" for trace in traces]}
+
+
+_FAULT_ALIASES = {
+    "pod_kill": "pod_crash", "crashloopbackoff": "pod_crash", "pod_restart": "pod_crash",
+    "latency_injection": "high_latency", "slow_response": "high_latency",
+    "cpu_throttling": "cpu_stress", "cpu_saturation": "cpu_stress",
+    "oom_kill": "memory_stress", "oomkilled": "memory_stress", "out_of_memory": "memory_stress",
+    "request_abort": "http_abort", "http_request_abort": "http_abort",
+    "network_delay": "dependency_failure", "network_loss": "dependency_failure",
+    "dependency_timeout": "dependency_failure",
+}
+_FAULT_TYPES = get_args(RootCauseHypothesis.model_fields["fault_type"].annotation)
+
+
+def _diagnosis(answer: str, metadata: dict[str, Any]) -> tuple[InvestigationReport, str]:
+    match = re.search(r"```json\s*(.*?)```", answer, flags=re.IGNORECASE | re.DOTALL)
+    try:
+        payload = json.loads(match[1] if match else _strip_json_fences(answer))
+        raw_causes = payload["root_causes"]
+        if not isinstance(raw_causes, list):
+            raise ValueError("root_causes must be an array")
+        causes = []
+        for i, raw in enumerate(raw_causes, 1):
+            label = re.sub(r"[-\s]+", "_", str(raw.get("fault_type", "unknown")).strip().lower())
+            fault = _FAULT_ALIASES.get(label, label)
+            service = canonical_service(raw["service"])
+            causes.append(RootCauseHypothesis.model_validate({
+                "rank": i, "description": "", "confidence": 0.0, **raw,
+                "fault_type": fault if fault in _FAULT_TYPES else "unknown", "service": service,
+            }))
+        causes.sort(key=lambda cause: cause.rank)
+        if causes:
+            return InvestigationReport.model_validate({
+                **metadata, "root_causes": causes[:3],
+                "remediation_steps": payload.get("remediation_steps", []),
+                "fault_type_classification": causes[0].fault_type,
+            }), "ok"
+        status = "no_hypotheses"
+    except (ValueError, TypeError, KeyError, AttributeError):
+        status = "invalid_answer"
+    return InvestigationReport.model_construct(
+        **metadata, fault_type_classification="unknown", root_causes=[],
+    ), status
 
 
 def run_holmes(snapshot: Path, trace_path: Path, scope: str) -> dict[str, Any]:
@@ -74,6 +120,10 @@ def run_holmes(snapshot: Path, trace_path: Path, scope: str) -> dict[str, Any]:
                 payload = json.loads(body)
                 if payload.get("model") != settings.model or payload.get("stream"):
                     return 400, b'{"error":{"message":"Use the benchmark model without streaming"}}'
+                if payload.get("tools") and not any(
+                    message.get("role") == "tool" for message in payload.get("messages", [])
+                ):
+                    payload["tool_choice"] = "required"
                 response = ctx.copy().run(
                     client.post, f"{DEFAULT_BASE_URL}/chat/completions", json=payload,
                     headers={"Authorization": f"Bearer {settings.api_key}"},
@@ -88,14 +138,24 @@ def run_holmes(snapshot: Path, trace_path: Path, scope: str) -> dict[str, Any]:
                 return 504, b'{"error":{"message":"NIM request timed out or disconnected"}}'
 
         trace_path.parent.mkdir(parents=True, exist_ok=True)
+        services = ", ".join(ASTRONOMY_SHOP_SERVICES)
+        logql = "\n".join(
+            query.format(svc="<SVC>") for query in LOKI_QUERIES.values()
+        )
         prompt = (
-            f"Investigate the incident in {meta.get('namespace', 'otel-demo')} "
-            f"between {start} and {end} using the three recorded telemetry backends. "
-            "Return only JSON with up to three ranked service and fault-type pairs, "
-            "evidence, and remediation. Cite exact queried expressions or retrieved trace IDs. "
-            f"Match this schema: {INVESTIGATION_REPORT_SCHEMA}\n"
-            "Available recorded metric query templates, substituting <SVC>:\n"
-            f"{_query_catalog()}"
+            f"Investigate the incident in {meta.get('namespace', 'otel-demo')}. "
+            f"Pass explicit start={start} and end={end} to telemetry tools, not a relative "
+            f"time. Recorded service names: {services}. Use the tools before concluding.\n"
+            "Use Prometheus range queries with these exact recorded expressions, "
+            f"substituting only <SVC>:\n{_query_catalog()}\n"
+            f"Recorded Loki expressions, substituting only <SVC>:\n{logql}\n"
+            "For Tempo, use unfiltered or exact root-service search and retrieve a trace ID.\n"
+            'After investigating, return {"root_causes": [{"rank": 1, "service": "...", '
+            '"fault_type": "...", "description": "...", "confidence": 0.5, "evidence": '
+            '[{"signal_type": "metric", "query_or_id": "...", "observed_value": "..."}]}], '
+            '"remediation_steps": []}. Rank up to three causes. Allowed faults: pod_crash, '
+            "high_latency, cpu_stress, memory_stress, http_abort, dependency_failure, unknown. "
+            "Use metric, log or trace evidence and cite the exact successful query or trace ID."
         )
         output = trace_path.with_name("holmes.json")
         worker = Path(__file__).resolve().parents[1] / "scripts/holmes_worker.py"
@@ -112,7 +172,7 @@ def run_holmes(snapshot: Path, trace_path: Path, scope: str) -> dict[str, Any]:
                 with trace_path.with_name("holmes.log").open("w") as log:
                     subprocess.run(
                         [python, str(worker), f"http://127.0.0.1:{server.server_port}",
-                         settings.model, prompt, str(output.resolve())],
+                         settings.model, prompt, str(output.resolve()), "--investigate"],
                         env=env, stdout=log, stderr=subprocess.STDOUT, check=True, timeout=600,
                     )
             finally:
@@ -135,14 +195,7 @@ def run_holmes(snapshot: Path, trace_path: Path, scope: str) -> dict[str, Any]:
         "total_completion_tokens": data["completion_tokens"],
         "cost_usd": estimate_cost(data["prompt_tokens"], data["completion_tokens"]),
     }
-    try:
-        payload = json.loads(_strip_json_fences(data.get("result") or ""))
-        metadata["fault_type_classification"] = payload["root_causes"][0]["fault_type"]
-        report = InvestigationReport.model_validate({**payload, **metadata})
-    except (ValueError, TypeError, KeyError, IndexError):
-        report = InvestigationReport.model_construct(
-            **{**metadata, "fault_type_classification": "unknown"}, root_causes=[],
-        )
+    report, answer_status = _diagnosis(data.get("result") or "", metadata)
     grounding = verify(report, evidence)
     report.grounding_score = grounding.grounding_score
     metrics = compute_per_scenario(
@@ -158,5 +211,6 @@ def run_holmes(snapshot: Path, trace_path: Path, scope: str) -> dict[str, Any]:
         "scenario_id": scenario, "snapshot_dir": str(snapshot), "model": settings.model,
         "report": report.model_dump(mode="json"), "ground_truth": truth,
         "tool_calls": evidence, "metrics": metrics,
+        "answer_status": answer_status, "finish_reason": data.get("finish_reason"),
     })
     return metrics
