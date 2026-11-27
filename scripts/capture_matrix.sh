@@ -9,7 +9,7 @@ SEEDS=("$@")
 [[ ${#SEEDS[@]} -eq 0 ]] && SEEDS=(42 7)
 SCENARIO_DIR="${SCENARIO_DIR:-scenarios/mvp}"
 BASELINE_MIN="${BASELINE_MIN:-8}"
-COOLDOWN_S="${COOLDOWN_S:-360}"
+COOLDOWN_S="${COOLDOWN_S:-$((BASELINE_MIN * 60))}"
 PYTHON="${PYTHON:-$([[ -x .venv/bin/python ]] && echo .venv/bin/python || echo python3)}"
 
 first=1
