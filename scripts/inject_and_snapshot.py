@@ -1,11 +1,7 @@
-"""Inject a Chaos Mesh fault, wait for recovery, then snapshot telemetry.
+"""Inject Chaos Mesh faults, wait for recovery, then snapshot telemetry.
 
-The scenario YAML has two sections:
-1. metadata: scenario_id, fault_service, fault_type, seed, fault_duration, window_extra_s
-2. chaos_manifest: the raw Chaos Mesh CRD YAML
-
-The ground truth is extracted directly from the chaos_manifest (no human annotation).
-CRD kind → fault_type mapping is a deterministic lookup table.
+A scenario contains metadata and one chaos_manifest, or metadata and a faults list.
+Each entry in faults provides fault_service, fault_type and chaos_manifest.
 
 Usage:
     python scripts/inject_and_snapshot.py \\
@@ -72,15 +68,20 @@ def _derive_fault_type(kind: str, chaos: dict[str, object]) -> str:
     return "unknown"
 
 
-def parse_scenario(path: Path) -> tuple[dict[str, object], dict[str, object]]:
-    """Parse scenario YAML into (metadata, chaos_manifest)."""
+def parse_scenario(
+    path: Path,
+) -> tuple[dict[str, object], list[tuple[dict[str, object], dict[str, object]]]]:
     with open(path) as f:
         doc = yaml.safe_load(f)
     meta = doc.get("metadata", {})
-    chaos = doc.get("chaos_manifest", {})
-    if not meta or not chaos:
-        raise ValueError(f"Scenario YAML must have 'metadata' and 'chaos_manifest' keys: {path}")
-    return meta, chaos
+    faults = doc.get("faults")
+    if not meta or bool(faults) == bool(doc.get("chaos_manifest")):
+        raise ValueError(f"{path}: provide metadata and either chaos_manifest or faults")
+    if not faults:
+        return meta, [(meta, doc["chaos_manifest"])]
+    if len(faults) < 2 or any(not fault.get("chaos_manifest") for fault in faults):
+        raise ValueError(f"{path}: provide at least two faults, each with a chaos_manifest")
+    return meta, [(fault, fault["chaos_manifest"]) for fault in faults]
 
 
 def extract_ground_truth(
@@ -157,19 +158,18 @@ def run_kubectl(
     raise RuntimeError(f"kubectl failed: {last_stderr}")
 
 
-def apply_seed(meta: dict[str, object], chaos: dict[str, object], seed: int) -> None:
-    """Re-target a scenario at another seed: the seed is part of the snapshot id and of the
-    Chaos Mesh resource name, so replicate captures never overwrite each other."""
+def apply_seed(
+    meta: dict[str, object], manifests: list[dict[str, object]], seed: int
+) -> None:
     old = int(meta.get("seed", 42))  # type: ignore[call-overload]
     meta["seed"] = seed
     sid = str(meta.get("scenario_id", ""))
-    meta["scenario_id"] = sid.replace(f"seed{old}", f"seed{seed}") if f"seed{old}" in sid \
-        else f"{sid}-seed{seed}"
-    cmeta = chaos.setdefault("metadata", {})
-    assert isinstance(cmeta, dict)
-    name = str(cmeta.get("name", "fault"))
-    cmeta["name"] = name.replace(f"seed{old}", f"seed{seed}") if f"seed{old}" in name \
-        else f"{name}-seed{seed}"
+    meta["scenario_id"] = f"{sid.removesuffix(f'-seed{old}')}-seed{seed}"
+    for chaos in manifests:
+        cmeta = chaos.setdefault("metadata", {})
+        assert isinstance(cmeta, dict)
+        name = str(cmeta.get("name", "fault"))
+        cmeta["name"] = f"{name.removesuffix(f'-seed{old}')}-seed{seed}"
 
 
 def inject(
@@ -178,9 +178,10 @@ def inject(
     seed: int | None = None,
     baseline_minutes: int = 30,
 ) -> None:
-    meta, chaos = parse_scenario(scenario_path)
+    meta, faults = parse_scenario(scenario_path)
+    manifests = [manifest for _, manifest in faults]
     if seed is not None:
-        apply_seed(meta, chaos, seed)
+        apply_seed(meta, manifests, seed)
 
     scenario_id = str(meta.get("scenario_id", scenario_path.stem))
     fault_duration_s = int(meta.get("fault_duration_s", 300))   # default 5 min
@@ -200,35 +201,36 @@ def inject(
     injection_ts = datetime.now(UTC)
     snapshot_start = (injection_ts - timedelta(seconds=window_extra_s)).isoformat()
 
-    # Write chaos manifest to temp file and apply via kubectl
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as tmp:
-        yaml.dump(chaos, tmp)
-        tmp_path = tmp.name
-
-    run_kubectl(["apply", "-f", tmp_path, "--validate=false"], dry_run=dry_run)
-    Path(tmp_path).unlink(missing_ok=True)
-
-    if not dry_run:
-        log.info("waiting_for_fault_duration", seconds=fault_duration_s)
-        time.sleep(fault_duration_s)
-
-    # Delete the chaos resource to trigger recovery
-    chaos_name = str(chaos.get("metadata", {}).get("name", ""))  # type: ignore[union-attr]
-    chaos_kind = str(chaos.get("kind", ""))
-    chaos_ns = str(chaos.get("metadata", {}).get("namespace", "chaos-mesh"))  # type: ignore[union-attr]
-    run_kubectl(
-        ["delete", chaos_kind, chaos_name, "-n", chaos_ns, "--ignore-not-found"],
-        dry_run=dry_run,
-    )
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml") as tmp:
+        yaml.safe_dump_all(manifests, tmp)
+        tmp.flush()
+        try:
+            run_kubectl(["apply", "-f", tmp.name, "--validate=false"], dry_run=dry_run)
+            if not dry_run:
+                log.info("waiting_for_fault_duration", seconds=fault_duration_s)
+                time.sleep(fault_duration_s)
+        finally:
+            run_kubectl(["delete", "-f", tmp.name, "--ignore-not-found"], dry_run=dry_run)
 
     recovery_ts = datetime.now(UTC)
     snapshot_end = (recovery_ts + timedelta(seconds=window_extra_s)).isoformat()
 
-    gt = extract_ground_truth(
-        meta, chaos,
-        injection_ts=injection_ts.isoformat(),
-        recovery_ts=recovery_ts.isoformat(),
-    )
+    truths = [
+        extract_ground_truth(
+            {**meta, **fault_meta, "scenario_id": scenario_id, "seed": meta.get("seed", 42)},
+            chaos,
+            injection_ts=injection_ts.isoformat(),
+            recovery_ts=recovery_ts.isoformat(),
+        )
+        for fault_meta, chaos in faults
+    ]
+    gt = dict(truths[0])
+    if len(truths) > 1:
+        for key in ("fault_service", "fault_type", "chaos_kind", "chaos_manifest_hash"):
+            del gt[key]
+        gt["faults"] = truths
+    if "split" in meta:
+        gt["split"] = meta["split"]
     # Self-contained window so ground_truth and telemetry can never drift apart.
     gt["window_start"] = snapshot_start
     gt["window_end"] = snapshot_end
@@ -257,7 +259,10 @@ def inject(
                 injection_ts - timedelta(seconds=window_extra_s, minutes=baseline_minutes)
             ).isoformat(),
         )
-        gt["validation_passed"] = validate_snapshot(output_dir, gt)
+        validation = [validate_snapshot(output_dir, truth) for truth in truths]
+        gt["validation_passed"] = all(validation)
+        for truth, passed in zip(truths, validation, strict=True):
+            truth["validation_passed"] = passed
 
     # Written last, after validation, so ground_truth records whether the fault produced a
     # discriminative signal (the eval can flag/exclude snapshots that did not).

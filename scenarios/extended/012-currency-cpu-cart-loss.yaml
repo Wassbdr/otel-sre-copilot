@@ -1,0 +1,49 @@
+metadata:
+  scenario_id: currency-cart-multi-seed42
+  seed: 42
+  split: held-out
+  fault_duration_s: 300
+  window_extra_s: 60
+  snapshot_settle_s: 90
+  namespace: otel-demo
+
+faults:
+  - fault_service: currency
+    fault_type: cpu_stress
+    chaos_manifest:
+      apiVersion: chaos-mesh.org/v1alpha1
+      kind: StressChaos
+      metadata:
+        name: currency-cpu-stress-seed42
+        namespace: chaos-mesh
+      spec:
+        mode: all
+        selector:
+          namespaces: [otel-demo]
+          labelSelectors:
+            app.kubernetes.io/component: currency
+        duration: "300s"
+        stressors:
+          cpu:
+            workers: 2
+            load: 90
+  - fault_service: cart
+    fault_type: http_abort
+    chaos_manifest:
+      apiVersion: chaos-mesh.org/v1alpha1
+      kind: NetworkChaos
+      metadata:
+        name: cart-request-loss-seed42
+        namespace: chaos-mesh
+      spec:
+        action: loss
+        mode: all
+        selector:
+          namespaces: [otel-demo]
+          labelSelectors:
+            app.kubernetes.io/component: cart
+        duration: "300s"
+        direction: to
+        loss:
+          loss: "100"
+          correlation: "0"
