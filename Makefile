@@ -177,6 +177,8 @@ bench: check-python  ## Compare methods on snapshots and resume with the same BE
 		--split "$(BENCH_SPLIT)" $(if $(BENCH_METHODS),--methods $(BENCH_METHODS)) \
 		$(if $(BENCH_SNAPSHOT_SET_FROM),--snapshot-set-from "$(BENCH_SNAPSHOT_SET_FROM)") \
 		$(if $(BENCH_RECORDED_FROM),--recorded-from "$(BENCH_RECORDED_FROM)") \
+		$(if $(BENCH_MAX_SNAPSHOTS),--max-snapshots "$(BENCH_MAX_SNAPSHOTS)") \
+		$(if $(BENCH_MAX_REPEATS),--max-repeats "$(BENCH_MAX_REPEATS)") \
 		$(if $(BENCH_CHANGE),--change "$(BENCH_CHANGE)")
 
 help:

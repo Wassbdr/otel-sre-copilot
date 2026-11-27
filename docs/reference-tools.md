@@ -35,6 +35,10 @@ and adaptive limiter as the other benchmark methods. The standalone HolmesGPT
 CLI does not use that limiter. The scorer checks citations against successful
 replay queries and trace IDs, not against the model's account of its calls.
 
+For a first pass on four development snapshots, add `BENCH_MAX_SNAPSHOTS=4`
+and `BENCH_MAX_REPEATS=1`. Resume the full cohort with the same run ID and
+without those limits. The table keeps the full expected sample size.
+
 ## k8sgpt v0.4.41
 
 `k8sgpt analyze --kubeconfig /path/to/missing --filter Pod --output json`

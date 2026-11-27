@@ -143,3 +143,10 @@ def test_live_methods_interleave_for_each_snapshot_and_repeat(
         for method in ("agent", "react", "agent_no_prior", "holmes")
         if method != "holmes" or repeat == 0
     ]
+    observed.clear()
+    args.max_repeats = 1
+    assert not bench.run(args)
+    assert observed == [
+        (str(snapshot["path"]), method, 0) for snapshot in snapshots
+        for method in ("agent", "react", "agent_no_prior", "holmes")
+    ]

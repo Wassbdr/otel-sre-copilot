@@ -276,6 +276,9 @@ def run(args: argparse.Namespace) -> bool:
     max_snapshots = getattr(args, "max_snapshots", None)
     if max_snapshots is not None and max_snapshots < 1:
         raise ValueError("--max-snapshots must be at least one.")
+    max_repeats = getattr(args, "max_repeats", None)
+    if max_repeats is not None and not 1 <= max_repeats <= args.repeats:
+        raise ValueError("--max-repeats must be between one and --repeats.")
     if not args.run_id or Path(args.run_id).name != args.run_id or args.run_id in {".", ".."}:
         raise ValueError("Use a single directory name for BENCH_RUN_ID.")
     recorded_from = getattr(args, "recorded_from", None)
@@ -304,7 +307,7 @@ def run(args: argparse.Namespace) -> bool:
         return summary
 
     for snapshot in setup["snapshots"][:max_snapshots]:
-        for repeat in range(args.repeats):
+        for repeat in range(max_repeats or args.repeats):
             for method in methods_order:
                 if method == "holmes" and repeat:
                     continue
@@ -335,6 +338,7 @@ def main() -> None:
     parser.add_argument("--recorded-from", help="Re-score recorded agent traces without LLM calls.")
     parser.add_argument("--repeats", type=int, default=3)
     parser.add_argument("--max-snapshots", type=int, help="Pause after this many snapshots.")
+    parser.add_argument("--max-repeats", type=int, help="Run this many repeats before pausing.")
     parser.add_argument("--output-dir", type=Path, default=Path("benchmarks"))
     parser.add_argument("--change", default="Baseline")
     args = parser.parse_args()
@@ -343,7 +347,7 @@ def main() -> None:
         complete = run(args)
     except ValueError as error:
         parser.error(str(error))
-    if not complete and args.max_snapshots is None:
+    if not complete and args.max_snapshots is None and args.max_repeats is None:
         parser.exit(1, "Incomplete benchmark. Repeat with the same BENCH_RUN_ID.\n")
 
 
