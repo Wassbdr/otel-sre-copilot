@@ -11,6 +11,11 @@ import os
 from dataclasses import dataclass
 from typing import Any
 
+import structlog
+
+log = structlog.get_logger(__name__)
+_waited_s = [0.0]
+
 DEFAULT_BASE_URL = "https://integrate.api.nvidia.com/v1"
 # meta/llama-3.1-70b-instruct was retired from the NIM catalog on 2026-08-26 (HTTP 410).
 DEFAULT_MODEL = "nvidia/nemotron-3.5-lightning-30b-a3b"
@@ -78,3 +83,33 @@ def make_chat_model(max_tokens: int, json_mode: bool = False) -> Any:  # noqa: A
         max_retries=int(os.getenv("LLM_MAX_RETRIES", "8")),
         **kwargs,
     )
+
+
+def invoke_with_backoff(model: Any, messages: Any) -> Any:
+    """`model.invoke` that waits out provider rate limits (HTTP 429).
+
+    The OpenAI client's own retries back off for seconds; free tiers such as NIM need minutes.
+    """
+    import time
+
+    attempts = int(os.getenv("LLM_RATE_LIMIT_RETRIES", "6"))
+    for i in range(attempts + 1):
+        try:
+            return model.invoke(messages)
+        except Exception as e:
+            if "RateLimit" not in type(e).__name__ or i == attempts:
+                raise
+            wait_s = min(15 * 2**i, 120)
+            log.warning("llm_rate_limited", attempt=i + 1, wait_s=wait_s)
+            time.sleep(wait_s)
+            _waited_s[0] += wait_s
+    raise AssertionError("unreachable")
+
+
+
+def rate_limit_wait_s(reset: bool = False) -> float:
+    """Seconds spent waiting on 429s since the last reset (excluded from reported latency)."""
+    waited = _waited_s[0]
+    if reset:
+        _waited_s[0] = 0.0
+    return waited

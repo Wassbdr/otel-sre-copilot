@@ -21,7 +21,12 @@ from langgraph.graph import END, START, StateGraph
 from pydantic import ValidationError
 
 from src.agent.context_manager import ContextBudget
-from src.agent.llm import llm_settings, make_chat_model
+from src.agent.llm import (
+    invoke_with_backoff,
+    llm_settings,
+    make_chat_model,
+    rate_limit_wait_s,
+)
 from src.agent.prompts import build_system_prompt
 from src.agent.schemas import InvestigationReport
 from src.agent.tools import make_tools
@@ -125,7 +130,7 @@ def build_graph(ds: DataSource, on_event: EventCallback | None = None) -> Any:  
 
         # Call LLM
         t0 = time.perf_counter()
-        response: AIMessage = llm_with_tools.invoke(messages)
+        response: AIMessage = invoke_with_backoff(llm_with_tools, messages)
         token_usage = _add_usage(state.get("token_usage", {}), response)
         emit({"type": "llm", "iteration": iteration,
               "elapsed_s": round(time.perf_counter() - t0, 2),
@@ -198,7 +203,7 @@ def build_graph(ds: DataSource, on_event: EventCallback | None = None) -> Any:  
         report_llm = make_chat_model(max_tokens=int(os.getenv("LLM_REPORT_MAX_TOKENS", "4096")),
                                      json_mode=True)
 
-        response: AIMessage = report_llm.invoke(messages_for_report)
+        response: AIMessage = invoke_with_backoff(report_llm, messages_for_report)
         inv_end = datetime.now(UTC).isoformat()
 
         # Parse and validate
@@ -212,7 +217,7 @@ def build_graph(ds: DataSource, on_event: EventCallback | None = None) -> Any:  
               "completion_tokens": completion_tokens, "llm_calls": usage_totals["llm_calls"]})
         latency_s = (
             datetime.fromisoformat(inv_end) - datetime.fromisoformat(inv_start)
-        ).total_seconds()
+        ).total_seconds() - rate_limit_wait_s()
 
         try:
             raw = json.loads(_strip_json_fences(content))

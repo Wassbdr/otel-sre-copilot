@@ -84,6 +84,9 @@ def run_scenario(
         incident_end_ts=end,
         affected_namespace=namespace,
     )
+    from src.agent.llm import rate_limit_wait_s
+
+    rate_limit_wait_s(reset=True)
     state["_investigation_start_ts"] = datetime.now(UTC).isoformat()
 
     result = graph.invoke(state, {"recursion_limit": 100})
@@ -104,6 +107,7 @@ def run_scenario(
     per_scenario["repeat"] = repeat
     per_scenario["llm_calls"] = result.get("token_usage", {}).get("llm_calls", 0)
     per_scenario["tool_calls"] = len(tool_calls_log)
+    per_scenario["rate_limit_wait_s"] = rate_limit_wait_s()
 
     # Save run artifacts
     if run_id:
