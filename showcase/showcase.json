@@ -90,6 +90,6 @@
     "LLM runs are not bit-reproducible even at temperature 0; variance is reported over 3 runs per snapshot.",
     "Single model measured (NIM free tier); no multi-fault or cascading incidents."
   ],
-  "role": "TODO",
+  "role": "Sole developer.",
   "repo": "https://github.com/Wassbdr/otel-sre-copilot"
 }

@@ -14,6 +14,8 @@ def pct(v: float | None) -> str:
 
 
 def main(summary_path: Path) -> None:
+    output_path = ROOT / "showcase" / "showcase.json"
+    previous = json.loads(output_path.read_text()) if output_path.exists() else {}
     s = json.loads(summary_path.read_text())
     m = s["methods"]
     run_id = s["run_id"]
@@ -89,10 +91,10 @@ def main(summary_path: Path) -> None:
             "3 runs per snapshot.",
             "Single model measured (NIM free tier); no multi-fault or cascading incidents.",
         ],
-        "role": "TODO",
+        "role": previous.get("role", "Sole developer."),
         "repo": "https://github.com/Wassbdr/otel-sre-copilot",
     }
-    (ROOT / "showcase" / "showcase.json").write_text(json.dumps(doc, indent=2) + "\n")
+    output_path.write_text(json.dumps(doc, indent=2) + "\n")
 
 
 if __name__ == "__main__":
