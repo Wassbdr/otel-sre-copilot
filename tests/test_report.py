@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 from eval.report import headline_table, scenario_table, summarize
@@ -52,3 +53,18 @@ def test_tables_render() -> None:
     s = summarize(RAW)
     assert "75% ± 25" in headline_table(s)
     assert "`checkout-pod_crash` (checkout, pod_crash)" in scenario_table(s)
+
+
+def test_update_readme_rewrites_only_the_marked_block(tmp_path: Path) -> None:
+    from eval.report import README_END, README_START, update_readme
+
+    readme = tmp_path / "README.md"
+    readme.write_text(f"intro\n{README_START}\nold\n{README_END}\noutro\n")
+    summary = {"methods": {"random": {"accuracy_at_1": 0.1, "accuracy_at_3": 0.2,
+                                      "grounding_score": None, "latency_s": 0.0,
+                                      "tokens_per_investigation": 0}},
+               "setup": "setup.", "run_id": "r1"}
+    assert update_readme(summary, readme)
+    text = readme.read_text()
+    assert text.startswith("intro\n") and text.endswith("outro\n")
+    assert "old" not in text and "| Random | 10% | 20% |" in text

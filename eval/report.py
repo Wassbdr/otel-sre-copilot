@@ -264,17 +264,40 @@ def write_report(run_id: str, results_dir: Path = _RESULTS_DIR) -> dict[str, Any
     return summary
 
 
+README_START = "<!-- benchmark:start (written by python -m eval.report) -->"
+README_END = "<!-- benchmark:end -->"
+
+
+def update_readme(summary: dict[str, Any], readme: Path) -> bool:
+    """Replace the README block between the benchmark markers with the measured table."""
+    if not readme.exists():
+        return False
+    text = readme.read_text()
+    if README_START not in text or README_END not in text:
+        return False
+    head, rest = text.split(README_START, 1)
+    _, tail = rest.split(README_END, 1)
+    block = (f"{README_START}\n{headline_table(summary)}\n\n<sub>{summary['setup']} "
+             f"Run `{summary['run_id']}`, full tables in "
+             f"[results/benchmark.md](results/benchmark.md).</sub>\n{README_END}")
+    readme.write_text(head + block + tail)
+    return True
+
+
 def main() -> None:
     import structlog
 
     parser = argparse.ArgumentParser(description="Write results/ from a benchmark run")
     parser.add_argument("--run-id", default="", help="Run ID (default: latest)")
     parser.add_argument("--results-dir", type=Path, default=_RESULTS_DIR)
+    parser.add_argument("--readme", type=Path, default=Path("README.md"),
+                        help="README whose benchmark block is rewritten (if it has the markers)")
     args = parser.parse_args()
     run_id = args.run_id or latest_run_id()
     if not run_id:
         raise SystemExit("No run in artifacts/. Run: make benchmark")
     summary = write_report(run_id, args.results_dir)
+    update_readme(summary, args.readme)
     structlog.get_logger().info("report_written", run_id=run_id, results_dir=str(args.results_dir),
                                 n_snapshots=summary["n_snapshots"])
 
