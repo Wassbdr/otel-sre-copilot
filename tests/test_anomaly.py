@@ -53,6 +53,7 @@ def test_full_agent_prior_and_no_prior_ablation() -> None:
     assert full.keys() - ablation == {"rank_incident_anomalies"}
     result = full["rank_incident_anomalies"].invoke({"start": start, "end": end})
     assert "composite:" in result and "n-sigma:" in result
+    assert "incident peak" in result and ", peak=" in result
     assert _evidence_ids("rank_incident_anomalies", result)
     assert not _evidence_ids("query_loki", result)
 

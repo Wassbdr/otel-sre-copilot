@@ -258,8 +258,10 @@ def make_tools(
             for heading, ranking in (("composite", composite), ("n-sigma", nsigma))
         ]
         candidates = list(dict.fromkeys(w.service for w, _ in composite[:2] + nsigma[:2]))[:3]
-        sections.append("Candidate signals (before and during):\n" + "\n".join(
+        sections.append("Candidate signals (baseline mean -> incident mean, incident peak):\n"
+                        + "\n".join(
             f"metric:{w.signal}:{w.service} {w.baseline_mean:.3g} -> {w.incident_mean:.3g}"
+            f", peak={max(w.incident):.3g}"
             for service in candidates for w in windows if w.service == service
         ))
         latency = [w for w in windows if w.signal == "p99_latency_ms" and w.ratio is not None]

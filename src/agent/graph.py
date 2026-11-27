@@ -101,10 +101,15 @@ def build_graph(
         ds, budget, improved=improved, prior=improved and prior,
         services=services, namespace=namespace,
     )
+    seeded_tools = []
+    if improved and not react:
+        if prior:
+            seeded_tools.append("rank_incident_anomalies")
+        seeded_tools.append("rank_request_rate_drops")
 
     settings = llm_settings()
     llm = make_chat_model(max_tokens=4096, concise=improved)
-    llm_with_tools = llm.bind_tools(tools)
+    llm_with_tools = llm.bind_tools([t for t in tools if t.name not in seeded_tools])
     tool_map = {t.name: t for t in tools}
 
     def run_tool(
@@ -160,12 +165,9 @@ def build_graph(
                 f"Window: {state['incident_start_ts']} → {state['incident_end_ts']}. "
                 "Identify the root cause and produce an InvestigationReport JSON."
             )
-            if improved and not react:
+            if seeded_tools:
                 window = {"start": state["incident_start_ts"], "end": state["incident_end_ts"]}
-                seeds = ["rank_request_rate_drops"]
-                if prior:
-                    seeds.insert(0, "rank_incident_anomalies")
-                initial = [run_tool(name, window, 0, tool_calls_log) for name in seeds]
+                initial = [run_tool(name, window, 0, tool_calls_log) for name in seeded_tools]
                 human_content += "\nRecorded tool observations:\n" + "\n\n".join(initial)
             messages = [system_msg, HumanMessage(content=human_content)]
 

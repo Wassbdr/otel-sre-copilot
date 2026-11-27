@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from pathlib import Path
 
 import httpx
 import pytest
 from langchain_core.messages import AIMessage
+from langchain_core.tools import BaseTool
 
 from src.agent.fake_llm import FakeChatModel
 from src.agent.llm import DEFAULT_BASE_URL, DEFAULT_MODEL, llm_settings, make_chat_model
@@ -161,6 +163,14 @@ def test_fast_graph_limits_llm_calls_and_seeds_only_available_prior(
     from src.datasources.replay import ReplayDataSource
 
     monkeypatch.setenv("LLM_PROVIDER", "fake")
+    bound_tools = []
+    bind_tools = FakeChatModel.bind_tools
+
+    def capture_tools(model: FakeChatModel, tools: Sequence[BaseTool]) -> FakeChatModel:
+        bound_tools.extend(tool.name for tool in tools)
+        return bind_tools(model, tools)
+
+    monkeypatch.setattr(FakeChatModel, "bind_tools", capture_tools)
     graph = build_graph(ReplayDataSource(FIXTURE), improved=not react, react=react, prior=prior)
     state = initial_state("fixture", "2024-01-15T14:00:00Z", "2024-01-15T14:10:00Z", "otel-demo")
     result = graph.invoke(state)
@@ -168,6 +178,8 @@ def test_fast_graph_limits_llm_calls_and_seeds_only_available_prior(
     assert [call["tool_name"] for call in result["tool_calls_log"]] == [
         *seeded, "get_service_topology", "query_prometheus_range",
     ]
+    assert "query_prometheus_range" in bound_tools
+    assert set(seeded).isdisjoint(bound_tools)
 
 
 def test_nim_429_slows_subsequent_requests_until_recovery(
