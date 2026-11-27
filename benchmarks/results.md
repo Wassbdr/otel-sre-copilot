@@ -109,12 +109,21 @@ Top-k is the fraction of true causes covered within the first k predictions. Str
 
 | Method | Runs | Top-1 | Top-3 | Service top-1 | Service top-3 | Grounding | Citations | Calls/run | Tokens/run | Seconds/run | USD/run |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| SRE-Copilot | 4/42 | 50.0% | 100.0% | 100.0% | 100.0% | 100.0% | 13 | 3.0 | 9,476 | 9.648 | 0.0000 |
-| ReAct without grounding verifier in the agent | 4/42 | 0.0% | 0.0% | 0.0% | 0.0% | 100.0% | 4 | 3.0 | 12,768 | 28.015 | 0.0000 |
-| SRE-Copilot without anomaly prior | 4/42 | 0.0% | 0.0% | 0.0% | 50.0% | 95.2% | 21 | 3.0 | 8,898 | 12.416 | 0.0000 |
-| HolmesGPT 0.48.0 (1 run per snapshot) | 4/14 | 0.0% | 0.0% | 0.0% | 0.0% | n/a | 0 | 1.0 | 15,809 | 10.346 | 0.0000 |
-| RCAEval N-Sigma (metrics) | 4/42 | 50.0% | 50.0% | 50.0% | 50.0% | n/a | 0 | n/a | 0 | 0.006 | 0.0000 |
-| Composite z-score | 4/42 | 50.0% | 50.0% | 75.0% | 100.0% | n/a | 0 | n/a | 0 | 0.004 | 0.0000 |
-| RCAEval BARO (metrics) | 4/42 | 25.0% | 25.0% | 50.0% | 50.0% | n/a | 0 | n/a | 0 | 0.009 | 0.0000 |
-| Error-rate z-score | 4/42 | 0.0% | 0.0% | 0.0% | 75.0% | n/a | 0 | n/a | 0 | 0.001 | 0.0000 |
-| Random | 4/42 | 0.0% | 0.0% | 0.0% | 50.0% | n/a | 0 | n/a | 0 | 0.000 | 0.0000 |
+| SRE-Copilot | 42/42 | 69.0% | 100.0% | 83.3% | 100.0% | 100.0% | 142 | 3.0 | 9,903 | 12.950 | 0.0000 |
+| ReAct without grounding verifier in the agent | 42/42 | 0.0% | 0.0% | 2.4% | 7.1% | 95.7% | 47 | 3.0 | 12,812 | 38.747 | 0.0000 |
+| SRE-Copilot without anomaly prior | 42/42 | 9.5% | 19.0% | 33.3% | 69.0% | 90.9% | 230 | 3.1 | 9,186 | 10.761 | 0.0000 |
+| HolmesGPT 0.48.0 (1 run per snapshot) | 14/14 | 0.0% | 0.0% | 0.0% | 0.0% | n/a | 0 | 1.0 | 15,832 | 11.508 | 0.0000 |
+| RCAEval N-Sigma (metrics) | 42/42 | 35.7% | 50.0% | 42.9% | 64.3% | n/a | 0 | n/a | 0 | 0.006 | 0.0000 |
+| Composite z-score | 42/42 | 28.6% | 50.0% | 42.9% | 92.9% | n/a | 0 | n/a | 0 | 0.004 | 0.0000 |
+| RCAEval BARO (metrics) | 42/42 | 28.6% | 42.9% | 42.9% | 57.1% | n/a | 0 | n/a | 0 | 0.008 | 0.0000 |
+| Error-rate z-score | 42/42 | 0.0% | 14.3% | 14.3% | 50.0% | n/a | 0 | n/a | 0 | 0.001 | 0.0000 |
+| Random | 42/42 | 4.8% | 4.8% | 9.5% | 23.8% | n/a | 0 | n/a | 0 | 0.000 | 0.0000 |
+
+Change against round2-iteration-0:
+
+| Change | Metric | Delta |
+| --- | --- | ---: |
+| Iteration 6: protect leading corroborated candidates; second attempt on symptom displacement | Top-1 | +33.3 pp |
+| Iteration 6: protect leading corroborated candidates; second attempt on symptom displacement | Top-3 | +52.4 pp |
+| Iteration 6: protect leading corroborated candidates; second attempt on symptom displacement | Service top-1 | +21.4 pp |
+| Iteration 6: protect leading corroborated candidates; second attempt on symptom displacement | Service top-3 | +14.3 pp |
