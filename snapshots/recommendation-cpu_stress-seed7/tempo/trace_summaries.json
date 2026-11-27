@@ -1,0 +1,72 @@
+[
+  {
+    "traceID": "19eb3628c898eb9af8a936041583130c",
+    "rootServiceName": "frontend-proxy",
+    "rootTraceName": "ingress",
+    "startTimeUnixNano": "1795766409737657000",
+    "durationMs": 3111
+  },
+  {
+    "traceID": "87fe27d2e3c397252d429b2046949a6",
+    "rootServiceName": "load-generator",
+    "rootTraceName": "browser_change_currency",
+    "startTimeUnixNano": "1795766402791044929",
+    "durationMs": 2223
+  },
+  {
+    "traceID": "bd3a7e5a29315dce294cabc8022c308b",
+    "rootServiceName": "frontend-proxy",
+    "rootTraceName": "ingress",
+    "startTimeUnixNano": "1795766399318951000",
+    "durationMs": 3301
+  },
+  {
+    "traceID": "cdf99dca650bca8372cb56b818222605",
+    "rootServiceName": "frontend-proxy",
+    "rootTraceName": "ingress",
+    "startTimeUnixNano": "1795766395707838000",
+    "durationMs": 3371
+  },
+  {
+    "traceID": "f4a50dd541facc44050d8a6c0a3c62bf",
+    "rootServiceName": "load-generator",
+    "rootTraceName": "browser_add_to_cart",
+    "startTimeUnixNano": "1795766395581174491",
+    "durationMs": 2479
+  },
+  {
+    "traceID": "28e9973ebcdce2e8845d9b1682a021d6",
+    "rootServiceName": "frontend-proxy",
+    "rootTraceName": "ingress",
+    "startTimeUnixNano": "1795766687067943000",
+    "durationMs": 3385
+  },
+  {
+    "traceID": "64c7b1cdd34b74a567577be2db51cb5d",
+    "rootServiceName": "load-generator",
+    "rootTraceName": "browser_change_currency",
+    "startTimeUnixNano": "1795766683498738716",
+    "durationMs": 2239
+  },
+  {
+    "traceID": "6b79e722e518e6ee577743453d9be9c6",
+    "rootServiceName": "load-generator",
+    "rootTraceName": "browser_add_to_cart",
+    "startTimeUnixNano": "1795766679896426468",
+    "durationMs": 2444
+  },
+  {
+    "traceID": "f75785540c179a823f0adc7038473e8e",
+    "rootServiceName": "frontend-proxy",
+    "rootTraceName": "ingress",
+    "startTimeUnixNano": "1795766676328701000",
+    "durationMs": 3414
+  },
+  {
+    "traceID": "f3cc3222a214aac19c41197b2cffa1c4",
+    "rootServiceName": "load-generator",
+    "rootTraceName": "browser_add_to_cart",
+    "startTimeUnixNano": "1795766676188016885",
+    "durationMs": 2531
+  }
+]
