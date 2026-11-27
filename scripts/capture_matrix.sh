@@ -10,7 +10,7 @@ SEEDS=("$@")
 SCENARIO_DIR="${SCENARIO_DIR:-scenarios/mvp}"
 BASELINE_MIN="${BASELINE_MIN:-8}"
 COOLDOWN_S="${COOLDOWN_S:-360}"
-PYTHON="${PYTHON:-python3}"
+PYTHON="${PYTHON:-$([[ -x .venv/bin/python ]] && echo .venv/bin/python || echo python3)}"
 
 first=1
 for seed in "${SEEDS[@]}"; do
