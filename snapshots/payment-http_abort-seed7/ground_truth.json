@@ -1,0 +1,13 @@
+{
+  "scenario_id": "payment-http_abort-seed7",
+  "fault_service": "payment",
+  "fault_type": "http_abort",
+  "chaos_kind": "NetworkChaos",
+  "injection_ts": "2026-11-27T08:50:13.066961+00:00",
+  "recovery_ts": "2026-11-27T08:55:13.274197+00:00",
+  "seed": 7,
+  "chaos_manifest_hash": "e00b34b947f26e70",
+  "window_start": "2026-11-27T08:49:13.066961+00:00",
+  "window_end": "2026-11-27T08:56:13.274197+00:00",
+  "validation_passed": true
+}
