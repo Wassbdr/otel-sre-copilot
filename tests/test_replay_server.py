@@ -24,6 +24,10 @@ def test_replay_http_uses_recorded_queries_and_limits_windows() -> None:
                     "query": query, "start": ts, "end": ts,
                 })
                 assert clipped.json()["data"]["result"][0]["values"] == [points[0]]
+                label_quotes = client.get("/api/v1/query_range", params={
+                    "query": query.replace('"', "'"), "start": ts, "end": ts,
+                })
+                assert label_quotes.json() == clipped.json()
                 missing = client.get("/api/v1/query_range", params={"query": "never_recorded"})
                 assert missing.status_code == 422
 
@@ -41,6 +45,11 @@ def test_replay_http_uses_recorded_queries_and_limits_windows() -> None:
 
                 traces = client.get("/api/search", params={"q": "{}", "limit": 1}).json()["traces"]
                 assert len(traces) == 1
+                tagged = client.get("/api/search", params={
+                    "tags": 'service.name="frontend-proxy"',
+                    "minDuration": "0s", "maxDuration": "86400s", "limit": 1,
+                })
+                assert tagged.json()["traces"][0]["rootServiceName"] == "frontend-proxy"
                 probe = client.get("/api/search", params={
                     "q": '{ .service.name = "test-endpoint" }',
                 })

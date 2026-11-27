@@ -3,7 +3,8 @@
 The replay server exposes captured Prometheus range and instant queries, Loki
 range queries and labels, and Tempo search and trace lookup on loopback. It does
 not implement PromQL, LogQL or general TraceQL. Prometheus and Loki expressions
-must match the queries in the snapshot. Time filters apply to stored samples.
+must match the queries in the snapshot. Prometheus accepts either single or
+double quotes around simple label values. Time filters apply to stored samples.
 Tempo supports unfiltered search or an exact root-service filter. Full span
 payloads are available only for traces that were downloaded during capture.
 
@@ -36,7 +37,8 @@ CLI does not use that limiter. The scorer checks citations against successful
 replay queries and trace IDs, not against the model's account of its calls.
 
 HolmesGPT has ten model steps. Its first model request with tools requires a
-tool call; later steps can choose to stop. The prompt supplies the snapshot
+tool call; later steps can choose to stop. If it reaches the final step without
+a diagnosis, that request has no tools and uses JSON output mode. The prompt supplies the snapshot
 timestamps, recorded service names, and query templates. Tool discovery and
 readiness checks do not count as incident evidence. Successful replay calls
 record their time parameters in the trace.

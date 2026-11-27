@@ -26,6 +26,18 @@ def _seconds(value: str) -> float:
         return datetime.fromisoformat(value).timestamp()
 
 
+def _promql_quote_style(query: str) -> str:
+    return re.sub(r"((?:!?=~?|!~)\s*)'([^'\"\\]*)'", r'\1"\2"', query)
+
+
+def _duration_ms(value: str) -> float:
+    if value.endswith("ms"):
+        return float(value[:-2])
+    if value.endswith("s"):
+        return float(value[:-1]) * 1000
+    return float(value)
+
+
 class SnapshotHTTP:
     def __init__(self, snapshot: Path) -> None:
         self.snapshot = snapshot
@@ -49,6 +61,7 @@ class SnapshotHTTP:
                 raise ValueError("Specify a captured PromQL query.")
             if instant and query == "up":
                 return _result("vector", [])
+            query = _promql_quote_style(query)
             entries = [e for e in self.prom if e["query"] == query and e["type"] == kind]
             if not entries:
                 return _unsupported("PromQL expression was not recorded for this endpoint.")
@@ -119,10 +132,11 @@ class SnapshotHTTP:
                     return _unsupported("Only the service.name Tempo tag filter is supported.")
                 service = match[1]
             start, end = _seconds(param("start", "0")), _seconds(param("end", "inf"))
-            minimum = float(param("minDuration", "0").removesuffix("ms"))
+            minimum = _duration_ms(param("minDuration", "0"))
+            maximum = _duration_ms(param("maxDuration", "inf"))
             limit = max(0, min(1000, int(param("limit", "20"))))
             matches = [
-                t for t in self.traces if int(t.get("durationMs", 0)) >= minimum
+                t for t in self.traces if minimum <= int(t.get("durationMs", 0)) <= maximum
                 and start <= int(t["startTimeUnixNano"]) / 1e9 <= end
                 and (not service or t.get("rootServiceName") == service)
             ]

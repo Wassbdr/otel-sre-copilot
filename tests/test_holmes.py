@@ -41,6 +41,10 @@ def test_holmes_scores_via_paced_cache_and_observed_replay_queries(
                     "Authorization": f"Bearer {env['NVIDIA_NIM_API_KEY']}",
                 })
                 assert response.json() == {"id": "completion"}
+            final = client.post("/v1/chat/completions", json={
+                "model": model, "messages": [{"role": "tool", "content": "incident observations"}],
+            }, headers={"Authorization": f"Bearer {env['NVIDIA_NIM_API_KEY']}"})
+            assert final.json() == {"id": "completion"}
             response = client.get("/api/v1/query_range", params={"query": query})
             assert response.json()["data"]["result"]
         report = {"root_causes": [{
@@ -56,9 +60,12 @@ def test_holmes_scores_via_paced_cache_and_observed_replay_queries(
 
     monkeypatch.setattr(holmes.subprocess, "run", worker)
     result = holmes.run_holmes(SNAPSHOT, tmp_path / "trace.json", "benchmark")
-    assert upstream.call_count == result["cached_requests"] == 1
+    assert upstream.call_count == 2 and result["cached_requests"] == 1
     assert upstream.call_args.args[0].headers["Authorization"] == "Bearer example-upstream"
-    assert json.loads(upstream.call_args.args[0].content)["tool_choice"] == "required"
+    first, final = [json.loads(call.args[0].content) for call in upstream.call_args_list]
+    assert first["tool_choice"] == "required"
+    assert final["response_format"] == {"type": "json_object"}
+    assert "Do not request tools" in final["messages"][-1]["content"]
     assert result["accuracy_at_1"] == result["verified_evidence_count"] == 1
 
 

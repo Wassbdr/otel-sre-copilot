@@ -120,10 +120,18 @@ def run_holmes(snapshot: Path, trace_path: Path, scope: str) -> dict[str, Any]:
                 payload = json.loads(body)
                 if payload.get("model") != settings.model or payload.get("stream"):
                     return 400, b'{"error":{"message":"Use the benchmark model without streaming"}}'
-                if payload.get("tools") and not any(
-                    message.get("role") == "tool" for message in payload.get("messages", [])
-                ):
-                    payload["tool_choice"] = "required"
+                messages = payload.get("messages", [])
+                if payload.get("tools"):
+                    if not any(message.get("role") == "tool" for message in messages):
+                        payload["tool_choice"] = "required"
+                else:
+                    payload["response_format"] = {"type": "json_object"}
+                    messages.append({
+                        "role": "user", "content": (
+                            "The tool budget is exhausted. Return the requested JSON report "
+                            "using the observations already collected. Do not request tools."
+                        ),
+                    })
                 response = ctx.copy().run(
                     client.post, f"{DEFAULT_BASE_URL}/chat/completions", json=payload,
                     headers={"Authorization": f"Bearer {settings.api_key}"},
