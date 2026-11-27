@@ -13,6 +13,8 @@ from typing import Any
 
 import structlog
 
+from src.agent.llm_cache import CachedChatClient, request_stats
+
 log = structlog.get_logger(__name__)
 _waited_s = [0.0]
 
@@ -73,13 +75,15 @@ def make_chat_model(max_tokens: int, json_mode: bool = False) -> Any:  # noqa: A
     kwargs: dict[str, Any] = {}
     if json_mode:
         kwargs["model_kwargs"] = {"response_format": {"type": "json_object"}}
+    timeout = float(os.getenv("LLM_TIMEOUT_S", "90"))
     return ChatOpenAI(
         model=settings.model,
         api_key=settings.api_key,  # type: ignore[arg-type]
         base_url=settings.base_url,
         temperature=0,
         max_tokens=max_tokens,  # type: ignore[call-arg]
-        timeout=float(os.getenv("LLM_TIMEOUT_S", "90")),
+        timeout=timeout,
+        http_client=CachedChatClient(timeout=timeout),
         max_retries=int(os.getenv("LLM_MAX_RETRIES", "2")),
         **kwargs,
     )
@@ -99,6 +103,8 @@ def invoke_with_backoff(model: Any, messages: Any) -> Any:
     attempts = int(os.getenv("LLM_RATE_LIMIT_RETRIES", "6"))
     for i in range(attempts + 1):
         t0 = time.monotonic()
+        stats = request_stats()
+        prior_wait = stats.wait_s if stats is not None else 0.0
         try:
             return model.invoke(messages)
         except Exception as e:
@@ -108,12 +114,22 @@ def invoke_with_backoff(model: Any, messages: Any) -> Any:
             log.warning("llm_transient_error", error=type(e).__name__, attempt=i + 1,
                         wait_s=wait_s)
             time.sleep(wait_s)
-            _waited_s[0] += time.monotonic() - t0
+            waited = time.monotonic() - t0
+            if stats is not None:
+                stats.wait_s = prior_wait + waited
+            else:
+                _waited_s[0] += waited
     raise AssertionError("unreachable")
 
 
 def rate_limit_wait_s(reset: bool = False) -> float:
     """Seconds lost to provider errors since the last reset (excluded from reported latency)."""
+    stats = request_stats()
+    if stats is not None:
+        waited = stats.wait_s
+        if reset:
+            stats.wait_s = 0.0
+        return waited
     waited = _waited_s[0]
     if reset:
         _waited_s[0] = 0.0

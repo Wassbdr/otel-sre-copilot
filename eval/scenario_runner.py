@@ -84,12 +84,12 @@ def run_scenario(
         incident_end_ts=end,
         affected_namespace=namespace,
     )
-    from src.agent.llm import rate_limit_wait_s
+    from src.agent.llm_cache import request_scope
 
-    rate_limit_wait_s(reset=True)
     state["_investigation_start_ts"] = datetime.now(UTC).isoformat()
 
-    result = graph.invoke(state, {"recursion_limit": 100})
+    with request_scope(json.dumps([run_id, mode, scenario_id, repeat])) as stats:
+        result = graph.invoke(state, {"recursion_limit": 100})
     report: InvestigationReport = result["final_report"]
     tool_calls_log: list[dict[str, Any]] = result.get("tool_calls_log", [])
 
@@ -107,7 +107,8 @@ def run_scenario(
     per_scenario["repeat"] = repeat
     per_scenario["llm_calls"] = result.get("token_usage", {}).get("llm_calls", 0)
     per_scenario["tool_calls"] = len(tool_calls_log)
-    per_scenario["rate_limit_wait_s"] = rate_limit_wait_s()
+    per_scenario["rate_limit_wait_s"] = stats.wait_s
+    per_scenario["cached_requests"] = stats.cached_requests
 
     # Save run artifacts
     if run_id:

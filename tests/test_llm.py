@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import httpx
 import pytest
 from langchain_core.messages import AIMessage
 
@@ -64,6 +65,56 @@ def test_fake_model_replays_scripted_responses() -> None:
     assert fake.bind_tools([]) is fake
     assert [fake.invoke([]).content, fake.invoke([]).content] == ["a", "b"]
     assert len(fake.calls) == 2
+
+
+def test_nim_requests_are_cached_and_paced_across_clients(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path,
+) -> None:
+    from src.agent import llm, llm_cache
+
+    monkeypatch.setenv("NIM_API_KEY", "example")
+    monkeypatch.setenv("LLM_CACHE_DIR", str(tmp_path))
+    monkeypatch.setattr(llm_cache, "_last_request_at", None)
+    now = 40.0
+
+    def advance(seconds: float) -> None:
+        nonlocal now
+        now += seconds
+
+    monkeypatch.setattr(llm_cache.time, "monotonic", lambda: now)
+    monkeypatch.setattr(llm_cache.time, "sleep", advance)
+    calls: list[float] = []
+
+    def reply(request: httpx.Request) -> httpx.Response:
+        calls.append(now)
+        return httpx.Response(200, json={
+            "id": f"answer-{len(calls)}",
+            "object": "chat.completion",
+            "model": llm.DEFAULT_MODEL,
+            "created": 1,
+            "choices": [{
+                "index": 0,
+                "message": {"role": "assistant", "content": str(len(calls))},
+                "finish_reason": "stop",
+            }],
+        })
+
+    monkeypatch.setattr(
+        llm, "CachedChatClient",
+        lambda **kwargs: llm_cache.CachedChatClient(
+            **kwargs, transport=httpx.MockTransport(reply),
+        ),
+    )
+    with llm_cache.request_scope("bench:0") as stats:
+        assert llm.make_chat_model(10).invoke("hello").content == "1"
+        assert llm.make_chat_model(10).invoke("hello").content == "1"
+        assert llm.make_chat_model(11, json_mode=True).invoke("hello").content == "2"
+        assert stats.cached_requests == 1
+        assert stats.wait_s == 4.0
+    with llm_cache.request_scope("bench:1"):
+        assert llm.make_chat_model(10).invoke("hello").content == "3"
+    assert calls == [40.0, 44.0, 48.0]
+    assert len(list(tmp_path.glob("*.json"))) == 3
 
 
 def test_graph_runs_end_to_end_with_fake_llm(monkeypatch: pytest.MonkeyPatch) -> None:

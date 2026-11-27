@@ -27,6 +27,7 @@ from src.agent.llm import (
     make_chat_model,
     rate_limit_wait_s,
 )
+from src.agent.llm_cache import request_stats
 from src.agent.prompts import build_system_prompt
 from src.agent.schemas import InvestigationReport
 from src.agent.tools import make_tools
@@ -266,6 +267,9 @@ def build_graph(ds: DataSource, on_event: EventCallback | None = None) -> Any:  
         latency_s = (
             datetime.fromisoformat(inv_end) - datetime.fromisoformat(inv_start)
         ).total_seconds() - rate_limit_wait_s()
+        stats = request_stats()
+        if stats is not None:
+            latency_s += stats.replay_adjustment_s
         totals: dict[str, Any] = {
             "investigation_end_ts": inv_end,
             "latency_s": latency_s,
