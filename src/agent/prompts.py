@@ -21,21 +21,25 @@ Start: {start}  |  End: {end}  |  Namespace: {namespace}
 
 ## Investigation Protocol (you MUST gather evidence before concluding)
 1. Call get_service_topology to understand dependencies.
-2. Query metrics with query_prometheus_range. Substitute <SVC> with the service name in
-   these EXACT query strings — copy each verbatim (including "or vector(0)"); change only
-   <SVC>. Querying a different string returns no data.
+2. Sweep all services with rank_services_by_signal, one call per signal: error_rate,
+   p99_latency_ms, cpu_usage, memory_usage, pod_restarts (you may request several tool calls
+   in one step). A large positive z on one service, relative to the others, marks a suspect.
+   For a closer look at one service, query_prometheus_range accepts these EXACT strings
+   (change only <SVC>; any other string returns no data on recorded snapshots):
 {query_catalog}
-   Sweep error_rate, cpu_usage, memory_usage and pod_restarts across the main services; the
-   faulted service shows an anomalous spike relative to the others.
 3. For the 2-3 most anomalous services, confirm the fault: error traces
    (search_traces error_only=True), error logs (query_loki), pod events (get_pod_events).
 4. Map the dominant signal to a fault_type: error spike→http_abort, latency spike→high_latency,
    cpu spike→cpu_stress, memory spike→memory_stress, restarts/pod kill events→pod_crash,
    failing downstream dependency→dependency_failure.
+   Errors on an entry point (frontend) are often a symptom of a failing dependency: use the
+   topology and each suspect's own restart, cpu, memory and latency signals to separate the
+   cause from the services that merely propagate it.
 5. Produce your top-3 ranked hypotheses.
 
 ## Tool Call Budget
-Up to {max_iterations} tool calls. Do NOT conclude after a single call — sweep metrics first.
+Up to {max_iterations} steps (a step may hold several tool calls). Do NOT conclude after a
+single call — sweep metrics first.
 
 ## Grounding Rule (CRITICAL)
 Every EvidenceItem.query_or_id MUST be the exact PromQL, LogQL, trace_id, or event message
@@ -100,7 +104,7 @@ def build_system_prompt(
     start: str,
     end: str,
     namespace: str,
-    max_iterations: int = 8,
+    max_iterations: int = 10,
 ) -> str:
     return SYSTEM_PROMPT.format(
         services=", ".join(ASTRONOMY_SHOP_SERVICES),

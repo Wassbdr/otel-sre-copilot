@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 
 log = structlog.get_logger()
 
-MAX_TOOL_ITERATIONS = int(os.getenv("MAX_TOOL_ITERATIONS", "8"))
+MAX_TOOL_ITERATIONS = int(os.getenv("MAX_TOOL_ITERATIONS", "10"))
 
 
 def make_tools(ds: DataSource, budget: ContextBudget) -> list:  # type: ignore[type-arg]
@@ -202,7 +202,43 @@ def make_tools(ds: DataSource, budget: ContextBudget) -> list:  # type: ignore[t
             log.warning("tool_error", tool="get_service_topology", error=str(e))
             return f"[ERROR: {e}]"
 
+    @tool
+    def rank_services_by_signal(signal: str, start: str, end: str) -> str:
+        """Rank ALL services by how anomalous one signal is in the window (Z-score).
+
+        Compares the window mean of the signal with the 30 minutes before `start`, for every
+        service at once. Use it first to find suspects, then confirm with traces, logs and
+        pod events. Cite the PromQL printed next to a service as metric evidence.
+
+        Args:
+            signal: one of error_rate, request_rate, p99_latency_ms, cpu_usage,
+                memory_usage, pod_restarts.
+            start: ISO-8601 UTC start of the incident window.
+            end: ISO-8601 UTC end of the incident window.
+        """
+        from src.anomaly import rank_services
+
+        try:
+            scores = rank_services(ds, signal, start, end)
+            lines = [f"{signal}: window mean vs 30-min baseline, most anomalous first"]
+            for sc in scores:
+                if not sc.has_data:
+                    lines.append(f"  {sc.service:<16} no data")
+                    continue
+                z = f"{sc.z:+8.2f}" if abs(sc.z) < 1000 else (
+                    "   >1000" if sc.z > 0 else "  <-1000")
+                lines.append(
+                    f"  {sc.service:<16} z={z}  window={sc.window_mean:.4g}  "
+                    f"baseline={sc.baseline_mean:.4g}±{sc.baseline_std:.2g}  "
+                    f"promql: {sc.query}"
+                )
+            return budget.consume("\n".join(lines))
+        except Exception as e:
+            log.warning("tool_error", tool="rank_services_by_signal", error=str(e))
+            return f"[ERROR: {e}]"
+
     return [
+        rank_services_by_signal,
         query_prometheus_range,
         query_prometheus_instant,
         search_traces,

@@ -25,6 +25,7 @@ from src.agent.llm import llm_settings, make_chat_model
 from src.agent.prompts import build_system_prompt
 from src.agent.schemas import InvestigationReport
 from src.agent.tools import make_tools
+from src.datasources.live import ASTRONOMY_SHOP_SERVICES
 from src.utils.cost import estimate_cost
 
 if TYPE_CHECKING:
@@ -50,7 +51,7 @@ class GraphState(TypedDict, total=False):
 
 log = structlog.get_logger()
 
-MAX_TOOL_ITERATIONS = int(os.getenv("MAX_TOOL_ITERATIONS", "8"))
+MAX_TOOL_ITERATIONS = int(os.getenv("MAX_TOOL_ITERATIONS", "10"))
 # Force at least this many tool iterations, and at least one Prometheus metric sweep, before
 # the agent is allowed to write a report. Without this the LLM tends to call get_service_topology
 # once and then fabricate evidence (grounding_score=0.0).
@@ -273,7 +274,7 @@ def build_graph(ds: DataSource, on_event: EventCallback | None = None) -> Any:  
         # MIN_TOOL_ITERATIONS iterations AND at least one Prometheus metric query.
         metric_calls = sum(
             1 for e in state.get("tool_calls_log", [])
-            if str(e.get("tool_name", "")).startswith("query_prometheus")
+            if str(e.get("tool_name", "")).startswith(("query_prometheus", "rank_services"))
         )
         if iteration < MIN_TOOL_ITERATIONS or metric_calls < 1:
             log.info("forcing_more_investigation", iteration=iteration, metric_calls=metric_calls)
@@ -310,6 +311,11 @@ def _extract_query_or_id(tool_name: str, args: dict) -> list[str]:  # type: igno
     """Extract the query strings or IDs from tool args for grounding verification."""
     if tool_name in ("query_prometheus_range", "query_prometheus_instant"):
         return [args.get("query", "")]
+    if tool_name == "rank_services_by_signal":
+        from src.telemetry_queries import METRIC_QUERIES
+
+        tpl = METRIC_QUERIES.get(str(args.get("signal", "")))
+        return [tpl.format(svc=svc) for svc in ASTRONOMY_SHOP_SERVICES] if tpl else []
     if tool_name in ("search_traces",):
         return [f"search_traces:{args.get('service_name','')}" ]
     if tool_name == "get_trace":

@@ -75,6 +75,6 @@ def make_chat_model(max_tokens: int, json_mode: bool = False) -> Any:  # noqa: A
         temperature=0,
         max_tokens=max_tokens,  # type: ignore[call-arg]
         timeout=float(os.getenv("LLM_TIMEOUT_S", "180")),
-        max_retries=int(os.getenv("LLM_MAX_RETRIES", "3")),
+        max_retries=int(os.getenv("LLM_MAX_RETRIES", "8")),
         **kwargs,
     )
