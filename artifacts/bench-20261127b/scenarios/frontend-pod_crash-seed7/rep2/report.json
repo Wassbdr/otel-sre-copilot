@@ -1,0 +1,65 @@
+{
+  "incident_id": "INC-71f3a540",
+  "investigation_start_ts": "2026-11-27T10:37:40.440510+00:00",
+  "investigation_end_ts": "2026-11-27T10:39:26.104672+00:00",
+  "root_causes": [
+    {
+      "rank": 1,
+      "service": "frontend",
+      "fault_type": "pod_crash",
+      "description": "Frontend pods experiencing extreme restart activity with z>1000, indicating repeated pod crashes during the incident window. This is the most anomalous signal across all swept metrics.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "max(increase(kube_pod_container_status_restarts_total{namespace=\"otel-demo\",pod=~\"frontend-.*\"}[5m])) or vector(0)",
+          "observed_value": "z>1000 at 2026-11-27T08:37:06.580002+00:00 to 2026-11-27T08:44:06.781548+00:00",
+          "expected_baseline": "z≈0 (pre-incident baseline=0±0)"
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "service": "flagd",
+      "fault_type": "high_latency",
+      "description": "flagd service showing severe p99 latency spike of 10000ms (z=+7.59), far above the pre-incident baseline of ~4023ms. This latency anomaly is the second most dominant signal in the investigation window.",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"flagd\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "p99=10000.000ms at 2026-11-27T08:37:06.580002+00:00 to 2026-11-27T08:44:06.781548+00:00",
+          "expected_baseline": "p99≈4023ms (pre-incident baseline=4023±1.8e+02)"
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "service": "accounting",
+      "fault_type": "memory_stress",
+      "description": "accounting service showing significant memory increase with z=+22.27, the third most anomalous signal. Memory usage window mean of 2.778e+08 bytes significantly exceeds the pre-incident baseline of 2.769e+08±3.8e+04 bytes.",
+      "confidence": 0.75,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"accounting-.*\"})",
+          "observed_value": "z=+22.27 at 2026-11-27T08:37:06.580002+00:00 to 2026-11-27T08:44:06.781548+00:00",
+          "expected_baseline": "z≈0 (pre-incident baseline=2.769e+08±3.8e+04)"
+        }
+      ]
+    }
+  ],
+  "remediation_steps": [
+    "Investigate and restart frontend pods to stabilize the entry point service",
+    "Review flagd service configuration and recent deployments causing 10s latency",
+    "Check accounting pod resource limits and potential memory leak sources"
+  ],
+  "fault_type_classification": "pod_crash",
+  "grounding_score": 1.0,
+  "latency_s": 56.70627511900145,
+  "cost_usd": 0.0,
+  "total_prompt_tokens": 76917,
+  "total_completion_tokens": 9754,
+  "llm_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "agent_version": "0.2.0"
+}

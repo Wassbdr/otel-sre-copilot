@@ -1,0 +1,54 @@
+{
+  "incident_id": "INC-82b3c4c1",
+  "investigation_start_ts": "2026-11-27T10:16:23.849643+00:00",
+  "investigation_end_ts": "2026-11-27T10:18:08.505412+00:00",
+  "root_causes": [
+    {
+      "rank": 1,
+      "service": "cart",
+      "fault_type": "pod_crash",
+      "description": "Cart service experiencing pod crashes due to extreme memory pressure (z=+370.57), causing restarts (z>1000), which elevates latency (p99=78.268ms, z=+37.33) and CPU usage (z=+33.36), ultimately impacting frontend availability through dependency chain.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "max(increase(kube_pod_container_status_restarts_total{namespace=\"otel-demo\",pod=~\"cart-.*\"}[5m])) or vector(0)",
+          "observed_value": "z>1000 window=0.6667 baseline=0±0",
+          "expected_baseline": "z<0.1 (pre-incident stable restarts)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"cart-.*\"})",
+          "observed_value": "z=+370.57 window=1.258e+08 baseline=1.108e+08±4e+04",
+          "expected_baseline": "z<0.1 (pre-incident stable memory)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"cart-.*\"}[2m]))",
+          "observed_value": "z=+33.36 window=0.02439 baseline=0.006394±0.00054",
+          "expected_baseline": "z<0.1 (pre-incident stable CPU)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"cart\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "p99=78.268ms mean=13.764 p50=4.155 p95=76.317 max=78.755",
+          "expected_baseline": "p99<10ms (pre-incident baseline)"
+        }
+      ]
+    }
+  ],
+  "remediation_steps": [
+    "Investigate cart pod logs for OOM killer events or memory allocation failures",
+    "Increase cart pod memory limits or optimize cart service memory footprint",
+    "Restart cart deployment pods to recover from crash loop",
+    "Monitor cart metrics post-restart to confirm stability"
+  ],
+  "fault_type_classification": "pod_crash",
+  "grounding_score": 1.0,
+  "latency_s": 40.20394863500319,
+  "cost_usd": 0.0,
+  "total_prompt_tokens": 77152,
+  "total_completion_tokens": 5020,
+  "llm_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "agent_version": "0.2.0"
+}

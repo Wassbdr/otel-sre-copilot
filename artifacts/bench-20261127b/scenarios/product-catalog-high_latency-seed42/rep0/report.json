@@ -1,0 +1,15 @@
+{
+  "incident_id": "INC-79a55d3b",
+  "investigation_start_ts": "2026-11-27T08:25:46.234844+00:00",
+  "investigation_end_ts": "2026-11-27T08:29:34.140552+00:00",
+  "root_causes": [],
+  "remediation_steps": [],
+  "fault_type_classification": "unknown",
+  "grounding_score": 1.0,
+  "latency_s": 118.5861558319973,
+  "cost_usd": 0.0,
+  "total_prompt_tokens": 85563,
+  "total_completion_tokens": 18737,
+  "llm_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "agent_version": "0.2.0"
+}

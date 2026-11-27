@@ -1,0 +1,65 @@
+{
+  "incident_id": "INC-b81d8097",
+  "investigation_start_ts": "2026-11-27T09:16:25.069097+00:00",
+  "investigation_end_ts": "2026-11-27T09:25:43.598608+00:00",
+  "root_causes": [
+    {
+      "rank": 1,
+      "service": "currency",
+      "fault_type": "high_latency",
+      "description": "Currency service experiencing extreme latency spike (p99_latency_ms z>1000 vs baseline 1.98±2.5e-16), propagating through checkout dependency to frontend. Despite extreme z-score, frontend shows no latency anomaly (z=-0.36), suggesting contained impact or graceful degradation.",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"currency\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "p99 latency z>1000 vs baseline z=1.98±2.5e-16",
+          "expected_baseline": "p99_latency_ms < ~2ms (pre-incident baseline 1.98±2.5e-16)"
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "service": "recommendation",
+      "fault_type": "cpu_stress",
+      "description": "Recommendation service experiencing extreme CPU utilization (z>1000 vs baseline 0.02978±0.0017) and severe memory pressure (z+122.56 vs baseline 9.912e+07±5.2e+04). Both anomalies exceed incident window duration of ~7 minutes, suggesting resource exhaustion or runaway process.",
+      "confidence": 0.75,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"recommendation-.*\"}[2m]))",
+          "observed_value": "cpu_usage z>1000 vs baseline 0.02978±0.0017",
+          "expected_baseline": "cpu_usage < baseline threshold (p99 last 24h)"
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "service": "payment",
+      "fault_type": "memory_stress",
+      "description": "Payment service experiencing memory pressure (z+10.97 vs baseline 1.311e+08±1.7e+05) with secondary latency impact (p99_latency_ms z+7.88). Memory anomaly sustained over incident window, potentially causing OOM risk or garbage collection pauses affecting downstream checkout dependency.",
+      "confidence": 0.65,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"payment-.*\"})",
+          "observed_value": "memory_usage z+10.97 vs baseline 1.311e+08±1.7e+05",
+          "expected_baseline": "memory_usage < baseline threshold (p99 last 24h)"
+        }
+      ]
+    }
+  ],
+  "remediation_steps": [
+    "Investigate currency service dependency - check for downstream database latency or circuit breaker issues causing p99_latency_ms spike",
+    "Restart recommendation pods to relieve extreme CPU and memory pressure, investigate for memory leaks or runaway computation",
+    "Add memory monitoring and alerts for payment service to prevent OOM incidents, review recent deployment changes"
+  ],
+  "fault_type_classification": "high_latency",
+  "grounding_score": 1.0,
+  "latency_s": 52.44162482300021,
+  "cost_usd": 0.0,
+  "total_prompt_tokens": 76944,
+  "total_completion_tokens": 9085,
+  "llm_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "agent_version": "0.2.0"
+}

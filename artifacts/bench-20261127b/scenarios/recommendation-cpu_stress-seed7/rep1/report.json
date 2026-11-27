@@ -1,0 +1,60 @@
+{
+  "incident_id": "INC-6016e59b",
+  "investigation_start_ts": "2026-11-27T10:10:56.375422+00:00",
+  "investigation_end_ts": "2026-11-27T10:14:34.608655+00:00",
+  "root_causes": [
+    {
+      "rank": 1,
+      "service": "recommendation",
+      "fault_type": "cpu_stress",
+      "description": "recommendation service experiencing extreme CPU usage (z=+810.80) and memory usage (z=>1000) above pre-incident baselines, indicating resource exhaustion as the root cause. No error traces, logs, or pod restarts observed, confirming the fault is resource stress rather than crashes or dependency failures.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"recommendation-.*\"}[2m]))",
+          "observed_value": "cpu_usage z=+810.80 at window mean",
+          "expected_baseline": "cpu_usage baseline z~0 (pre-incident)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"recommendation-.*\"})",
+          "observed_value": "memory_usage z=>1000 at window mean",
+          "expected_baseline": "memory_usage baseline z~0 (pre-incident)"
+        },
+        {
+          "signal_type": "trace",
+          "query_or_id": "search_traces error_only=True service_name=recommendation",
+          "observed_value": "[no traces found]",
+          "expected_baseline": "error traces should be absent if fault is resource stress only"
+        },
+        {
+          "signal_type": "log",
+          "query_or_id": "query_loki logql={service_name=\"recommendation\"} |= \"error\"",
+          "observed_value": "[no logs found]",
+          "expected_baseline": "no error logs expected for resource-stress-only fault"
+        },
+        {
+          "signal_type": "k8s_event",
+          "query_or_id": "get_pod_events namespace=otel-demo pod_name_prefix=recommendation",
+          "observed_value": "[no K8s events found]",
+          "expected_baseline": "no pod restarts or kill events for resource-stress-only fault"
+        }
+      ]
+    }
+  ],
+  "remediation_steps": [
+    "Increase CPU and memory limits for the recommendation Deployment/StatefulSet",
+    "Investigate for memory leaks or runaway processes in the recommendation service code",
+    "Add horizontal scaling (HPA) for recommendation if load increases",
+    "Monitor resource quotas and limit ranges in the otel-demo namespace"
+  ],
+  "fault_type_classification": "cpu_stress",
+  "grounding_score": 0.8,
+  "latency_s": 75.70492094099708,
+  "cost_usd": 0.0,
+  "total_prompt_tokens": 75836,
+  "total_completion_tokens": 6104,
+  "llm_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "agent_version": "0.2.0"
+}

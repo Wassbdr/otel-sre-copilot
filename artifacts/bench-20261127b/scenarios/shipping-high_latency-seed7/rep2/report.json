@@ -1,0 +1,84 @@
+{
+  "incident_id": "INC-d4278e77",
+  "investigation_start_ts": "2026-11-27T10:29:18.265514+00:00",
+  "investigation_end_ts": "2026-11-27T10:32:03.699642+00:00",
+  "root_causes": [
+    {
+      "rank": 1,
+      "service": "frontend",
+      "fault_type": "memory_stress",
+      "description": "Frontend service experiencing significant memory pressure (z+5.90, the highest resource anomaly across all services) causing error rate spike (z>1000) and latency degradation (p99_latency_ms z+388.16), likely due to resource contention or memory leak; this frontend-specific memory anomaly differentiates it from shipping which has error/latency anomalies but not comparable memory pressure",
+      "confidence": 0.88,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"frontend-.*\")}",
+          "observed_value": "z+5.90 at 08:25:03 to 08:32:03",
+          "expected_baseline": "memory_usage < 3.225e+08 (p99 last 24h)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(rate(calls_total{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+          "observed_value": "error_rate z>1000 at 08:25:03 to 08:32:03",
+          "expected_baseline": "error_rate < 0.01 (p99 last 24h)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "p99_latency_ms z+388.16 at 08:25:03 to 08:32:03",
+          "expected_baseline": "p99_latency_ms < 36.11 (p99 last 24h)"
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "service": "shipping",
+      "fault_type": "dependency_failure",
+      "description": "Shipping service shows error_rate z>1000 and p99_latency_ms z>1000 anomalies; frontend depends on shipping per topology, so shipping failures may propagate errors and latency to frontend, though shipping lacks the frontend-specific memory anomaly (z+1.18 vs z+5.90)",
+      "confidence": 0.65,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(rate(calls_total{service_name=\"shipping\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+          "observed_value": "error_rate z>1000 at 08:25:03 to 08:32:03",
+          "expected_baseline": "error_rate < 0.01 (p99 last 24h)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"shipping\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "p99_latency_ms z>1000 at 08:25:03 to 08:32:03",
+          "expected_baseline": "p99_latency_ms < 5.67 (p99 last 24h)"
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "service": "checkout",
+      "fault_type": "high_latency",
+      "description": "Checkout service shows p99_latency_ms z+541.33 anomaly; frontend depends on checkout per topology, so checkout latency degradation propagates downstream contributing to frontend's latency symptoms, though checkout shows no comparable error_rate or memory anomalies",
+      "confidence": 0.52,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"checkout\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "p99_latency_ms z+541.33 at 08:25:03 to 08:32:03",
+          "expected_baseline": "p99_latency_ms < 36.33 (p99 last 24h)"
+        }
+      ]
+    }
+  ],
+  "remediation_steps": [
+    "Investigate frontend pod for memory leak or resource exhaustion; check OOM events and GC logs",
+    "Increase frontend memory limit or optimize application memory footprint",
+    "Review shipping service for error sources and latency bottlenecks",
+    "Monitor frontend memory and error rates post-intervention for resolution"
+  ],
+  "fault_type_classification": "memory_stress",
+  "grounding_score": 1.0,
+  "latency_s": 56.18140395200237,
+  "cost_usd": 0.0,
+  "total_prompt_tokens": 75779,
+  "total_completion_tokens": 9286,
+  "llm_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "agent_version": "0.2.0"
+}

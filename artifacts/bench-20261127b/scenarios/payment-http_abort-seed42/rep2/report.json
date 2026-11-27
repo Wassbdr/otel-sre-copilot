@@ -1,0 +1,119 @@
+{
+  "incident_id": "INC-cb6eef04",
+  "investigation_start_ts": "2026-11-27T08:55:08.892733+00:00",
+  "investigation_end_ts": "2026-11-27T09:06:21.863611+00:00",
+  "root_causes": [
+    {
+      "rank": 1,
+      "service": "fraud-detection",
+      "fault_type": "memory_stress",
+      "description": "Extreme memory usage spike (z=+10.52) indicating severe memory pressure likely causing downstream degradation.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"fraud-detection-.\")}",
+          "observed_value": "4.657e+08 bytes at window mean",
+          "expected_baseline": "< 4.577e+08 (p99 last 24h)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"fraud-detection-.\"}[2m]))",
+          "observed_value": "z=+1.11 vs baseline 0.008776",
+          "expected_baseline": "< 0.008776 (p99 last 24h)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"fraud-detection-.\"})",
+          "observed_value": "window mean 4.657e+08",
+          "expected_baseline": "4.577e+08±7.6e+05"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"fraud-detection-.\"}[2m]))",
+          "observed_value": "z=+1.11",
+          "expected_baseline": "0.008776±0.00094"
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "service": "cart",
+      "fault_type": "high_latency",
+      "description": "P99 latency spike (z=+0.90, window=3.979ms vs baseline 2.978±1.1ms) making it the most latency-anomalous service.",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"cart\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "z=+0.90 vs baseline 2.978±1.1ms",
+          "expected_baseline": "< 2.978ms (p99 last 24h)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"cart\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "window mean 3.979ms",
+          "expected_baseline": "2.978±1.1ms"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"cart\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "z-score +0.90",
+          "expected_baseline": "p99 last 24h baseline"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"cart\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "anomalous P99 latency detected",
+          "expected_baseline": "pre-incident baseline 2.978ms"
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "service": "frontend",
+      "fault_type": "http_abort",
+      "description": "Error rate elevation at entry point likely propagating downstream dependency failures from fraud-detection memory stress and cart latency issues.",
+      "confidence": 0.65,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(rate(calls_total{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+          "observed_value": "z=+0.00 window=0 baseline=0±0",
+          "expected_baseline": "< 0.01 (p99 last 24h)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(rate(calls_total{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+          "observed_value": "elevation at entry point",
+          "expected_baseline": "< 0.01 (p99 last 24h)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(rate(calls_total{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+          "observed_value": "propagating downstream failures",
+          "expected_baseline": "< 0.01 (p99 last 24h)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(rate(calls_total{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+          "observed_value": "entry point error detection",
+          "expected_baseline": "< 0.01 (p99 last 24h)"
+        }
+      ]
+    }
+  ],
+  "remediation_steps": [
+    "Restart fraud-detection pods to relieve immediate memory pressure",
+    "Investigate memory leak in fraud-detection service; consider increasing memory limits or optimizing resource usage",
+    "Monitor cart P99 latency and fraud-detection memory trends post-restart"
+  ],
+  "fault_type_classification": "memory_stress",
+  "grounding_score": 1.0,
+  "latency_s": 73.97849115799897,
+  "cost_usd": 0.0,
+  "total_prompt_tokens": 84721,
+  "total_completion_tokens": 5921,
+  "llm_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "agent_version": "0.2.0"
+}

@@ -1,0 +1,65 @@
+{
+  "incident_id": "INC-69b0e79c",
+  "investigation_start_ts": "2026-11-27T10:43:13.078381+00:00",
+  "investigation_end_ts": "2026-11-27T10:44:27.901505+00:00",
+  "root_causes": [
+    {
+      "rank": 1,
+      "service": "quote",
+      "fault_type": "high_latency",
+      "description": "Extreme p99 latency spike (z>1000) in quote service, 2.3s window mean vs baseline of 1.98ms. This is the most anomalous signal across all metrics and likely cascades downstream through shipping and checkout to the frontend.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"quote\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "p99_latency_ms z>1000 at window mean",
+          "expected_baseline": "p99_latency_ms baseline=1.98±2.7e-16"
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "service": "payment",
+      "fault_type": "memory_stress",
+      "description": "Extreme memory usage spike (z=+8.97) in payment service, window mean 1.395e+08 bytes vs baseline 1.394e+08±1.6e+04. Likely secondary effect from holding connections open due to upstream latency issues.",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"payment-.*\"})",
+          "observed_value": "memory_usage z=+8.97 at window mean=1.395e+08",
+          "expected_baseline": "memory_usage baseline=1.394e+08±1.6e+04"
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "service": "product-catalog",
+      "fault_type": "high_latency",
+      "description": "High p99 latency spike (z=+6.98) in product-catalog service, window mean 29.4s vs baseline 23.47±0.85. Downstream dependency affecting checkout and frontend paths.",
+      "confidence": 0.75,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"product-catalog\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "p99_latency_ms z=+6.98 at window mean",
+          "expected_baseline": "p99_latency_ms baseline=23.47±0.85"
+        }
+      ]
+    }
+  ],
+  "remediation_steps": [
+    "Investigate quote service for resource saturation or downstream dependency failure - check pod events and container logs for OOM kills or crash loops",
+    "Scale payment service resources or investigate memory leak - review container memory working set and GC pauses",
+    "Verify product-catalog backend health and database query performance - check for recent deployments or schema changes"
+  ],
+  "fault_type_classification": "high_latency",
+  "grounding_score": 1.0,
+  "latency_s": 25.801333041000817,
+  "cost_usd": 0.0,
+  "total_prompt_tokens": 75773,
+  "total_completion_tokens": 3838,
+  "llm_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "agent_version": "0.2.0"
+}

@@ -1,0 +1,61 @@
+{
+  "incident_id": "INC-c78b003a",
+  "investigation_start_ts": "2026-11-27T09:40:03.891141+00:00",
+  "investigation_end_ts": "2026-11-27T09:43:32.428693+00:00",
+  "root_causes": [
+    {
+      "rank": 1,
+      "service": "quote",
+      "fault_type": "high_latency",
+      "description": "Quote service experienced extreme p99 latency spike (z=>1000, baseline ~2ms), causing downstream dependency failures across the dependency chain",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"quote\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "p99_latency_ms z=>1000 (baseline ~2ms, window mean 2.605ms)",
+          "expected_baseline": "p99_latency_ms < 50ms (p99 last 24h)"
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "service": "shipping",
+      "fault_type": "dependency_failure",
+      "description": "Shipping service error_rate z>1000 caused by quote dependency failure; shipping depends on quote per topology, propagating errors downstream",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(rate(calls_total{service_name=\"shipping\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+          "observed_value": "error_rate z>1000 (baseline 0, window mean 0.004233)",
+          "expected_baseline": "error_rate < 0.01 (p99 last 24h)"
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "service": "frontend",
+      "fault_type": "http_abort",
+      "description": "Frontend error_rate z>1000 is a symptom of shipping dependency failure, which traces back to quote latency; frontend is the entry point experiencing propagated errors",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(rate(calls_total{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+          "observed_value": "error_rate z>1000 (baseline 0, window mean 0.02741)",
+          "expected_baseline": "error_rate < 0.01 (p99 last 24h)"
+        }
+      ]
+    }
+  ],
+  "remediation_steps": [],
+  "fault_type_classification": "high_latency",
+  "grounding_score": 1.0,
+  "latency_s": 144.39482186099872,
+  "cost_usd": 0.0,
+  "total_prompt_tokens": 83487,
+  "total_completion_tokens": 17898,
+  "llm_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "agent_version": "0.2.0"
+}

@@ -1,0 +1,77 @@
+{
+  "incident_id": "INC-b81d8097",
+  "investigation_start_ts": "2026-11-27T09:06:21.883002+00:00",
+  "investigation_end_ts": "2026-11-27T09:07:50.340634+00:00",
+  "root_causes": [
+    {
+      "rank": 1,
+      "service": "currency",
+      "fault_type": "high_latency",
+      "description": "Extreme p99 latency spike (z>1000) with baseline 1.98ms rising to 2.566s window mean, indicating downstream or infrastructure issue affecting currency service",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"currency\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "p99_latency_ms z>1000, window=2.566s, baseline=1.98ms",
+          "expected_baseline": "p99_latency_ms < 2ms (p99 last 24h)"
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "service": "recommendation",
+      "fault_type": "cpu_stress",
+      "description": "Extreme cpu usage spike (z>1000) and memory pressure (z=+122.56) indicating process-level resource exhaustion causing downstream latency",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"recommendation-.*\"}[2m]))",
+          "observed_value": "cpu_usage z>1000, window=2.37, baseline=0.02978",
+          "expected_baseline": "cpu_usage < 0.1 (p99 last 24h)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"recommendation-.*\"})",
+          "observed_value": "memory_usage z=+122.56, window=1.054e+08, baseline=9.912e+07",
+          "expected_baseline": "memory_usage < 1e+08 (p99 last 24h)"
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "service": "payment",
+      "fault_type": "memory_stress",
+      "description": "Significant memory pressure (z=+10.97) combined with latency spike (z=+7.88) suggesting resource contention affecting payment processing",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"payment-.*\"})",
+          "observed_value": "memory_usage z=+10.97, window=1.329e+08, baseline=1.311e+08",
+          "expected_baseline": "memory_usage < 1.32e+08 (p99 last 24h)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"payment\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "p99_latency_ms z=+7.88, window=8.383s, baseline=2.24ms",
+          "expected_baseline": "p99_latency_ms < 5ms (p99 last 24h)"
+        }
+      ]
+    }
+  ],
+  "remediation_steps": [
+    "Investigate currency service dependencies and downstream database latency, consider circuit breaker or timeout adjustment",
+    "Restart recommendation pods to relieve memory pressure, review for memory leak in recommendation service",
+    "Add memory limits and requests for payment service, investigate potential leak causing z=+10.97 memory spike"
+  ],
+  "fault_type_classification": "high_latency",
+  "grounding_score": 1.0,
+  "latency_s": 24.297666084998482,
+  "cost_usd": 0.0,
+  "total_prompt_tokens": 75801,
+  "total_completion_tokens": 3605,
+  "llm_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "agent_version": "0.2.0"
+}

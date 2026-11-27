@@ -1,0 +1,52 @@
+{
+  "incident_id": "INC-82b3c4c1",
+  "investigation_start_ts": "2026-11-27T10:18:08.526015+00:00",
+  "investigation_end_ts": "2026-11-27T10:20:11.958175+00:00",
+  "root_causes": [
+    {
+      "rank": 1,
+      "service": "cart",
+      "fault_type": "pod_crash",
+      "description": "Cart service experienced massive resource exhaustion with z-score >1000 on pod_restarts, z=+33.36 on cpu_usage, z=+370.57 on memory_usage, and z=+37.33 on p99_latency_ms, indicating container restarts due to OOM or resource limits",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "max(increase(kube_pod_container_status_restarts_total{namespace=\"otel-demo\",pod=~\"cart-.*\"}[5m])) or vector(0)",
+          "observed_value": "z > 1000, window=0.6667, baseline=0±0",
+          "expected_baseline": "z < 3 (normal variation)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"cart-.*\"}[2m]))",
+          "observed_value": "z=+33.36, window=0.02439, baseline=0.006394±0.00054",
+          "expected_baseline": "z < 3 (normal variation)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"cart-.*\"})",
+          "observed_value": "z=+370.57, window=1.258e+08, baseline=1.108e+08±4e+04",
+          "expected_baseline": "z < 3 (normal variation)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"cart\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "p99=78.268ms, mean=13.764ms, anomaly window detected",
+          "expected_baseline": "p99 < 30ms (normal baseline)"
+        }
+      ]
+    }
+  ],
+  "remediation_steps": [
+    "Investigate cart container OOM kills and increase memory limits or optimize cart resource usage",
+    "Review cart deployment resource requests/limits and adjust to prevent future restarts"
+  ],
+  "fault_type_classification": "pod_crash",
+  "grounding_score": 1.0,
+  "latency_s": 26.57917308899748,
+  "cost_usd": 0.0,
+  "total_prompt_tokens": 76409,
+  "total_completion_tokens": 3907,
+  "llm_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "agent_version": "0.2.0"
+}

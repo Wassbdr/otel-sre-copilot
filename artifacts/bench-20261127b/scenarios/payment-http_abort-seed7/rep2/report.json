@@ -1,0 +1,71 @@
+{
+  "incident_id": "INC-69b0e79c",
+  "investigation_start_ts": "2026-11-27T10:44:27.922708+00:00",
+  "investigation_end_ts": "2026-11-27T10:47:21.960760+00:00",
+  "root_causes": [
+    {
+      "rank": 1,
+      "service": "payment",
+      "fault_type": "memory_stress",
+      "description": "Payment service exhibits extreme memory usage anomaly (z=+8.97) with window mean 1.395e+08 bytes against baseline 1.394e+08±1.6e+04, indicating severe memory pressure likely to cause OOM kills.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"payment-.*\")",
+          "observed_value": "window mean=1.395e+08 bytes",
+          "expected_baseline": "baseline=1.394e+08±1.6e+04 (pre-incident)"
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "service": "quote",
+      "fault_type": "high_latency",
+      "description": "Quote service shows extreme p99_latency_ms z-score (>1000) vs baseline 1.98±2.9e-16, though actual p99=4.516ms suggests baseline artifact requiring further investigation.",
+      "confidence": 0.65,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"quote\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "p99=4.516ms, mean=2.307ms",
+          "expected_baseline": "baseline=1.98±2.9e-16"
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "service": "shipping",
+      "fault_type": "dependency_failure",
+      "description": "Shipping service shows elevated p99_latency_ms z=+4.85 and cpu_usage z=+1.24, consistent with downstream dependency pressure from quote service latency anomalies.",
+      "confidence": 0.75,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"shipping\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "p99 latency z=+4.85",
+          "expected_baseline": "baseline=7.736±1.8"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"shipping-.*\"}[2m]))",
+          "observed_value": "cpu_usage z=+1.24",
+          "expected_baseline": "baseline=0.001808±0.0005"
+        }
+      ]
+    }
+  ],
+  "remediation_steps": [
+    "Investigate payment service memory pressure - check for memory leaks, increase resource limits, or review recent deployments that may have introduced excessive memory consumption",
+    "Monitor quote service latency - if p99 persists above baseline, investigate quote product-catalog dependency and potential slow queries or catalog indexing issues",
+    "Review shipping service dependencies - check quote service health and implement circuit breakers if downstream latency continues"
+  ],
+  "fault_type_classification": "memory_stress",
+  "grounding_score": 1.0,
+  "latency_s": 48.53599357900396,
+  "cost_usd": 0.0,
+  "total_prompt_tokens": 86086,
+  "total_completion_tokens": 6393,
+  "llm_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "agent_version": "0.2.0"
+}

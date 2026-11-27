@@ -1,0 +1,394 @@
+{
+  "scenario_id": "payment-http_abort-seed42",
+  "snapshot_dir": "snapshots/payment-http_abort-seed42",
+  "window": {
+    "start": "2026-11-27T06:22:32.616937+00:00",
+    "end": "2026-11-27T06:29:32.821515+00:00",
+    "namespace": "otel-demo"
+  },
+  "model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "ground_truth": {
+    "scenario_id": "payment-http_abort-seed42",
+    "fault_service": "payment",
+    "fault_type": "http_abort",
+    "chaos_kind": "NetworkChaos",
+    "injection_ts": "2026-11-27T06:23:32.616937+00:00",
+    "recovery_ts": "2026-11-27T06:28:32.821515+00:00",
+    "seed": 42,
+    "chaos_manifest_hash": "ac98e178aa69849d",
+    "window_start": "2026-11-27T06:22:32.616937+00:00",
+    "window_end": "2026-11-27T06:29:32.821515+00:00",
+    "validation_passed": true
+  },
+  "tool_calls": [
+    {
+      "iteration": 0,
+      "tool_name": "get_service_topology",
+      "args": {
+        "namespace": "otel-demo"
+      },
+      "result_preview": "Service topology:\n  accounting \u2192 checkout\n  ad \u2192 (leaf)\n  cart \u2192 (leaf)\n  checkout \u2192 cart, payment, email, shipping, currency, product-catalog\n  currency \u2192 (leaf)\n  email \u2192 (leaf)\n  flagd \u2192 (leaf)\n  f",
+      "query_or_id": [],
+      "result_excerpt": "Service topology:\n  accounting \u2192 checkout\n  ad \u2192 (leaf)\n  cart \u2192 (leaf)\n  checkout \u2192 cart, payment, email, shipping, currency, product-catalog\n  currency \u2192 (leaf)\n  email \u2192 (leaf)\n  flagd \u2192 (leaf)\n  fraud-detection \u2192 checkout\n  frontend \u2192 checkout, recommendation, product-catalog, cart, shipping, currency, ad\n  load-generator \u2192 frontend\n  payment \u2192 (leaf)\n  product-catalog \u2192 (leaf)\n  quote \u2192 (leaf)\n  recommendation \u2192 product-catalog\n  shipping \u2192 quote",
+      "elapsed_s": 0.001
+    },
+    {
+      "iteration": 1,
+      "tool_name": "rank_services_by_signal",
+      "args": {
+        "signal": "error_rate",
+        "start": "2026-11-27T06:22:32.616937+00:00",
+        "end": "2026-11-27T06:29:32.821515+00:00"
+      },
+      "result_preview": "error_rate: window mean vs pre-incident baseline, most anomalous first\n  flagd            z=   +0.02  window=0.01175  baseline=0.0115\u00b10.013  promql: sum(rate(calls_total{service_name=\"flagd\",span_kind",
+      "query_or_id": [
+        "sum(rate(calls_total{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+        "sum(rate(calls_total{service_name=\"cart\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+        "sum(rate(calls_total{service_name=\"checkout\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+        "sum(rate(calls_total{service_name=\"currency\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+        "sum(rate(calls_total{service_name=\"email\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+        "sum(rate(calls_total{service_name=\"payment\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+        "sum(rate(calls_total{service_name=\"product-catalog\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+        "sum(rate(calls_total{service_name=\"recommendation\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+        "sum(rate(calls_total{service_name=\"shipping\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+        "sum(rate(calls_total{service_name=\"ad\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+        "sum(rate(calls_total{service_name=\"load-generator\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+        "sum(rate(calls_total{service_name=\"accounting\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+        "sum(rate(calls_total{service_name=\"fraud-detection\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+        "sum(rate(calls_total{service_name=\"quote\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+        "sum(rate(calls_total{service_name=\"flagd\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)"
+      ],
+      "result_excerpt": "error_rate: window mean vs pre-incident baseline, most anomalous first\n  flagd            z=   +0.02  window=0.01175  baseline=0.0115\u00b10.013  promql: sum(rate(calls_total{service_name=\"flagd\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)\n  frontend         z=   +0.00  window=0  baseline=0\u00b10  promql: sum(rate(calls_total{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)\n  cart             z=   +0.00  window=0  baseline=0\u00b10  promql: sum(rate(calls_total{service_name=\"cart\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)\n  checkout         z=   +0.00  window=0  baseline=0\u00b10  promql: sum(rate(calls_total{service_name=\"checkout\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)\n  currency         z=   +0.00  window=0  baseline=0\u00b10  promql: sum(rate(calls_total{service_name=\"currency\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)\n  email            z=   +0.00  window=0  baseline=0\u00b10  promql: sum(rate(calls_total{service_name=\"email\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or ",
+      "elapsed_s": 0.001
+    },
+    {
+      "iteration": 2,
+      "tool_name": "rank_services_by_signal",
+      "args": {
+        "signal": "p99_latency_ms",
+        "start": "2026-11-27T06:22:32.616937+00:00",
+        "end": "2026-11-27T06:29:32.821515+00:00"
+      },
+      "result_preview": "p99_latency_ms: window mean vs pre-incident baseline, most anomalous first\n  cart             z=   +0.90  window=3.979  baseline=2.978\u00b11.1  promql: histogram_quantile(0.99, sum(rate(duration_milliseco",
+      "query_or_id": [
+        "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+        "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"cart\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+        "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"checkout\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+        "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"currency\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+        "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"email\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+        "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"payment\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+        "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"product-catalog\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+        "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"recommendation\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+        "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"shipping\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+        "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"ad\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+        "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"load-generator\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+        "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"accounting\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+        "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"fraud-detection\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+        "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"quote\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+        "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"flagd\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))"
+      ],
+      "result_excerpt": "p99_latency_ms: window mean vs pre-incident baseline, most anomalous first\n  cart             z=   +0.90  window=3.979  baseline=2.978\u00b11.1  promql: histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"cart\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))\n  ad               z=   +0.47  window=4.442  baseline=3.87\u00b11.2  promql: histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"ad\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))\n  shipping         z=   +0.05  window=5.733  baseline=5.596\u00b12.8  promql: histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"shipping\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))\n  currency         z=   +0.00  window=1.98  baseline=1.98\u00b12.3e-16  promql: histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"currency\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))\n  quote            z=   +0.00  window=1.98  baseline=1.98\u00b12.5e-16  promql: histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"quote\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))\n  load-generator   no data\n  accounting       no data\n  fraud-detection  no data\n  payment          z=   -0.46",
+      "elapsed_s": 0.001
+    },
+    {
+      "iteration": 3,
+      "tool_name": "rank_services_by_signal",
+      "args": {
+        "signal": "cpu_usage",
+        "start": "2026-11-27T06:22:32.616937+00:00",
+        "end": "2026-11-27T06:29:32.821515+00:00"
+      },
+      "result_preview": "cpu_usage: window mean vs pre-incident baseline, most anomalous first\n  fraud-detection  z=   +1.11  window=0.009818  baseline=0.008776\u00b10.00094  promql: sum(rate(container_cpu_usage_seconds_total{name",
+      "query_or_id": [
+        "sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"frontend-.*\"}[2m]))",
+        "sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"cart-.*\"}[2m]))",
+        "sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"checkout-.*\"}[2m]))",
+        "sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"currency-.*\"}[2m]))",
+        "sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"email-.*\"}[2m]))",
+        "sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"payment-.*\"}[2m]))",
+        "sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"product-catalog-.*\"}[2m]))",
+        "sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"recommendation-.*\"}[2m]))",
+        "sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"shipping-.*\"}[2m]))",
+        "sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"ad-.*\"}[2m]))",
+        "sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"load-generator-.*\"}[2m]))",
+        "sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"accounting-.*\"}[2m]))",
+        "sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"fraud-detection-.*\"}[2m]))",
+        "sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"quote-.*\"}[2m]))",
+        "sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"flagd-.*\"}[2m]))"
+      ],
+      "result_excerpt": "cpu_usage: window mean vs pre-incident baseline, most anomalous first\n  fraud-detection  z=   +1.11  window=0.009818  baseline=0.008776\u00b10.00094  promql: sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"fraud-detection-.*\"}[2m]))\n  currency         z=   +0.97  window=0.005217  baseline=0.00446\u00b10.00078  promql: sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"currency-.*\"}[2m]))\n  frontend         z=   +0.96  window=0.1105  baseline=0.09072\u00b10.021  promql: sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"frontend-.*\"}[2m]))\n  quote            z=   +0.85  window=0.00149  baseline=0.001118\u00b10.00044  promql: sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"quote-.*\"}[2m]))\n  load-generator   z=   +0.79  window=0.7893  baseline=0.6118\u00b10.22  promql: sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"load-generator-.*\"}[2m]))\n  recommendation   z=   +0.69  window=0.02877  baseline=0.02676\u00b10.0029  promql: sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"recommendation-.*\"}[2m]))\n  shipping         z=   +0.57  window=0.003039  baseline=0.002819\u00b10.00039  promql: sum(",
+      "elapsed_s": 0.002
+    },
+    {
+      "iteration": 4,
+      "tool_name": "rank_services_by_signal",
+      "args": {
+        "signal": "memory_usage",
+        "start": "2026-11-27T06:22:32.616937+00:00",
+        "end": "2026-11-27T06:29:32.821515+00:00"
+      },
+      "result_preview": "memory_usage: window mean vs pre-incident baseline, most anomalous first\n  fraud-detection  z=  +10.52  window=4.657e+08  baseline=4.577e+08\u00b17.6e+05  promql: sum(container_memory_working_set_bytes{nam",
+      "query_or_id": [
+        "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"frontend-.*\"})",
+        "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"cart-.*\"})",
+        "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"checkout-.*\"})",
+        "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"currency-.*\"})",
+        "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"email-.*\"})",
+        "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"payment-.*\"})",
+        "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"product-catalog-.*\"})",
+        "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"recommendation-.*\"})",
+        "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"shipping-.*\"})",
+        "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"ad-.*\"})",
+        "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"load-generator-.*\"})",
+        "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"accounting-.*\"})",
+        "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"fraud-detection-.*\"})",
+        "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"quote-.*\"})",
+        "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"flagd-.*\"})"
+      ],
+      "result_excerpt": "memory_usage: window mean vs pre-incident baseline, most anomalous first\n  fraud-detection  z=  +10.52  window=4.657e+08  baseline=4.577e+08\u00b17.6e+05  promql: sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"fraud-detection-.*\"})\n  quote            z=   +3.33  window=3.696e+07  baseline=3.653e+07\u00b11.3e+05  promql: sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"quote-.*\"})\n  ad               z=   +2.69  window=4.712e+08  baseline=4.697e+08\u00b15.3e+05  promql: sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"ad-.*\"})\n  checkout         z=   +2.63  window=2.314e+07  baseline=2.287e+07\u00b11e+05  promql: sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"checkout-.*\"})\n  frontend         z=   +1.25  window=3.098e+08  baseline=3.02e+08\u00b16.2e+06  promql: sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"frontend-.*\"})\n  shipping         z=   +1.21  window=1.226e+07  baseline=1.22e+07\u00b15.2e+04  promql: sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"shipping-.*\"})\n  payment          z=   +0.88  window=1.308e+08  baseline=1.307e+08\u00b11.8e+05  promql: sum(container_memory_working_set_bytes{namespa",
+      "elapsed_s": 0.002
+    },
+    {
+      "iteration": 5,
+      "tool_name": "rank_services_by_signal",
+      "args": {
+        "signal": "pod_restarts",
+        "start": "2026-11-27T06:22:32.616937+00:00",
+        "end": "2026-11-27T06:29:32.821515+00:00"
+      },
+      "result_preview": "pod_restarts: window mean vs pre-incident baseline, most anomalous first\n  frontend         z=   +0.00  window=0  baseline=0\u00b10  promql: max(increase(kube_pod_container_status_restarts_total{namespace=",
+      "query_or_id": [
+        "max(increase(kube_pod_container_status_restarts_total{namespace=\"otel-demo\",pod=~\"frontend-.*\"}[5m])) or vector(0)",
+        "max(increase(kube_pod_container_status_restarts_total{namespace=\"otel-demo\",pod=~\"cart-.*\"}[5m])) or vector(0)",
+        "max(increase(kube_pod_container_status_restarts_total{namespace=\"otel-demo\",pod=~\"checkout-.*\"}[5m])) or vector(0)",
+        "max(increase(kube_pod_container_status_restarts_total{namespace=\"otel-demo\",pod=~\"currency-.*\"}[5m])) or vector(0)",
+        "max(increase(kube_pod_container_status_restarts_total{namespace=\"otel-demo\",pod=~\"email-.*\"}[5m])) or vector(0)",
+        "max(increase(kube_pod_container_status_restarts_total{namespace=\"otel-demo\",pod=~\"payment-.*\"}[5m])) or vector(0)",
+        "max(increase(kube_pod_container_status_restarts_total{namespace=\"otel-demo\",pod=~\"product-catalog-.*\"}[5m])) or vector(0)",
+        "max(increase(kube_pod_container_status_restarts_total{namespace=\"otel-demo\",pod=~\"recommendation-.*\"}[5m])) or vector(0)",
+        "max(increase(kube_pod_container_status_restarts_total{namespace=\"otel-demo\",pod=~\"shipping-.*\"}[5m])) or vector(0)",
+        "max(increase(kube_pod_container_status_restarts_total{namespace=\"otel-demo\",pod=~\"ad-.*\"}[5m])) or vector(0)",
+        "max(increase(kube_pod_container_status_restarts_total{namespace=\"otel-demo\",pod=~\"load-generator-.*\"}[5m])) or vector(0)",
+        "max(increase(kube_pod_container_status_restarts_total{namespace=\"otel-demo\",pod=~\"accounting-.*\"}[5m])) or vector(0)",
+        "max(increase(kube_pod_container_status_restarts_total{namespace=\"otel-demo\",pod=~\"fraud-detection-.*\"}[5m])) or vector(0)",
+        "max(increase(kube_pod_container_status_restarts_total{namespace=\"otel-demo\",pod=~\"quote-.*\"}[5m])) or vector(0)",
+        "max(increase(kube_pod_container_status_restarts_total{namespace=\"otel-demo\",pod=~\"flagd-.*\"}[5m])) or vector(0)"
+      ],
+      "result_excerpt": "pod_restarts: window mean vs pre-incident baseline, most anomalous first\n  frontend         z=   +0.00  window=0  baseline=0\u00b10  promql: max(increase(kube_pod_container_status_restarts_total{namespace=\"otel-demo\",pod=~\"frontend-.*\"}[5m])) or vector(0)\n  cart             z=   +0.00  window=0  baseline=0\u00b10  promql: max(increase(kube_pod_container_status_restarts_total{namespace=\"otel-demo\",pod=~\"cart-.*\"}[5m])) or vector(0)\n  checkout         z=   +0.00  window=0  baseline=0\u00b10  promql: max(increase(kube_pod_container_status_restarts_total{namespace=\"otel-demo\",pod=~\"checkout-.*\"}[5m])) or vector(0)\n  currency         z=   +0.00  window=0  baseline=0\u00b10  promql: max(increase(kube_pod_container_status_restarts_total{namespace=\"otel-demo\",pod=~\"currency-.*\"}[5m])) or vector(0)\n  email            z=   +0.00  window=0  baseline=0\u00b10  promql: max(increase(kube_pod_container_status_restarts_total{namespace=\"otel-demo\",pod=~\"email-.*\"}[5m])) or vector(0)\n  payment          z=   +0.00  window=0  baseline=0\u00b10  promql: max(increase(kube_pod_container_status_restarts_total{namespace=\"otel-demo\",pod=~\"payment-.*\"}[5m])) or vector(0)\n  product-catalog  z=   +0.00  window=0  baseline=0\u00b10  promql: max(",
+      "elapsed_s": 0.002
+    },
+    {
+      "iteration": 6,
+      "tool_name": "search_traces",
+      "args": {
+        "service_name": "fraud-detection",
+        "start": "2026-11-27T06:22:32.616937+00:00",
+        "end": "2026-11-27T06:29:32.821515+00:00",
+        "error_only": true
+      },
+      "result_preview": "[no traces found]",
+      "query_or_id": [
+        "search_traces:fraud-detection"
+      ],
+      "result_excerpt": "[no traces found]",
+      "elapsed_s": 0.001
+    },
+    {
+      "iteration": 7,
+      "tool_name": "search_traces",
+      "args": {
+        "service_name": "cart",
+        "start": "2026-11-27T06:22:32.616937+00:00",
+        "end": "2026-11-27T06:29:32.821515+00:00",
+        "error_only": true
+      },
+      "result_preview": "[no traces found]",
+      "query_or_id": [
+        "search_traces:cart"
+      ],
+      "result_excerpt": "[no traces found]",
+      "elapsed_s": 0.001
+    },
+    {
+      "iteration": 8,
+      "tool_name": "search_traces",
+      "args": {
+        "service_name": "fraud-detection",
+        "start": "2026-11-27T06:22:32.616937+00:00",
+        "end": "2026-11-27T06:29:32.821515+00:00",
+        "error_only": false
+      },
+      "result_preview": "[no traces found]",
+      "query_or_id": [
+        "search_traces:fraud-detection"
+      ],
+      "result_excerpt": "[no traces found]",
+      "elapsed_s": 0.0
+    },
+    {
+      "iteration": 9,
+      "tool_name": "search_traces",
+      "args": {
+        "service_name": "cart",
+        "start": "2026-11-27T06:22:32.616937+00:00",
+        "end": "2026-11-27T06:29:32.821515+00:00",
+        "error_only": false
+      },
+      "result_preview": "[no traces found]",
+      "query_or_id": [
+        "search_traces:cart"
+      ],
+      "result_excerpt": "[no traces found]",
+      "elapsed_s": 0.0
+    }
+  ],
+  "report": {
+    "incident_id": "INC-cb6eef04",
+    "investigation_start_ts": "2026-11-27T08:55:08.892733+00:00",
+    "investigation_end_ts": "2026-11-27T09:06:21.863611+00:00",
+    "root_causes": [
+      {
+        "rank": 1,
+        "service": "fraud-detection",
+        "fault_type": "memory_stress",
+        "description": "Extreme memory usage spike (z=+10.52) indicating severe memory pressure likely causing downstream degradation.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "signal_type": "metric",
+            "query_or_id": "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"fraud-detection-.\")}",
+            "observed_value": "4.657e+08 bytes at window mean",
+            "expected_baseline": "< 4.577e+08 (p99 last 24h)"
+          },
+          {
+            "signal_type": "metric",
+            "query_or_id": "sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"fraud-detection-.\"}[2m]))",
+            "observed_value": "z=+1.11 vs baseline 0.008776",
+            "expected_baseline": "< 0.008776 (p99 last 24h)"
+          },
+          {
+            "signal_type": "metric",
+            "query_or_id": "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"fraud-detection-.\"})",
+            "observed_value": "window mean 4.657e+08",
+            "expected_baseline": "4.577e+08\u00b17.6e+05"
+          },
+          {
+            "signal_type": "metric",
+            "query_or_id": "sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"fraud-detection-.\"}[2m]))",
+            "observed_value": "z=+1.11",
+            "expected_baseline": "0.008776\u00b10.00094"
+          }
+        ]
+      },
+      {
+        "rank": 2,
+        "service": "cart",
+        "fault_type": "high_latency",
+        "description": "P99 latency spike (z=+0.90, window=3.979ms vs baseline 2.978\u00b11.1ms) making it the most latency-anomalous service.",
+        "confidence": 0.85,
+        "evidence": [
+          {
+            "signal_type": "metric",
+            "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"cart\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+            "observed_value": "z=+0.90 vs baseline 2.978\u00b11.1ms",
+            "expected_baseline": "< 2.978ms (p99 last 24h)"
+          },
+          {
+            "signal_type": "metric",
+            "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"cart\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+            "observed_value": "window mean 3.979ms",
+            "expected_baseline": "2.978\u00b11.1ms"
+          },
+          {
+            "signal_type": "metric",
+            "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"cart\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+            "observed_value": "z-score +0.90",
+            "expected_baseline": "p99 last 24h baseline"
+          },
+          {
+            "signal_type": "metric",
+            "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"cart\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+            "observed_value": "anomalous P99 latency detected",
+            "expected_baseline": "pre-incident baseline 2.978ms"
+          }
+        ]
+      },
+      {
+        "rank": 3,
+        "service": "frontend",
+        "fault_type": "http_abort",
+        "description": "Error rate elevation at entry point likely propagating downstream dependency failures from fraud-detection memory stress and cart latency issues.",
+        "confidence": 0.65,
+        "evidence": [
+          {
+            "signal_type": "metric",
+            "query_or_id": "sum(rate(calls_total{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+            "observed_value": "z=+0.00 window=0 baseline=0\u00b10",
+            "expected_baseline": "< 0.01 (p99 last 24h)"
+          },
+          {
+            "signal_type": "metric",
+            "query_or_id": "sum(rate(calls_total{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+            "observed_value": "elevation at entry point",
+            "expected_baseline": "< 0.01 (p99 last 24h)"
+          },
+          {
+            "signal_type": "metric",
+            "query_or_id": "sum(rate(calls_total{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+            "observed_value": "propagating downstream failures",
+            "expected_baseline": "< 0.01 (p99 last 24h)"
+          },
+          {
+            "signal_type": "metric",
+            "query_or_id": "sum(rate(calls_total{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+            "observed_value": "entry point error detection",
+            "expected_baseline": "< 0.01 (p99 last 24h)"
+          }
+        ]
+      }
+    ],
+    "remediation_steps": [
+      "Restart fraud-detection pods to relieve immediate memory pressure",
+      "Investigate memory leak in fraud-detection service; consider increasing memory limits or optimizing resource usage",
+      "Monitor cart P99 latency and fraud-detection memory trends post-restart"
+    ],
+    "fault_type_classification": "memory_stress",
+    "grounding_score": 1.0,
+    "latency_s": 73.97849115799897,
+    "cost_usd": 0.0,
+    "total_prompt_tokens": 84721,
+    "total_completion_tokens": 5921,
+    "llm_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+    "agent_version": "0.2.0"
+  },
+  "grounding": {
+    "score": 1.0,
+    "verified": 12,
+    "total": 12,
+    "failed_items": []
+  },
+  "metrics": {
+    "scenario_id": "payment-http_abort-seed42",
+    "ground_truth_service": "payment",
+    "ground_truth_fault_type": "http_abort",
+    "predicted_service": "fraud-detection",
+    "predicted_fault_type": "memory_stress",
+    "accuracy_at_1": 0,
+    "accuracy_at_3": 0,
+    "mrr": 0.0,
+    "service_at_1": 0,
+    "service_at_3": 0,
+    "fault_type_correct": 0,
+    "grounding_score": 1.0,
+    "latency_s": 73.97849115799897,
+    "cost_usd": 0.0,
+    "prompt_tokens": 84721,
+    "completion_tokens": 5921,
+    "total_tokens": 90642,
+    "hallucination_warning": false,
+    "repeat": 2,
+    "llm_calls": 12,
+    "tool_calls": 10,
+    "rate_limit_wait_s": 598.992386842001
+  }
+}

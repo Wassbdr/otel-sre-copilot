@@ -1,0 +1,65 @@
+{
+  "incident_id": "INC-b81d8097",
+  "investigation_start_ts": "2026-11-27T09:07:50.366545+00:00",
+  "investigation_end_ts": "2026-11-27T09:16:25.049374+00:00",
+  "root_causes": [
+    {
+      "rank": 1,
+      "service": "recommendation",
+      "fault_type": "memory_stress",
+      "description": "Recommendation service exhibits extreme memory pressure (z=+122.56) far exceeding other services, indicating potential OOM risk or memory leak causing cascading failures",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"recommendation-.\")}",
+          "observed_value": "memory_usage z=+122.56, window mean=1.054e+08",
+          "expected_baseline": "memory_usage baseline=9.912e+07±5.2e+04 (pre-incident)"
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "service": "currency",
+      "fault_type": "high_latency",
+      "description": "Currency service shows extreme p99 latency anomaly (z>1000) with p99=6.401ms vs baseline of 1.98ms, indicating severe latency degradation affecting dependent services",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"currency\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "p99_latency_ms mean=2.566 p99=6.401 max=6.414",
+          "expected_baseline": "p99_latency_ms baseline=1.98±2.5e-16 (pre-incident)"
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "service": "payment",
+      "fault_type": "memory_stress",
+      "description": "Payment service shows significant memory pressure (z=+10.97) with working set at 1.329e+08 bytes vs baseline of 1.311e+08±1.7e+05, indicating growing memory usage contributing to instability",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"payment-.\")}",
+          "observed_value": "memory_usage z=+10.97, window mean=1.329e+08",
+          "expected_baseline": "memory_usage baseline=1.311e+08±1.7e+05 (pre-incident)"
+        }
+      ]
+    }
+  ],
+  "remediation_steps": [
+    "Investigate recommendation pod for memory leak or increase memory limits",
+    "Review currency service latency dependencies and optimize slow paths",
+    "Apply memory pressure monitoring and alerts for payment service"
+  ],
+  "fault_type_classification": "memory_stress",
+  "grounding_score": 1.0,
+  "latency_s": 93.85831488900169,
+  "cost_usd": 0.0,
+  "total_prompt_tokens": 84834,
+  "total_completion_tokens": 17040,
+  "llm_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "agent_version": "0.2.0"
+}

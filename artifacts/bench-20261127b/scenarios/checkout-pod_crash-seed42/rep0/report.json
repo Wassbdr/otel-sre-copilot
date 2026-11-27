@@ -1,0 +1,70 @@
+{
+  "incident_id": "INC-48509879",
+  "investigation_start_ts": "2026-11-27T08:16:06.589478+00:00",
+  "investigation_end_ts": "2026-11-27T08:19:29.100312+00:00",
+  "root_causes": [
+    {
+      "rank": 1,
+      "service": "checkout",
+      "fault_type": "pod_crash",
+      "description": "Extreme pod restarts (z=>1000) in checkout service caused frontend error_rate spike (z=>1000) and downstream impacts across the microservices chain",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "max(increase(kube_pod_container_status_restarts_total{namespace=\"otel-demo\",pod=~\"checkout-.*\"}[5m])) or vector(0)",
+          "observed_value": "pod_restarts z=>1000 at 05:58-06:05",
+          "expected_baseline": "pod_restarts < 0.01 (pre-incident baseline)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(rate(calls_total{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+          "observed_value": "frontend error_rate z=>1000 at 05:58-06:05",
+          "expected_baseline": "error_rate < 0.01 (p99 last 24h)"
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "service": "product-catalog",
+      "fault_type": "high_latency",
+      "description": "P99 latency spike (z=+6.48) in product-catalog service observed during incident window, potentially independent or compounding the checkout failure",
+      "confidence": 0.75,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"product-catalog\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "p99_latency_ms z=+6.48 at 05:58-06:05",
+          "expected_baseline": "p99_latency_ms < 25.59 (pre-incident baseline)"
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "service": "payment",
+      "fault_type": "memory_stress",
+      "description": "Very high memory usage (z=+5.97) in payment service observed during incident window, may contribute to instability",
+      "confidence": 0.65,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"payment-.*\"})",
+          "observed_value": "payment memory_usage z=+5.97 at 05:58-06:05",
+          "expected_baseline": "memory < 1.212e+08 (pre-incident baseline)"
+        }
+      ]
+    }
+  ],
+  "remediation_steps": [
+    "Restart checkout pods immediately to stabilize the service and stop the restart storm",
+    "Investigate the container definition change that triggered the 2 checkout container restarts; roll back any recent deployment changes"
+  ],
+  "fault_type_classification": "pod_crash",
+  "grounding_score": 1.0,
+  "latency_s": 29.45341424699774,
+  "cost_usd": 0.0,
+  "total_prompt_tokens": 76177,
+  "total_completion_tokens": 4186,
+  "llm_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "agent_version": "0.2.0"
+}
