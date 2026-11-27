@@ -18,11 +18,8 @@ venv/
 .coverage
 htmlcov/
 
-# Raw telemetry snapshots (only metadata + ground_truth are versioned)
-snapshots/*/prometheus/
-snapshots/*/tempo/traces/
-snapshots/*/loki/
-snapshots/*/k8s/
+# Snapshots are versioned in full: they are public Astronomy Shop telemetry and the benchmark
+# replays them without a cluster.
 
 # Jupyter
 .ipynb_checkpoints/
@@ -33,3 +30,6 @@ Thumbs.db
 
 # kind kubeconfig
 kubeconfig-otel-sre-copilot.yaml
+
+# Scratch eval runs (the committed benchmark run is listed in results/RUN_ID)
+artifacts/verify-*/
