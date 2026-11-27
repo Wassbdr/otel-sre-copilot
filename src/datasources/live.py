@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 from datetime import UTC, datetime
+from typing import Self
 
 import httpx
 import structlog
@@ -54,6 +55,7 @@ class LiveDataSource:
         tempo_url: str | None = None,
         loki_url: str | None = None,
         timeout: float = 10.0,
+        topology: dict[str, list[str]] | None = None,
     ) -> None:
         self._prom = (prometheus_url or os.getenv("PROMETHEUS_URL") or "http://localhost:9090").rstrip(
             "/"
@@ -62,10 +64,17 @@ class LiveDataSource:
         self._loki = (loki_url or os.getenv("LOKI_URL") or "http://localhost:3100").rstrip("/")
         self._client = httpx.Client(timeout=timeout)
         self._k8s: k8s_client.CoreV1Api | None = None
+        self._topology = _STATIC_TOPOLOGY if topology is None else topology
+
+    def __enter__(self) -> Self:
+        return self
+
+    def __exit__(self, *_exc: object) -> None:
+        self.close()
 
     def _k8s_client(self) -> k8s_client.CoreV1Api:
         if self._k8s is None:
-            kube_context = os.getenv("KUBE_CONTEXT", "kind-otel-sre-copilot")
+            kube_context = os.getenv("KUBE_CONTEXT")
             try:
                 k8s_config.load_kube_config(context=kube_context)  # type: ignore[no-untyped-call]
             except Exception:
@@ -169,7 +178,7 @@ class LiveDataSource:
         return results
 
     def get_service_topology(self, namespace: str) -> dict[str, list[str]]:
-        return dict(_STATIC_TOPOLOGY)
+        return dict(self._topology)
 
     def close(self) -> None:
         self._client.close()

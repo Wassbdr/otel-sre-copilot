@@ -82,6 +82,7 @@ def _add_usage(totals: dict[str, int], response: AIMessage) -> dict[str, int]:
 def build_graph(
     ds: DataSource, on_event: EventCallback | None = None, *, react: bool = False,
     improved: bool = False, prior: bool = True,
+    services: list[str] | None = None, namespace: str = "otel-demo",
 ) -> Any:  # noqa: ANN401
     """Build and compile the investigation StateGraph for the given DataSource.
 
@@ -96,7 +97,10 @@ def build_graph(
     max_rounds = min(MAX_TOOL_ITERATIONS, FAST_TOOL_ROUNDS) if improved or react else (
         MAX_TOOL_ITERATIONS
     )
-    tools = make_tools(ds, budget, improved=improved, prior=improved and prior)
+    tools = make_tools(
+        ds, budget, improved=improved, prior=improved and prior,
+        services=services, namespace=namespace,
+    )
 
     settings = llm_settings()
     llm = make_chat_model(max_tokens=4096)
@@ -121,7 +125,10 @@ def build_graph(
         entry = {
             "iteration": iteration, "tool_name": name, "args": args,
             "result_preview": result[:200], "result_excerpt": result[:1200],
-            "query_or_id": [] if repeated else _extract_query_or_id(name, args),
+            "query_or_id": [] if repeated or (
+                name == "rank_services_by_signal" and (services or namespace != "otel-demo")
+            )
+            else _extract_query_or_id(name, args),
             "elapsed_s": round(time.perf_counter() - started, 3),
         }
         if improved:

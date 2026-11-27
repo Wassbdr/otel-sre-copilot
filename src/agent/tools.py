@@ -30,6 +30,7 @@ log = structlog.get_logger()
 
 def make_tools(
     ds: DataSource, budget: ContextBudget, *, improved: bool = False, prior: bool = False,
+    services: list[str] | None = None, namespace: str = "otel-demo",
 ) -> list[BaseTool]:
     """Return LangChain tool functions bound to a specific DataSource and budget."""
 
@@ -213,7 +214,7 @@ def make_tools(
 
         Compares the window mean of the signal with the minutes before `start`, for every
         service at once. Use it first to find suspects, then confirm with traces, logs and
-        pod events. Cite the PromQL printed next to a service as metric evidence.
+        pod events. Cite the evidence identifier or PromQL printed next to a service.
 
         Args:
             signal: one of error_rate, request_rate, p99_latency_ms, cpu_usage,
@@ -224,7 +225,7 @@ def make_tools(
         from src.anomaly import rank_services
 
         try:
-            scores = rank_services(ds, signal, start, end)
+            scores = rank_services(ds, signal, start, end, services, namespace=namespace)
             lines = [f"{signal}: window mean vs pre-incident baseline, most anomalous first"]
             displayed = [sc for sc in scores if sc.has_data][:5] if improved else scores
             for sc in displayed:
@@ -247,7 +248,9 @@ def make_tools(
     @tool
     def rank_incident_anomalies(start: str, end: str) -> str:
         """Compare composite z-score and N-Sigma rankings against pre-incident metrics."""
-        windows = metric_windows(ds, list(SIGNAL_TO_FAULT), start, end)
+        windows = metric_windows(
+            ds, list(SIGNAL_TO_FAULT), start, end, services=services, namespace=namespace,
+        )
         composite = _rank_windows(windows, lambda w: w.composite)
         nsigma = _rank_windows(windows, lambda w: w.nsigma)
         sections = [
@@ -269,7 +272,9 @@ def make_tools(
     @tool
     def rank_request_rate_drops(start: str, end: str) -> str:
         """Compare incoming request rates against baseline and rank decreases, not error spikes."""
-        windows = metric_windows(ds, ["request_rate"], start, end)
+        windows = metric_windows(
+            ds, ["request_rate"], start, end, services=services, namespace=namespace,
+        )
         drops = [w for w in windows if w.baseline_mean > 0 and w.incident_mean < w.baseline_mean]
         drops.sort(key=lambda w: w.incident_mean / w.baseline_mean)
         lines = [_metric_line(w, 1 - (w.ratio or 0)) for w in drops[:6]]

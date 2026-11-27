@@ -27,7 +27,8 @@ if [[ "${RERUN_BENCHMARK:-0}" == "1" ]]; then
 fi
 
 # Baselines are deterministic: re-run them and check they match the committed run exactly.
-"$PY" -m eval.scenario_runner --mode baselines-only --run-id "verify-baselines" >/dev/null
+"$PY" -m eval.scenario_runner --mode baselines-only --run-id "verify-baselines" \
+  --snapshot-run-id "$RUN_ID" >/dev/null
 "$PY" scripts/check_baselines.py "artifacts/verify-baselines" "artifacts/$RUN_ID"
 rm -rf artifacts/verify-baselines
 

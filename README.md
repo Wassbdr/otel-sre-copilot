@@ -52,6 +52,10 @@ flowchart LR
 
 ## Details
 
+Use [your own telemetry](docs/using-your-telemetry.md) with the `copilot` CLI
+or Python API, [add a benchmark scenario](docs/adding-a-scenario.md), or
+[serve a snapshot over HTTP](docs/reference-tools.md) to compare other tools.
+
 ### What is in the box
 
 | Path | What |

@@ -1,11 +1,21 @@
 [build-system]
-requires = ["setuptools>=68", "wheel"]
+requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "otel-sre-copilot"
-version = "0.1.0"
+version = "0.2.0"
+description = "Investigate Kubernetes incidents from OpenTelemetry metrics, logs, and traces."
+readme = "README.md"
+license = "MIT"
 requires-python = ">=3.12"
+keywords = ["opentelemetry", "kubernetes", "incident-response", "sre"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: System :: Monitoring",
+]
 dependencies = [
     # Agent
     "langgraph>=0.2",
@@ -43,9 +53,16 @@ dev = [
     "types-requests",
     "types-PyYAML",
     "matplotlib>=3.8",
+    "pre-commit>=4",
 ]
 
+[project.urls]
+Repository = "https://github.com/Wassbdr/otel-sre-copilot"
+Documentation = "https://github.com/Wassbdr/otel-sre-copilot/tree/showcase/2026-11/docs"
+
 [project.scripts]
+copilot = "src.cli:main"
+copilot-replay = "src.replay_server:main"
 sre-copilot = "src.agent.run:main"
 sre-copilot-demo = "src.demo:main"
 

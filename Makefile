@@ -1,4 +1,4 @@
-.PHONY: setup up down health-check fault investigate eval eval-replay eval-baselines compare test lint fmt check-python demo demo-live bench benchmark help
+.PHONY: setup up down compose-up compose-down health-check fault investigate eval eval-replay eval-baselines reproduce-baselines compare test lint fmt check-python demo demo-live bench benchmark help
 
 CLUSTER_NAME      := otel-sre-copilot
 KUBECONFIG_PATH   := $(HOME)/.kube/config
@@ -129,6 +129,18 @@ eval-baselines:
 		--scenario-dir "$(SCENARIO_DIR)" \
 		--mode baselines-only
 
+reproduce-baselines: check-python
+	@$(PYTHON) -m eval.scenario_runner --mode baselines-only --run-id verify-baselines \
+		--snapshot-run-id "$$(cat results/RUN_ID)"
+	@$(PYTHON) scripts/check_baselines.py artifacts/verify-baselines \
+		"artifacts/$$(cat results/RUN_ID)"
+
+compose-up:
+	docker compose up -d
+
+compose-down:
+	docker compose down
+
 compare:
 	@$(PYTHON) -m eval.compare
 
@@ -174,6 +186,8 @@ help:
 	@echo "  make setup          Install dependencies + check tools"
 	@echo "  make up             Create kind cluster + deploy all backends"
 	@echo "  make down           Destroy cluster"
+	@echo "  make compose-up     Start the local telemetry backends and sample traffic"
+	@echo "  make compose-down   Stop the local Compose stack"
 	@echo "  make health-check   Verify all backends healthy"
 	@echo ""
 	@echo "  make fault SCENARIO=<path>     Inject fault + snapshot telemetry"

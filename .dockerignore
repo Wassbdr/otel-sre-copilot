@@ -8,3 +8,5 @@
 .env
 showcase
 notebooks
+artifacts/round2-*/
+artifacts/verify-*/

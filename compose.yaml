@@ -1,0 +1,48 @@
+services:
+  prometheus:
+    image: prom/prometheus:v3.2.1
+    volumes:
+      - ./infra/collector/compose-prometheus.yaml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "127.0.0.1:19090:9090"
+  tempo:
+    image: grafana/tempo:2.7.2
+    command: ["-config.file=/etc/tempo.yaml"]
+    volumes:
+      - ./infra/collector/compose-tempo.yaml:/etc/tempo.yaml:ro
+    ports:
+      - "127.0.0.1:13200:3200"
+  loki:
+    image: grafana/loki:3.4.2
+    command: ["-config.file=/etc/loki/local-config.yaml"]
+    ports:
+      - "127.0.0.1:13100:3100"
+  collector:
+    image: otel/opentelemetry-collector-contrib:0.123.0
+    command: ["--config=/etc/otelcol-contrib/config.yaml"]
+    volumes:
+      - ./infra/collector/compose-collector.yaml:/etc/otelcol-contrib/config.yaml:ro
+    ports:
+      - "127.0.0.1:4317:4317"
+      - "127.0.0.1:4318:4318"
+    depends_on: [prometheus, tempo, loki]
+  sample-traces:
+    image: ghcr.io/open-telemetry/opentelemetry-collector-contrib/telemetrygen:v0.123.0
+    command: ["traces", "--otlp-endpoint", "collector:4317", "--otlp-insecure",
+              "--rate", "4", "--duration", "1h"]
+    depends_on: [collector]
+  sample-logs:
+    image: ghcr.io/open-telemetry/opentelemetry-collector-contrib/telemetrygen:v0.123.0
+    command: ["logs", "--otlp-endpoint", "collector:4317", "--otlp-insecure",
+              "--rate", "2", "--duration", "1h"]
+    depends_on: [collector]
+  copilot:
+    profiles: [cli]
+    build: .
+    entrypoint: ["copilot"]
+    environment:
+      PROMETHEUS_URL: http://prometheus:9090
+      TEMPO_URL: http://tempo:3200
+      LOKI_URL: http://loki:3100
+      LLM_PROVIDER: ${LLM_PROVIDER:-openai-compatible}
+      NIM_API_KEY: ${NIM_API_KEY:-}

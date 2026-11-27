@@ -52,14 +52,15 @@ def minus_minutes(iso_ts: str, minutes: int) -> str:
 
 
 def rank_services(ds: DataSource, signal: str, start: str, end: str,
-                  services: list[str] | None = None) -> list[ServiceScore]:
+                  services: list[str] | None = None, *,
+                  namespace: str = "otel-demo") -> list[ServiceScore]:
     """Score every service on one signal, most anomalous first."""
     if signal not in METRIC_QUERIES:
         raise ValueError(f"unknown signal {signal!r}; choose one of {sorted(METRIC_QUERIES)}")
     baseline_start = minus_minutes(start, BASELINE_MINUTES)
     scores: list[ServiceScore] = []
     for svc in services or ASTRONOMY_SHOP_SERVICES:
-        query = METRIC_QUERIES[signal].format(svc=svc)
+        query = signal_query(signal, svc, namespace)
         win = values(ds.query_prometheus_range(query, start, end))
         base = values(ds.query_prometheus_range(query, baseline_start, start))
         if not win or not base:
@@ -110,13 +111,14 @@ def max_standardized(baseline: list[float], incident: list[float]) -> float:
 
 
 def metric_windows(
-    ds: DataSource, signals: list[str], start: str, end: str,
+    ds: DataSource, signals: list[str], start: str, end: str, *,
+    services: list[str] | None = None, namespace: str = "otel-demo",
 ) -> list[MetricWindow]:
     baseline_start = minus_minutes(start, BASELINE_MINUTES)
     windows = []
-    for service in ASTRONOMY_SHOP_SERVICES:
+    for service in services or ASTRONOMY_SHOP_SERVICES:
         for signal in signals:
-            query = METRIC_QUERIES[signal].format(svc=service)
+            query = signal_query(signal, service, namespace)
             base = [v for v in values(ds.query_prometheus_range(query, baseline_start, start))
                     if np.isfinite(v)]
             current = [v for v in values(ds.query_prometheus_range(query, start, end))
@@ -124,3 +126,9 @@ def metric_windows(
             if base and current:
                 windows.append(MetricWindow(service, signal, base, current))
     return windows
+
+
+def signal_query(signal: str, service: str, namespace: str) -> str:
+    return METRIC_QUERIES[signal].format(svc=service).replace(
+        'namespace="otel-demo"', f'namespace="{namespace}"',
+    )

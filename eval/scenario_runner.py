@@ -295,12 +295,13 @@ def run_all(
     mode: str,
     run_id: str = "",
     repeats: int = 1,
+    snapshots: list[Path] | None = None,
 ) -> None:
     """Run all scenarios in a directory and write aggregated results."""
     if not run_id:
         run_id = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
 
-    snapshot_dirs = discover_snapshots(scenario_dir)
+    snapshot_dirs = discover_snapshots(scenario_dir) if snapshots is None else snapshots
 
     if not snapshot_dirs:
         log.error("no_snapshots_found", scenario_dir=str(scenario_dir))
@@ -430,6 +431,7 @@ def main() -> None:
     parser.add_argument("--scenario-dir", type=Path, default=Path("scenarios/mvp"))
     parser.add_argument("--snapshot-dir", type=Path, default=None,
                         help="Single snapshot dir (use with --mode single)")
+    parser.add_argument("--snapshot-run-id", help="Use the snapshot list from a recorded run.")
     parser.add_argument("--mode", choices=["replay", "baselines-only", "benchmark", "single"],
                         default="replay",
                         help="benchmark = baselines + agent on every snapshot")
@@ -445,7 +447,17 @@ def main() -> None:
         if args.print_report:
             print(json.dumps(result, indent=2))
     else:
-        run_all(args.scenario_dir, mode=args.mode, run_id=args.run_id, repeats=args.repeats)
+        snapshots = None
+        if args.snapshot_run_id:
+            config = _ARTIFACTS_DIR / args.snapshot_run_id / "config.json"
+            try:
+                snapshots = [Path(path) for path in json.loads(config.read_text())["snapshots"]]
+            except (OSError, ValueError, KeyError, TypeError):
+                parser.error(f"Cannot read the recorded snapshot list from {config}.")
+        run_all(
+            args.scenario_dir, mode=args.mode, run_id=args.run_id, repeats=args.repeats,
+            snapshots=snapshots,
+        )
 
 
 if __name__ == "__main__":
