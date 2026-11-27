@@ -1,4 +1,4 @@
-.PHONY: setup up down health-check fault investigate eval eval-replay eval-baselines compare test lint fmt demo help
+.PHONY: setup up down health-check fault investigate eval eval-replay eval-baselines compare test lint fmt demo demo-live benchmark help
 
 CLUSTER_NAME      := otel-sre-copilot
 KUBECONFIG_PATH   := $(HOME)/.kube/config
@@ -6,6 +6,10 @@ NAMESPACE         := otel-demo
 CHAOS_NAMESPACE   := chaos-mesh
 
 SCENARIO          ?= scenarios/mvp/001-checkoutservice-pod-crash.yaml
+TRACE             ?= examples/checkout-pod-crash.trace.json
+SNAPSHOT          ?= snapshots/checkout-pod_crash-seed42
+REPEATS           ?= 3
+BENCH_ID          := bench-$(shell date -u +%Y%m%dT%H%M%SZ)
 SCENARIO_DIR      ?= scenarios/mvp
 RUN_ID            ?=
 INCIDENT_ID       ?=
@@ -137,15 +141,17 @@ fmt:
 	ruff format src/ eval/ scripts/ tests/
 
 # ── Demo ──────────────────────────────────────────────────────────────────
-demo:
-	@echo "Running demo on most recent snapshot..."
-	@LATEST=$$(ls -td snapshots/*/ground_truth.json 2>/dev/null | head -1 | xargs dirname); \
-	test -n "$$LATEST" || (echo "No snapshots found. Run: make fault SCENARIO=..." && exit 1); \
-	SCENARIO_ID=$$(basename $$LATEST); \
-	python3 -m eval.scenario_runner \
-		--snapshot-dir "$$LATEST" \
-		--mode single \
-		--print-report
+demo:  ## Offline: replay the recorded checkout pod-crash investigation (no key, no cluster)
+	@python3 -m src.demo --trace "$(TRACE)"
+
+demo-live:  ## Live LLM on a recorded snapshot (needs LLM_API_KEY or NIM_API_KEY)
+	@python3 -m src.demo --live --snapshot-dir "$(SNAPSHOT)"
+
+benchmark:  ## Agent x REPEATS + 3 baselines on every snapshot, then results/
+	@python3 -m eval.scenario_runner --scenario-dir "$(SCENARIO_DIR)" --mode benchmark \
+		--repeats $(REPEATS) --run-id $(BENCH_ID)
+	@python3 -m eval.report --run-id $(BENCH_ID)
+	@python3 -m eval.compare --run-id $(BENCH_ID)
 
 help:
 	@echo ""

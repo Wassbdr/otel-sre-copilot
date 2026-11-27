@@ -43,6 +43,7 @@ dev = [
 
 [project.scripts]
 sre-copilot = "src.agent.run:main"
+sre-copilot-demo = "src.demo:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
