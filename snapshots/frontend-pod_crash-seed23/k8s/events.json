@@ -1,0 +1,47 @@
+[
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: frontend",
+    "count": 3,
+    "first_time": "2026-11-27 14:59:12+00:00",
+    "last_time": "2026-11-27 16:32:04+00:00",
+    "involved_object_name": "frontend-5bd88c6fd9-9dhgg"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container frontend",
+    "count": 3,
+    "first_time": "2026-11-27 14:59:12+00:00",
+    "last_time": "2026-11-27 16:32:04+00:00",
+    "involved_object_name": "frontend-5bd88c6fd9-9dhgg"
+  },
+  {
+    "type": "Normal",
+    "reason": "Killing",
+    "message": "Container frontend definition changed, will be restarted",
+    "count": 2,
+    "first_time": "2026-11-27 16:27:04+00:00",
+    "last_time": "2026-11-27 16:32:04+00:00",
+    "involved_object_name": "frontend-5bd88c6fd9-9dhgg"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Container image \"gcr.io/google-containers/pause:latest\" already present on machine",
+    "count": 1,
+    "first_time": "2026-11-27 16:27:04+00:00",
+    "last_time": "2026-11-27 16:27:04+00:00",
+    "involved_object_name": "frontend-5bd88c6fd9-9dhgg"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Container image \"ghcr.io/open-telemetry/demo:3.1.0-frontend\" already present on machine",
+    "count": 1,
+    "first_time": "2026-11-27 16:32:04+00:00",
+    "last_time": "2026-11-27 16:32:04+00:00",
+    "involved_object_name": "frontend-5bd88c6fd9-9dhgg"
+  }
+]
