@@ -120,3 +120,29 @@ def test_backoff_does_not_retry_real_errors(monkeypatch: pytest.MonkeyPatch) -> 
     with pytest.raises(ValueError):
         llm.invoke_with_backoff(model, [])
     assert model.calls == 1
+
+
+def test_invalid_report_gets_one_repair_round(monkeypatch: pytest.MonkeyPatch) -> None:
+    from src.agent import graph as graph_mod
+    from src.agent.schemas import initial_state
+    from src.datasources.replay import ReplayDataSource
+
+    monkeypatch.setenv("LLM_PROVIDER", "fake")
+    original = graph_mod.make_chat_model
+    report_models: list[FakeChatModel] = []
+
+    def first_report_invalid(**kw: object) -> object:
+        if not kw.get("json_mode"):
+            return original(**kw)  # type: ignore[arg-type]
+        report_models.append(FakeChatModel(responses=[AIMessage(content='{"root_causes": [1]}')]))
+        return report_models[-1]
+
+    monkeypatch.setattr(graph_mod, "make_chat_model", first_report_invalid)
+    events: list[dict[str, object]] = []
+    graph = graph_mod.build_graph(ReplayDataSource(FIXTURE), on_event=events.append)
+    state = initial_state("fixture", "2024-01-15T14:00:00Z", "2024-01-15T14:10:00Z", "otel-demo")
+    report = graph.invoke(state)["final_report"]
+
+    assert report.root_causes[0].service == "frontend"
+    assert len(report_models[0].calls) == 2
+    assert any(e["type"] == "report_repair" for e in events)

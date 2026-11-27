@@ -56,6 +56,7 @@ class GraphState(TypedDict, total=False):
 
 log = structlog.get_logger()
 
+AGENT_VERSION = "0.2.0"
 MAX_TOOL_ITERATIONS = int(os.getenv("MAX_TOOL_ITERATIONS", "10"))
 # Force at least this many tool iterations, and at least one Prometheus metric sweep, before
 # the agent is allowed to write a report. Without this the LLM tends to call get_service_topology
@@ -203,27 +204,61 @@ def build_graph(ds: DataSource, on_event: EventCallback | None = None) -> Any:  
         report_llm = make_chat_model(max_tokens=int(os.getenv("LLM_REPORT_MAX_TOKENS", "8192")),
                                      json_mode=True)
 
-        try:
-            response: AIMessage = invoke_with_backoff(report_llm, messages_for_report)
-        except Exception as e:
-            # A reasoning model that exhausts max_tokens is a failed investigation, scored as
-            # a miss with the run's real cost, not a crashed benchmark.
-            if "LengthFinishReason" not in type(e).__name__:
-                raise
-            log.error("report_truncated", error=str(e)[:200])
-            usage = getattr(getattr(e, "completion", None), "usage", None)
-            response = AIMessage(content="", usage_metadata={
-                "input_tokens": getattr(usage, "prompt_tokens", 0),
-                "output_tokens": getattr(usage, "completion_tokens", 0),
-                "total_tokens": getattr(usage, "total_tokens", 0),
-            })
+        # One repair round: a report that fails the schema (or runs out of tokens) gets the
+        # validation error back once. The grounding check and metrics stay external.
+        usage_totals = dict(state.get("token_usage", {}))
+        report: InvestigationReport | None = None
+        content = ""
+        for attempt in range(1 + int(os.getenv("LLM_REPORT_REPAIRS", "1"))):
+            try:
+                response: AIMessage = invoke_with_backoff(report_llm, messages_for_report)
+            except Exception as e:
+                if "LengthFinishReason" not in type(e).__name__:
+                    raise
+                usage = getattr(getattr(e, "completion", None), "usage", None)
+                response = AIMessage(content="", usage_metadata={
+                    "input_tokens": getattr(usage, "prompt_tokens", 0),
+                    "output_tokens": getattr(usage, "completion_tokens", 0),
+                    "total_tokens": getattr(usage, "total_tokens", 0),
+                })
+            usage_totals = _add_usage(usage_totals, response)
+            content = response.content if isinstance(response.content, str) else str(
+                response.content)
+            try:
+                raw = json.loads(_strip_json_fences(content))
+                raw.update({
+                    "incident_id": state["incident_id"],
+                    "investigation_start_ts": inv_start,
+                    "investigation_end_ts": inv_start,
+                    "llm_model": settings.model,
+                    "agent_version": AGENT_VERSION,
+                    "fault_type_classification": (
+                        raw.get("root_causes", [{}])[0].get("fault_type", "unknown")
+                        if raw.get("root_causes") else "unknown"
+                    ),
+                })
+                report = InvestigationReport.model_validate(raw)
+                break
+            except (json.JSONDecodeError, ValidationError, IndexError, AttributeError) as e:
+                error = (
+                    "the answer hit the token limit before the JSON was complete"
+                    if not content else str(e)[:1500]
+                )
+                log.error("report_parse_failed", attempt=attempt, error=error[:300],
+                          content_preview=content[:200])
+                emit({"type": "report_repair", "attempt": attempt, "error": error[:300]})
+                messages_for_report = messages_for_report + [
+                    AIMessage(content=content[:4000]),
+                    HumanMessage(content=(
+                        f"That report is invalid: {error}\n"
+                        "Output the corrected InvestigationReport JSON only: at most 3 "
+                        "root_causes, at most 4 evidence items each, signal_type one of "
+                        "metric | trace | log | k8s_event, fault_type one of the allowed "
+                        "values, every field of the schema present."
+                    )),
+                ]
+
         inv_end = datetime.now(UTC).isoformat()
-
-        # Parse and validate
-        content = response.content if isinstance(response.content, str) else str(response.content)
-
-        # Token totals cover every LLM call of the investigation, not just the report call.
-        usage_totals = _add_usage(state.get("token_usage", {}), response)
         prompt_tokens = usage_totals["prompt_tokens"]
         completion_tokens = usage_totals["completion_tokens"]
         emit({"type": "report_llm", "prompt_tokens": prompt_tokens,
@@ -231,43 +266,28 @@ def build_graph(ds: DataSource, on_event: EventCallback | None = None) -> Any:  
         latency_s = (
             datetime.fromisoformat(inv_end) - datetime.fromisoformat(inv_start)
         ).total_seconds() - rate_limit_wait_s()
-
-        try:
-            raw = json.loads(_strip_json_fences(content))
-            raw.update({
-                "incident_id": state["incident_id"],
-                "investigation_start_ts": inv_start,
-                "investigation_end_ts": inv_end,
-                "latency_s": latency_s,
-                "total_prompt_tokens": prompt_tokens,
-                "total_completion_tokens": completion_tokens,
-                "cost_usd": estimate_cost(prompt_tokens, completion_tokens),
-                "llm_model": settings.model,
-                "agent_version": "0.1.0",
-                "fault_type_classification": (
-                    raw.get("root_causes", [{}])[0].get("fault_type", "unknown")
-                    if raw.get("root_causes") else "unknown"
-                ),
-            })
-            report = InvestigationReport.model_validate(raw)
-        except (json.JSONDecodeError, ValidationError, IndexError) as e:
-            log.error("report_parse_failed", error=str(e), content_preview=content[:300])
+        totals: dict[str, Any] = {
+            "investigation_end_ts": inv_end,
+            "latency_s": latency_s,
+            "total_prompt_tokens": prompt_tokens,
+            "total_completion_tokens": completion_tokens,
+            "cost_usd": estimate_cost(prompt_tokens, completion_tokens),
+        }
+        if report is not None:
+            report = report.model_copy(update=totals)
+        else:
             # Unparseable answer = no hypothesis. model_construct skips the min_length=1 check
             # on root_causes so the harness scores it as a miss instead of crashing.
             report = InvestigationReport.model_construct(
                 remediation_steps=[],
                 grounding_score=0.0,
-                cost_usd=0.0,
-                agent_version="0.1.0",
+                agent_version=AGENT_VERSION,
                 incident_id=state["incident_id"],
                 investigation_start_ts=inv_start,
-                investigation_end_ts=inv_end,
                 root_causes=[],
                 fault_type_classification="unknown",
-                latency_s=latency_s,
-                total_prompt_tokens=prompt_tokens,
-                total_completion_tokens=completion_tokens,
                 llm_model=settings.model,
+                **totals,
             )
 
         return {"final_report": report, "token_usage": usage_totals}

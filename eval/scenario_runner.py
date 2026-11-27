@@ -334,7 +334,7 @@ def _write_summary(
         "excluded_snapshots_failed_validation": sorted(set(EXCLUDED_SNAPSHOTS)),
         "hardware": f"{platform.machine()} {os.cpu_count()} vCPU, {platform.system()}, no GPU",
         "python": platform.python_version(),
-        "agent_version": "0.1.0",
+        "agent_version": __import__("src.agent.graph", fromlist=["AGENT_VERSION"]).AGENT_VERSION,
         "n_scenarios": len(all_results),
         "ts": datetime.now(UTC).isoformat(),
     }
