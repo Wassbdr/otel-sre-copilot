@@ -143,3 +143,28 @@ Change against round2-iteration-0:
 | RCAEval BARO (metrics) | 1/42 | 100.0% | 100.0% | 100.0% | 100.0% | n/a | 0 | n/a | 0 | 0.013 | 0.0000 |
 | Error-rate z-score | 1/42 | 0.0% | 0.0% | 0.0% | 100.0% | n/a | 0 | n/a | 0 | 0.001 | 0.0000 |
 | Random | 1/42 | 0.0% | 0.0% | 0.0% | 100.0% | n/a | 0 | n/a | 0 | 0.000 | 0.0000 |
+
+## Reference replay comparison: full ReAct tool access, recorded query compatibility and structured HolmesGPT diagnosis (round2-reference-aligned)
+
+14 Astronomy Shop snapshots (development); 3 runs per method; nvidia/nemotron-3.5-lightning-30b-a3b; x86_64, 8 vCPU, Linux, no GPU.
+
+| Method | Runs | Top-1 | Top-3 | Service top-1 | Service top-3 | Grounding | Citations | Calls/run | Tokens/run | Seconds/run | USD/run |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| SRE-Copilot | 42/42 | 69.0% | 100.0% | 83.3% | 100.0% | 100.0% | 142 | 3.0 | 9,903 | 12.950 | 0.0000 |
+| ReAct without grounding verifier in the agent | 42/42 | 14.3% | 21.4% | 33.3% | 52.4% | 43.8% | 96 | 11.0 | 47,774 | 43.982 | 0.0000 |
+| SRE-Copilot without anomaly prior | 42/42 | 9.5% | 19.0% | 33.3% | 69.0% | 90.9% | 230 | 3.1 | 9,186 | 10.761 | 0.0000 |
+| HolmesGPT 0.48.0 (1 run per snapshot) | 14/14 | 14.3% | 28.6% | 14.3% | 42.9% | 85.7% | 49 | 10.0 | 421,628 | 119.805 | 0.0000 |
+| RCAEval N-Sigma (metrics) | 42/42 | 35.7% | 50.0% | 42.9% | 64.3% | n/a | 0 | n/a | 0 | 0.006 | 0.0000 |
+| Composite z-score | 42/42 | 28.6% | 50.0% | 42.9% | 92.9% | n/a | 0 | n/a | 0 | 0.004 | 0.0000 |
+| RCAEval BARO (metrics) | 42/42 | 28.6% | 42.9% | 42.9% | 57.1% | n/a | 0 | n/a | 0 | 0.008 | 0.0000 |
+| Error-rate z-score | 42/42 | 0.0% | 14.3% | 14.3% | 50.0% | n/a | 0 | n/a | 0 | 0.001 | 0.0000 |
+| Random | 42/42 | 4.8% | 4.8% | 9.5% | 23.8% | n/a | 0 | n/a | 0 | 0.000 | 0.0000 |
+
+Change against round2-iteration-6:
+
+| Change | Metric | Delta |
+| --- | --- | ---: |
+| Reference replay comparison: full ReAct tool access, recorded query compatibility and structured HolmesGPT diagnosis | Top-1 | +0.0 pp |
+| Reference replay comparison: full ReAct tool access, recorded query compatibility and structured HolmesGPT diagnosis | Top-3 | +0.0 pp |
+| Reference replay comparison: full ReAct tool access, recorded query compatibility and structured HolmesGPT diagnosis | Service top-1 | +0.0 pp |
+| Reference replay comparison: full ReAct tool access, recorded query compatibility and structured HolmesGPT diagnosis | Service top-3 | +0.0 pp |
