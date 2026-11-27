@@ -94,3 +94,13 @@ baselines** → Phase 4 README/CI/LICENSE. Détail dans le plan d'implémentatio
   ns otel-demo) et — une fois service.name corrigé — les traces Tempo par service.
   Fix en cours : (a) restaurer OTEL_SERVICE_NAME (helm), (b) corriger sélecteurs chaos,
   (c) migration de nommage + templates de requêtes.
+
+## MAJ 2026-11-27 — benchmark complet (branche showcase/2026-11)
+
+- 14 snapshots validés (7 scénarios × seeds 42 et 7), télémétrie brute complète (Prometheus, Tempo, Loki, events k8s).
+  `payment-http_abort-seed7` a échoué la validation une fois (request_rate 0.51× baseline) et a été re-capturé.
+- Run `bench-20261127b` : agent `nvidia/nemotron-3.5-lightning-30b-a3b` × 3 runs + 3 baselines sur les mêmes snapshots.
+  Top-1 strict 36 % ± 12 (composite z-score 29 %), top-3 48 % (composite 50 %), service top-1 62 % (composite 43 %),
+  grounding 0.97, 3/42 runs < 0.8. Tables : `results/benchmark.md`.
+- L'agent ne bat pas la baseline composite en top-3 : c'est un résultat. Échecs systématiques : payment http_abort,
+  shipping high_latency.

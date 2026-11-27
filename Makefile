@@ -1,4 +1,4 @@
-.PHONY: setup up down health-check fault investigate eval eval-replay eval-baselines compare test lint fmt demo demo-live benchmark help
+.PHONY: setup up down health-check fault investigate eval eval-replay eval-baselines compare test lint fmt check-python demo demo-live benchmark help
 
 CLUSTER_NAME      := otel-sre-copilot
 KUBECONFIG_PATH   := $(HOME)/.kube/config
@@ -142,10 +142,14 @@ fmt:
 	$(PYTHON) -m ruff format src/ eval/ scripts/ tests/
 
 # ── Demo ──────────────────────────────────────────────────────────────────
-demo:  ## Offline: replay the recorded checkout pod-crash investigation (no key, no cluster)
+check-python:
+	@$(PYTHON) -c 'import sys; sys.exit(sys.version_info < (3, 12))' || { \
+	  echo "Python >= 3.12 required ($(PYTHON) is older): uv venv -p 3.12 && uv pip install -e ." >&2; exit 1; }
+
+demo: check-python  ## Offline: replay the recorded checkout pod-crash investigation (no key, no cluster)
 	@$(PYTHON) -m src.demo --trace "$(TRACE)"
 
-demo-live:  ## Live LLM on a recorded snapshot (needs LLM_API_KEY or NIM_API_KEY)
+demo-live: check-python  ## Live LLM on a recorded snapshot (needs LLM_API_KEY or NIM_API_KEY)
 	@$(PYTHON) -m src.demo --live --snapshot-dir "$(SNAPSHOT)"
 
 benchmark:  ## Agent x REPEATS + 3 baselines on every snapshot, then results/

@@ -6,7 +6,7 @@ An LLM agent that finds the root cause of a Kubernetes incident from OpenTelemet
 
 ```bash
 git clone https://github.com/Wassbdr/otel-sre-copilot && cd otel-sre-copilot
-python3.12 -m venv .venv && .venv/bin/pip install -e .
+uv venv -p 3.12 && uv pip install -e .   # or: python3.12 -m venv .venv && .venv/bin/pip install -e .
 make demo                 # replays a recorded investigation: no API key, no cluster
 ```
 
