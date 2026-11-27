@@ -164,6 +164,7 @@ bench: check-python  ## Compare methods on snapshots and resume with the same BE
 	@$(PYTHON) -m eval.bench --run-id "$(BENCH_RUN_ID)" --repeats "$(REPEATS)" \
 		--split "$(BENCH_SPLIT)" $(if $(BENCH_METHODS),--methods $(BENCH_METHODS)) \
 		$(if $(BENCH_SNAPSHOT_SET_FROM),--snapshot-set-from "$(BENCH_SNAPSHOT_SET_FROM)") \
+		$(if $(BENCH_RECORDED_FROM),--recorded-from "$(BENCH_RECORDED_FROM)") \
 		$(if $(BENCH_CHANGE),--change "$(BENCH_CHANGE)")
 
 help:

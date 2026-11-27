@@ -106,3 +106,12 @@ def test_improved_run_pins_original_snapshot_set_and_preserves_legacy_variant(
             run_id, config["snapshots"][0], "agent", 0, config.get("agent_variant", "agent"),
         )
         assert row["method"] == expected
+
+
+def test_recorded_benchmark_has_no_live_fallback(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path,
+) -> None:
+    monkeypatch.setattr(scenario_runner, "_ARTIFACTS_DIR", tmp_path)
+    monkeypatch.setattr(bench, "run_scenario", lambda *a, **k: pytest.fail("no live call"))
+    with pytest.raises(ValueError, match="No live fallback"):
+        bench._measure("test", {"scenario_id": "missing"}, "agent", 0, "agent_full", "recorded")

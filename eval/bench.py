@@ -50,6 +50,7 @@ def _snapshot_hash(snapshot: Path) -> str:
 def _snapshot_set(
     scenario_dirs: Sequence[Path], split: str, run_dir: Path, repeats: int,
     snapshot_set_from: str | None = None,
+    recorded_from: str | None = None,
 ) -> dict[str, Any]:
     manifest_path = run_dir / "manifest.json"
     settings = llm_settings()
@@ -60,9 +61,12 @@ def _snapshot_set(
         "split": split,
         "random_seed": int(os.getenv("RANDOM_SEED", "42")),
     }
+    if recorded_from:
+        setup["recorded_from"] = recorded_from
     if manifest_path.exists():
         manifest: dict[str, Any] = json.loads(manifest_path.read_text())
-        if any(manifest[key] != value for key, value in setup.items()):
+        if (any(manifest.get(key) != value for key, value in setup.items())
+                or manifest.get("recorded_from") != recorded_from):
             raise ValueError("Benchmark configuration changed; choose a new BENCH_RUN_ID.")
         for snapshot in manifest["snapshots"]:
             if _snapshot_hash(Path(snapshot["path"])) != snapshot["sha256"]:
@@ -71,7 +75,15 @@ def _snapshot_set(
                 )
         return manifest
 
-    if snapshot_set_from:
+    if recorded_from:
+        source = Path("artifacts") / recorded_from / "config.json"
+        if not source.is_file():
+            raise ValueError(f"Missing recorded run config: {source}.")
+        config = json.loads(source.read_text())
+        if config["model"] != settings.model or config["repeats"] != repeats:
+            raise ValueError("The recorded run must use the same model and repeat count.")
+        paths = sorted(Path(path) for path in config["snapshots"])
+    elif snapshot_set_from:
         source = Path("artifacts") / snapshot_set_from / "manifest.json"
         if not source.is_file():
             raise ValueError(f"Missing reference snapshot manifest: {source}.")
@@ -104,7 +116,8 @@ def _snapshot_set(
         **setup,
         "agent_variant": "agent_full",
         "snapshots": snapshots,
-        "hardware": f"{platform.machine()}, {os.cpu_count()} vCPU, {platform.system()}, no GPU",
+        "hardware": (config["hardware"] if recorded_from else
+                     f"{platform.machine()}, {os.cpu_count()} vCPU, {platform.system()}, no GPU"),
     }
     write_json_atomic(manifest_path, manifest)
     return manifest
@@ -112,7 +125,7 @@ def _snapshot_set(
 
 def _measure(
     run_id: str, snapshot: dict[str, Any], method: str, repeat: int,
-    agent_variant: str,
+    agent_variant: str, recorded_from: str | None = None,
 ) -> dict[str, Any]:
     runner_method = agent_variant if method == "agent" else method
     trace = trace_path(run_id, snapshot["scenario_id"], runner_method, repeat)
@@ -120,7 +133,14 @@ def _measure(
     if checkpoint.exists():
         result: dict[str, Any] = json.loads(checkpoint.read_text())
         return result
-    if method in LLM_METHODS and trace.exists():
+    if recorded_from and method == "agent":
+        recorded = trace_path(recorded_from, snapshot["scenario_id"], "agent", repeat)
+        if not recorded.is_file():
+            raise ValueError(f"Missing recorded trace: {recorded}. No live fallback.")
+        if json.loads(recorded.read_text())["model"] != llm_settings().model:
+            raise ValueError(f"Recorded trace {recorded} uses a different model.")
+        result = _metrics_from_trace(recorded)
+    elif method in LLM_METHODS and trace.exists():
         if json.loads(trace.read_text())["model"] != llm_settings().model:
             raise ValueError("Recorded trace uses a different model; choose a new BENCH_RUN_ID.")
         result = _metrics_from_trace(trace)
@@ -214,7 +234,10 @@ def _report(path: Path, iteration: dict[str, Any]) -> None:
             if method not in run["methods"]:
                 continue
             m = run["methods"][method]
-            cells = [LABELS[method], f"{m['completed']}/{m['expected']}"]
+            label = LABELS[method]
+            if method == "agent" and setup.get("recorded_from"):
+                label += f" (recorded: {setup['recorded_from']})"
+            cells = [label, f"{m['completed']}/{m['expected']}"]
             cells.extend(_format(m[key], ".1%") for key in ACCURACY)
             cells.extend([
                 _format(m["grounding_score"], ".1%"),
@@ -240,9 +263,16 @@ def run(args: argparse.Namespace) -> bool:
         raise ValueError("--repeats must be at least one.")
     if not args.run_id or Path(args.run_id).name != args.run_id or args.run_id in {".", ".."}:
         raise ValueError("Use a single directory name for BENCH_RUN_ID.")
+    recorded_from = getattr(args, "recorded_from", None)
+    if recorded_from and (
+        Path(recorded_from).name != recorded_from or recorded_from in {".", "..", args.run_id}
+        or any(method in {"react", "agent_no_prior"} for method in args.methods)
+        or getattr(args, "snapshot_set_from", None)
+    ):
+        raise ValueError("Use a different recorded run ID with agent and/or statistical methods.")
     setup = _snapshot_set(
         args.scenario_dir, args.split, Path("artifacts") / args.run_id,
-        args.repeats, getattr(args, "snapshot_set_from", None),
+        args.repeats, getattr(args, "snapshot_set_from", None), recorded_from,
     )
     rows: dict[str, list[dict[str, Any]]] = {m: [] for m in args.methods}
     for method in (*BASELINE_METHODS, *LLM_METHODS):
@@ -253,6 +283,7 @@ def run(args: argparse.Namespace) -> bool:
                 try:
                     result = _measure(
                         args.run_id, snapshot, method, repeat, setup.get("agent_variant", "agent"),
+                        recorded_from,
                     )
                 except Exception as error:
                     log.error("benchmark_item_failed", method=method,
@@ -278,6 +309,7 @@ def main() -> None:
     parser.add_argument("--methods", nargs="+", choices=METHODS, default=METHODS)
     parser.add_argument("--run-id", required=True)
     parser.add_argument("--snapshot-set-from", help="Pin snapshots to an existing run manifest.")
+    parser.add_argument("--recorded-from", help="Re-score recorded agent traces without LLM calls.")
     parser.add_argument("--repeats", type=int, default=3)
     parser.add_argument("--output-dir", type=Path, default=Path("benchmarks"))
     parser.add_argument("--change", default="Baseline")

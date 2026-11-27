@@ -234,24 +234,27 @@ def _run_baselines(
 
 def _metrics_from_trace(trace_path: Path) -> dict[str, Any]:
     """Re-score a recorded run with the current metric code (keeps run-time fields)."""
+    from eval.grounding_verifier import verify
     from eval.metrics import ScenarioResult, compute_per_scenario
     from src.agent.schemas import InvestigationReport
 
     trace = json.loads(trace_path.read_text())
+    report = (InvestigationReport.model_validate(trace["report"])
+              if trace["report"].get("root_causes")
+              else InvestigationReport.model_construct(**trace["report"]))
+    grounding = verify(report, trace["tool_calls"])
+    report.grounding_score = grounding.grounding_score
     sr = ScenarioResult(
         scenario_id=trace["scenario_id"],
-        report=(InvestigationReport.model_validate(trace["report"])
-                if trace["report"].get("root_causes")
-                # a miss (no parseable hypothesis) is recorded with root_causes=[]
-                else InvestigationReport.model_construct(**trace["report"])),
+        report=report,
         ground_truth=trace["ground_truth"],
-        grounding_score=trace["grounding"]["score"],
+        grounding_score=grounding.grounding_score,
     )
     return {
         **trace["metrics"],
         **compute_per_scenario(sr),
-        "evidence_count": trace["grounding"].get("total"),
-        "verified_evidence_count": trace["grounding"].get("verified"),
+        "evidence_count": grounding.total_count,
+        "verified_evidence_count": grounding.verified_count,
     }
 
 
