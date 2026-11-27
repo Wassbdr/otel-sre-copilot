@@ -6,10 +6,12 @@ They never import HTTP libraries directly — all I/O goes through a DataSource.
 
 from __future__ import annotations
 
-import os
+import json
+from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 import structlog
+from langchain_core.tools import BaseTool, tool
 
 from src.agent.context_manager import (
     ContextBudget,
@@ -17,18 +19,19 @@ from src.agent.context_manager import (
     compress_prometheus_range,
     compress_traces,
 )
+from src.anomaly import MetricWindow, metric_windows
+from src.telemetry_queries import SIGNAL_TO_FAULT
+from src.trace_timing import Timing, exclusive_timings
 
 if TYPE_CHECKING:
     from src.datasources.protocol import DataSource
 
 log = structlog.get_logger()
 
-MAX_TOOL_ITERATIONS = int(os.getenv("MAX_TOOL_ITERATIONS", "10"))
-
-
-def make_tools(ds: DataSource, budget: ContextBudget) -> list:  # type: ignore[type-arg]
+def make_tools(
+    ds: DataSource, budget: ContextBudget, *, improved: bool = False, prior: bool = False,
+) -> list[BaseTool]:
     """Return LangChain tool functions bound to a specific DataSource and budget."""
-    from langchain_core.tools import tool
 
     @tool
     def query_prometheus_range(
@@ -103,7 +106,7 @@ def make_tools(ds: DataSource, budget: ContextBudget) -> list:  # type: ignore[t
                 error_only=error_only,
                 limit=limit,
             )
-            compressed = compress_traces(traces)
+            compressed = compress_traces(traces, full_ids=improved)
             return budget.consume(compressed)
         except Exception as e:
             log.warning("tool_error", tool="search_traces", error=str(e))
@@ -122,7 +125,9 @@ def make_tools(ds: DataSource, budget: ContextBudget) -> list:  # type: ignore[t
             trace = ds.get_trace(trace_id)
             if not trace:
                 return f"[trace {trace_id} not found]"
-            # Return first 1000 chars of JSON — enough to see root spans
+            if improved:
+                timings = exclusive_timings(trace)
+                return budget.consume(_timing_lines([(trace_id, t) for t in timings[:6]]))
             return budget.consume(str(trace)[:1000])
         except Exception as e:
             log.warning("tool_error", tool="get_trace", error=str(e))
@@ -148,7 +153,7 @@ def make_tools(ds: DataSource, budget: ContextBudget) -> list:  # type: ignore[t
         """
         try:
             results = ds.query_loki(logql, start, end, limit=limit)
-            compressed = compress_loki(results)
+            compressed = compress_loki(results, compact=improved)
             return budget.consume(compressed)
         except Exception as e:
             log.warning("tool_error", tool="query_loki", error=str(e))
@@ -221,7 +226,8 @@ def make_tools(ds: DataSource, budget: ContextBudget) -> list:  # type: ignore[t
         try:
             scores = rank_services(ds, signal, start, end)
             lines = [f"{signal}: window mean vs pre-incident baseline, most anomalous first"]
-            for sc in scores:
+            displayed = [sc for sc in scores if sc.has_data][:5] if improved else scores
+            for sc in displayed:
                 if not sc.has_data:
                     lines.append(f"  {sc.service:<16} no data")
                     continue
@@ -230,14 +236,66 @@ def make_tools(ds: DataSource, budget: ContextBudget) -> list:  # type: ignore[t
                 lines.append(
                     f"  {sc.service:<16} z={z}  window={sc.window_mean:.4g}  "
                     f"baseline={sc.baseline_mean:.4g}±{sc.baseline_std:.2g}  "
-                    f"promql: {sc.query}"
+                    + (f"citation: metric:{signal}:{sc.service}" if improved else
+                       f"promql: {sc.query}")
                 )
             return budget.consume("\n".join(lines))
         except Exception as e:
             log.warning("tool_error", tool="rank_services_by_signal", error=str(e))
             return f"[ERROR: {e}]"
 
-    return [
+    @tool
+    def rank_incident_anomalies(start: str, end: str) -> str:
+        """Compare composite z-score and N-Sigma rankings against pre-incident metrics."""
+        windows = metric_windows(ds, list(SIGNAL_TO_FAULT), start, end)
+        sections = [
+            _rank_windows("composite", windows, lambda w: w.composite),
+            _rank_windows("n-sigma", windows, lambda w: w.nsigma),
+        ]
+        latency = [w for w in windows if w.signal == "p99_latency_ms" and w.ratio is not None]
+        latency.sort(key=lambda w: -(w.ratio or 0))
+        sections.append("p99 ratio, caller spans include downstream time:\n" + "\n".join(
+            _metric_line(w, w.ratio or 0) for w in latency[:4]
+        ))
+        return budget.consume("\n".join(sections))
+
+    @tool
+    def rank_request_rate_drops(start: str, end: str) -> str:
+        """Compare incoming request rates against baseline and rank decreases, not error spikes."""
+        windows = metric_windows(ds, ["request_rate"], start, end)
+        drops = [w for w in windows if w.baseline_mean > 0 and w.incident_mean < w.baseline_mean]
+        drops.sort(key=lambda w: w.incident_mean / w.baseline_mean)
+        lines = [_metric_line(w, 1 - (w.ratio or 0)) for w in drops[:6]]
+        return budget.consume("Request-rate decreases (score is fraction lost):\n" + (
+            "\n".join(lines) or "none among services with baseline traffic"
+        ))
+
+    @tool
+    def summarize_trace_latency(start: str, end: str) -> str:
+        """Summarize server self time and matched remote waits across sampled slow traces."""
+        sample = ds.search_traces("", start, end, min_duration_ms=200, limit=8)
+        per_kind: dict[str, dict[str, tuple[str, Timing]]] = {}
+        for summary in sample:
+            trace_id = str(summary.get("traceID", ""))
+            if not trace_id:
+                continue
+            try:
+                trace = ds.get_trace(trace_id)
+            except Exception:
+                continue
+            for timing in exclusive_timings(trace):
+                by_service = per_kind.setdefault(timing.kind, {})
+                current = by_service.get(timing.service)
+                if current is None or current[1].exclusive_ms < timing.exclusive_ms:
+                    by_service[timing.service] = (trace_id, timing)
+        lines = [
+            line
+            for group in per_kind.values()
+            for line in sorted(group.values(), key=lambda row: -row[1].exclusive_ms)[:3]
+        ]
+        return budget.consume(_timing_lines(lines))
+
+    tools = [
         rank_services_by_signal,
         query_prometheus_range,
         query_prometheus_instant,
@@ -247,3 +305,40 @@ def make_tools(ds: DataSource, budget: ContextBudget) -> list:  # type: ignore[t
         get_pod_events,
         get_service_topology,
     ]
+    if improved:
+        tools.extend([rank_request_rate_drops, summarize_trace_latency])
+    if prior:
+        tools.append(rank_incident_anomalies)
+    return tools
+
+
+def _metric_line(window: MetricWindow, score: float) -> str:
+    return (
+        f"metric:{window.signal}:{window.service} score={score:.3g} "
+        f"before={window.baseline_mean:.3g} during={window.incident_mean:.3g}"
+    )
+
+
+def _rank_windows(
+    name: str, windows: list[MetricWindow], score: Callable[[MetricWindow], float],
+) -> str:
+    top: list[str] = []
+    seen: set[str] = set()
+    for window, value in sorted(((w, score(w)) for w in windows), key=lambda row: -row[1]):
+        if window.service not in seen:
+            top.append(_metric_line(window, value))
+            seen.add(window.service)
+        if len(top) == 5:
+            break
+    return name + ":\n" + "\n".join(top)
+
+
+def _timing_lines(timings: list[tuple[str, Timing]]) -> str:
+    if not timings:
+        return "No sampled span timing available."
+    return "\n".join(
+        f"trace:{trace_id} {timing.service} {timing.kind} "
+        f"exclusive={timing.exclusive_ms:.0f}ms total={timing.inclusive_ms:.0f}ms "
+        f"operation={json.dumps(timing.operation[:70])}"
+        for trace_id, timing in timings
+    )

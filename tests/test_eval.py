@@ -61,6 +61,19 @@ class TestGroundingVerifier:
         assert result.has_hallucination_warning
         assert len(result.failed_items) == 1
 
+    def test_compact_citations_require_exact_emitted_id_and_signal_type(self) -> None:
+        from eval.grounding_verifier import verify
+
+        citation = "trace:3cec650e9f4bc75756c66f915a5ba14"
+        tool_log: list[dict[str, object]] = [{"evidence_ids": [citation]}]
+        assert verify(self._make_report_with_evidence(citation, "trace"), tool_log).verified_count
+        assert not verify(
+            self._make_report_with_evidence(citation[:-1], "trace"), tool_log,
+        ).verified_count
+        assert not verify(
+            self._make_report_with_evidence(citation, "metric"), tool_log,
+        ).verified_count
+
     def test_no_evidence_scores_1(self) -> None:
         from eval.grounding_verifier import verify
         report = InvestigationReport(

@@ -70,3 +70,57 @@ def rank_services(ds: DataSource, signal: str, start: str, end: str,
         z = (float(np.mean(win)) - mu) / (sigma + 1e-9)
         scores.append(ServiceScore(svc, z, float(np.mean(win)), mu, sigma, query, True))
     return sorted(scores, key=lambda s: -s.z)
+
+
+@dataclass(frozen=True)
+class MetricWindow:
+    service: str
+    signal: str
+    baseline: list[float]
+    incident: list[float]
+
+    @property
+    def baseline_mean(self) -> float:
+        return float(np.mean(self.baseline))
+
+    @property
+    def incident_mean(self) -> float:
+        return float(np.mean(self.incident))
+
+    @property
+    def ratio(self) -> float | None:
+        return self.incident_mean / self.baseline_mean if self.baseline_mean > 0 else None
+
+    @property
+    def composite(self) -> float:
+        return max(
+            0.0, (self.incident_mean - self.baseline_mean) / (float(np.std(self.baseline)) + 1e-9),
+        )
+
+    @property
+    def nsigma(self) -> float:
+        return max_standardized(self.baseline, self.incident)
+
+
+def max_standardized(baseline: list[float], incident: list[float]) -> float:
+    scale = float(np.std(baseline))
+    if scale < 10 * np.finfo(float).eps:
+        scale = 1.0
+    return (max(incident) - float(np.mean(baseline))) / scale
+
+
+def metric_windows(
+    ds: DataSource, signals: list[str], start: str, end: str,
+) -> list[MetricWindow]:
+    baseline_start = minus_minutes(start, BASELINE_MINUTES)
+    windows = []
+    for service in ASTRONOMY_SHOP_SERVICES:
+        for signal in signals:
+            query = METRIC_QUERIES[signal].format(svc=service)
+            base = [v for v in values(ds.query_prometheus_range(query, baseline_start, start))
+                    if np.isfinite(v)]
+            current = [v for v in values(ds.query_prometheus_range(query, start, end))
+                       if np.isfinite(v)]
+            if base and current:
+                windows.append(MetricWindow(service, signal, base, current))
+    return windows

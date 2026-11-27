@@ -6,6 +6,7 @@ from typing import Any, Literal
 import numpy as np
 
 from src.agent.schemas import InvestigationReport, RootCauseHypothesis
+from src.anomaly import max_standardized
 from src.datasources.live import ASTRONOMY_SHOP_SERVICES
 from src.datasources.protocol import DataSource
 from src.telemetry_queries import METRIC_QUERIES, SIGNAL_TO_FAULT
@@ -20,7 +21,7 @@ def rank_signal(
         q1, median, q3 = np.percentile(baseline, [25, 50, 75])
         center, scale = float(median), float(q3 - q1)
     else:
-        center, scale = float(np.mean(baseline)), float(np.std(baseline))
+        return max_standardized(baseline, incident)
     if scale < 10 * np.finfo(float).eps:
         scale = 1.0
     return (max(incident) - center) / scale

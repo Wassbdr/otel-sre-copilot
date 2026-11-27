@@ -107,6 +107,8 @@ def build_system_prompt(
     max_iterations: int = 10,
     *,
     react: bool = False,
+    improved: bool = False,
+    prior: bool = False,
 ) -> str:
     if react:
         return (
@@ -117,6 +119,30 @@ def build_system_prompt(
             f"{INVESTIGATION_REPORT_SCHEMA}\n"
             "On snapshots, use these metric query templates, substituting <SVC>:\n"
             f"{_query_catalog()}"
+        )
+    if improved:
+        sweep = (
+            "rank_incident_anomalies" if prior else "parallel rank_services_by_signal calls"
+        )
+        return (
+            f"Investigate {namespace} from {start} to {end}. Return up to three ranked "
+            "service and fault-type pairs.\n"
+            f"Start with {sweep} and rank_request_rate_drops in parallel. "
+            "A large drop in requests without an error spike can indicate requests rejected "
+            "before reaching instrumentation. Related routes may fall together, so use "
+            "topology or other signals to distinguish a cause from reduced upstream traffic. "
+            "When latency rises, call summarize_trace_latency. Treat inclusive caller duration "
+            "as a symptom; distinguish server self time from client wait outside the paired "
+            "server span. Compare latency folds, absolute changes and sample availability. "
+            "A restart can follow memory pressure; compare memory and CPU changes against "
+            "the affected service's own baseline and check pod events for termination causes. "
+            "Prefer a few strong independent signals. Query logs or events for targeted "
+            "confirmation, not for every candidate. Do not repeat identical calls. "
+            f"Stop once ranked alternatives are supported, within {max_iterations} tool steps.\n"
+            "Use only observed evidence. Copy complete metric: or trace: citation IDs exactly "
+            "as shown, or the exact PromQL, LogQL, trace ID or pod event message. "
+            "signal_type is only metric, trace, log or k8s_event.\n"
+            f"Output JSON matching this schema:\n{INVESTIGATION_REPORT_SCHEMA}"
         )
     return SYSTEM_PROMPT.format(
         services=", ".join(ASTRONOMY_SHOP_SERVICES),

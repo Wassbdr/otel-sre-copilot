@@ -42,7 +42,11 @@ def verify(
     """
     # Build set of all query strings from tool_calls_log
     all_executed: list[str] = []
+    evidence_ids: set[str] = set()
     for entry in tool_calls_log:
+        ids = entry.get("evidence_ids")
+        if isinstance(ids, list):
+            evidence_ids.update(str(item) for item in ids)
         # query_or_id field in tool call log
         qids: list[str] = entry.get("query_or_id", [])  # type: ignore[assignment]
         if isinstance(qids, str):
@@ -69,7 +73,11 @@ def verify(
     for hypothesis in report.root_causes:
         for ev in hypothesis.evidence:
             total += 1
-            matched = _check_evidence(ev, all_executed_set)
+            citation = ev.query_or_id
+            if citation.startswith(("metric:", "trace:")):
+                matched = citation.startswith(f"{ev.signal_type}:") and citation in evidence_ids
+            else:
+                matched = _check_evidence(ev, all_executed_set)
             if matched:
                 verified += 1
             else:

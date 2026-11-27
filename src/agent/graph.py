@@ -80,6 +80,7 @@ def _add_usage(totals: dict[str, int], response: AIMessage) -> dict[str, int]:
 
 def build_graph(
     ds: DataSource, on_event: EventCallback | None = None, *, react: bool = False,
+    improved: bool = False, prior: bool = True,
 ) -> Any:  # noqa: ANN401
     """Build and compile the investigation StateGraph for the given DataSource.
 
@@ -91,7 +92,7 @@ def build_graph(
             on_event(event)
 
     budget = ContextBudget()
-    tools = make_tools(ds, budget)
+    tools = make_tools(ds, budget, improved=improved, prior=improved and prior)
 
     settings = llm_settings()
     llm = make_chat_model(max_tokens=4096)
@@ -112,6 +113,8 @@ def build_graph(
                 namespace=state["affected_namespace"],
                 max_iterations=MAX_TOOL_ITERATIONS,
                 react=react,
+                improved=improved,
+                prior=prior,
             ))
             human_msg = HumanMessage(
                 content=f"Investigate incident {state['incident_id']} "
@@ -126,12 +129,14 @@ def build_graph(
         elif messages and isinstance(messages[-1], AIMessage) and not getattr(
             messages[-1], "tool_calls", None
         ):
-            messages = messages + [HumanMessage(content=(
+            nudge = (
+                "Gather evidence with one metric tool before concluding." if improved else
                 "You have not gathered enough grounded evidence yet. Before concluding, call "
                 "query_prometheus_range to sweep error_rate, cpu_usage, memory_usage and "
                 "pod_restarts across the main services, then inspect the top anomalies with "
                 "search_traces / query_loki / get_pod_events. Do not fabricate evidence."
-            ))]
+            )
+            messages = messages + [HumanMessage(content=nudge)]
 
         # Call LLM
         t0 = time.perf_counter()
@@ -154,7 +159,13 @@ def build_graph(
                 log.info("tool_call", name=tool_name, iteration=iteration)
 
                 t_tool = time.perf_counter()
-                if tool_name in tool_map:
+                repeated = improved and any(
+                    call["tool_name"] == tool_name and call["args"] == tool_args
+                    for call in tool_calls_log
+                )
+                if repeated:
+                    result_str = "Identical call already answered. Use the earlier result."
+                elif tool_name in tool_map:
                     try:
                         result_str = tool_map[tool_name].invoke(tool_args)
                     except Exception as e:
@@ -169,11 +180,13 @@ def build_graph(
                     "args": tool_args,
                     "result_preview": str(result_str)[:200],
                     # Store exact query/id strings for grounding check
-                    "query_or_id": _extract_query_or_id(tool_name, tool_args),
+                    "query_or_id": [] if repeated else _extract_query_or_id(tool_name, tool_args),
                     # Longer excerpt for human-readable traces (demo); not used for grounding.
                     "result_excerpt": str(result_str)[:1200],
                     "elapsed_s": round(time.perf_counter() - t_tool, 3),
                 }
+                if improved:
+                    entry["evidence_ids"] = _evidence_ids(tool_name, str(result_str))
                 tool_calls_log.append(entry)
                 emit({"type": "tool_call", **entry})
 
@@ -201,7 +214,11 @@ def build_graph(
             "Output ONLY the JSON object, no other text. "
         )
         if not react:
-            finalize += "Remember: every query_or_id in evidence must be an exact tool call you made."
+            finalize += (
+                "Copy citation IDs exactly. Use metric, trace, log or k8s_event as signal_type."
+                if improved else
+                "Remember: every query_or_id in evidence must be an exact tool call you made."
+            )
         messages_for_report = messages + [HumanMessage(content=finalize)]
 
         report_llm = make_chat_model(max_tokens=int(os.getenv("LLM_REPORT_MAX_TOKENS", "8192")),
@@ -320,9 +337,11 @@ def build_graph(
         # MIN_TOOL_ITERATIONS iterations AND at least one Prometheus metric query.
         metric_calls = sum(
             1 for e in state.get("tool_calls_log", [])
-            if str(e.get("tool_name", "")).startswith(("query_prometheus", "rank_services"))
+            if str(e.get("tool_name", "")).startswith((
+                "query_prometheus", "rank_services", "rank_incident", "rank_request",
+            ))
         )
-        if iteration < MIN_TOOL_ITERATIONS or metric_calls < 1:
+        if iteration < (1 if improved else MIN_TOOL_ITERATIONS) or metric_calls < 1:
             log.info("forcing_more_investigation", iteration=iteration, metric_calls=metric_calls)
             return "tool_call_loop"
         return "generate_report"
@@ -341,6 +360,22 @@ def build_graph(
     graph.add_edge("generate_report", END)
 
     return graph.compile()
+
+
+def _evidence_ids(tool_name: str, result: str) -> list[str]:
+    prefix = {
+        "rank_incident_anomalies": "metric:",
+        "rank_request_rate_drops": "metric:",
+        "get_trace": "trace:",
+        "summarize_trace_latency": "trace:",
+    }.get(tool_name)
+    ids = []
+    for line in result.splitlines():
+        if tool_name == "rank_services_by_signal" and "citation: " in line:
+            ids.append(line.rsplit("citation: ", 1)[-1])
+        elif prefix and line.startswith(prefix):
+            ids.append(line.split(maxsplit=1)[0])
+    return list(dict.fromkeys(ids))
 
 
 def _strip_json_fences(content: str) -> str:

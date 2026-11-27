@@ -66,7 +66,7 @@ def compress_prometheus_range(
     return f"PromQL: {query[:100]}\n" + "\n".join(summaries)
 
 
-def compress_traces(traces: list[dict[str, Any]]) -> str:
+def compress_traces(traces: list[dict[str, Any]], *, full_ids: bool = False) -> str:
     """Layer 2: Summarize trace list into compact text."""
     if not traces:
         return "[no traces found]"
@@ -79,7 +79,9 @@ def compress_traces(traces: list[dict[str, Any]]) -> str:
     # Include first 3 trace IDs + their error status
     examples = []
     for t in traces[:3]:
-        tid = t.get("traceID", "?")[:16]
+        tid = t.get("traceID", "?")
+        if not full_ids:
+            tid = tid[:16]
         dur = t.get("durationMs", "?")
         err = "ERROR" if t.get("hasError") else "ok"
         root = t.get("rootTraceName", "")[:40]
@@ -91,7 +93,7 @@ def compress_traces(traces: list[dict[str, Any]]) -> str:
     )
 
 
-def compress_loki(results: list[dict[str, Any]]) -> str:
+def compress_loki(results: list[dict[str, Any]], *, compact: bool = False) -> str:
     """Layer 2: Deduplicate and summarize Loki log results.
 
     Deduplicates by first 100 chars of each log line, keeps max 5 unique error patterns.
@@ -119,13 +121,13 @@ def compress_loki(results: list[dict[str, Any]]) -> str:
             prefix = line[:100]
             if prefix not in unique_patterns and "error" in lower:
                 unique_patterns[prefix] = line[:200]
-                if len(unique_patterns) >= 5:
+                if not compact and len(unique_patterns) >= 5:
                     break
 
     count_str = " | ".join(f"{k}={v}" for k, v in counts.items() if v > 0)
     lines = [f"Log counts: {count_str}", "Top error patterns:"]
-    for line in list(unique_patterns.values())[:5]:
-        lines.append(f"  {line}")
+    for line in list(unique_patterns.values())[:3 if compact else 5]:
+        lines.append(f"  {line[:140] if compact else line}")
 
     return "\n".join(lines)
 

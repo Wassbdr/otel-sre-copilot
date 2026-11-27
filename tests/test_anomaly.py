@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 
 from src.agent.context_manager import ContextBudget
-from src.agent.graph import _extract_query_or_id
+from src.agent.graph import _evidence_ids, _extract_query_or_id
 from src.agent.tools import make_tools
 from src.anomaly import rank_services
 from src.datasources.replay import ReplayDataSource
@@ -43,3 +43,41 @@ def test_unknown_signal_is_reported_not_raised() -> None:
     tools = {t.name: t for t in make_tools(ReplayDataSource(FIXTURE), ContextBudget())}
     out = tools["rank_services_by_signal"].invoke({"signal": "nope", "start": start, "end": end})
     assert out.startswith("[ERROR")
+
+
+def test_full_agent_prior_and_no_prior_ablation() -> None:
+    ds = ReplayDataSource(FIXTURE)
+    start, end = _window()
+    full = {t.name: t for t in make_tools(ds, ContextBudget(), improved=True, prior=True)}
+    ablation = {t.name for t in make_tools(ds, ContextBudget(), improved=True)}
+    assert full.keys() - ablation == {"rank_incident_anomalies"}
+    result = full["rank_incident_anomalies"].invoke({"start": start, "end": end})
+    assert "composite:" in result and "n-sigma:" in result
+    assert _evidence_ids("rank_incident_anomalies", result)
+    assert not _evidence_ids("query_loki", result)
+
+
+def test_request_rate_tool_surfaces_recorded_payment_drop() -> None:
+    snapshot = Path(__file__).parents[1] / "snapshots/payment-http_abort-seed7"
+    meta = json.loads((snapshot / "metadata.json").read_text())
+    tools = {
+        t.name: t for t in make_tools(ReplayDataSource(snapshot), ContextBudget(), improved=True)
+    }
+    result = tools["rank_request_rate_drops"].invoke(
+        {"start": meta["window_start"], "end": meta["window_end"]},
+    )
+    assert result.splitlines()[1].startswith("metric:request_rate:payment ")
+
+
+def test_trace_tool_exposes_shipping_wait_with_complete_trace_citation() -> None:
+    snapshot = Path(__file__).parents[1] / "snapshots/shipping-high_latency-seed42"
+    meta = json.loads((snapshot / "metadata.json").read_text())
+    tools = {
+        t.name: t for t in make_tools(ReplayDataSource(snapshot), ContextBudget(), improved=True)
+    }
+    result = tools["summarize_trace_latency"].invoke(
+        {"start": meta["window_start"], "end": meta["window_end"]},
+    )
+    assert "shipping client wait outside paired server" in result
+    for citation in _evidence_ids("summarize_trace_latency", result):
+        assert (snapshot / "tempo" / "traces" / f"{citation.removeprefix('trace:')}.json").exists()

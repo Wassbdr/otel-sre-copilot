@@ -103,11 +103,12 @@ class LiveDataSource:
         limit: int = 20,
     ) -> list[dict[str, object]]:
         params: dict[str, str | int] = {
-            "service.name": service_name,
             "start": _to_unix_s(start),
             "end": _to_unix_s(end),
             "limit": limit,
         }
+        if service_name:
+            params["service.name"] = service_name
         if min_duration_ms is not None:
             params["minDuration"] = f"{min_duration_ms}ms"
         if error_only:

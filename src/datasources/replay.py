@@ -115,7 +115,7 @@ class ReplayDataSource:
     ) -> list[dict[str, object]]:
         matches = [
             t for t in self._trace_summaries
-            if t.get("rootServiceName") == service_name
+            if not service_name or t.get("rootServiceName") == service_name
             or any(
                 s.get("attributes", {}).get("service.name") == service_name
                 for s in t.get("spanSets", [])
