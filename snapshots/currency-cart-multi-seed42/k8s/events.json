@@ -1,0 +1,20 @@
+[
+  {
+    "type": "Normal",
+    "reason": "Updated",
+    "message": "Successfully update ObservedGeneration and FailedMessage of resource",
+    "count": 1,
+    "first_time": "2026-11-27 18:48:18+00:00",
+    "last_time": "2026-11-27 18:48:18+00:00",
+    "involved_object_name": "cart-7ff5444c9c-mfwf7"
+  },
+  {
+    "type": "Normal",
+    "reason": "Updated",
+    "message": "Successfully update ObservedGeneration and FailedMessage of resource",
+    "count": 1,
+    "first_time": "2026-11-27 18:53:18+00:00",
+    "last_time": "2026-11-27 18:53:18+00:00",
+    "involved_object_name": "cart-7ff5444c9c-mfwf7"
+  }
+]

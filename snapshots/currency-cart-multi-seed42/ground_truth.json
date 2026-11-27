@@ -1,0 +1,34 @@
+{
+  "scenario_id": "currency-cart-multi-seed42",
+  "injection_ts": "2026-11-27T18:48:18.188860+00:00",
+  "recovery_ts": "2026-11-27T18:53:18.442599+00:00",
+  "seed": 42,
+  "faults": [
+    {
+      "scenario_id": "currency-cart-multi-seed42",
+      "fault_service": "currency",
+      "fault_type": "cpu_stress",
+      "chaos_kind": "StressChaos",
+      "injection_ts": "2026-11-27T18:48:18.188860+00:00",
+      "recovery_ts": "2026-11-27T18:53:18.442599+00:00",
+      "seed": 42,
+      "chaos_manifest_hash": "b703eb8385fdf238",
+      "validation_passed": true
+    },
+    {
+      "scenario_id": "currency-cart-multi-seed42",
+      "fault_service": "cart",
+      "fault_type": "http_abort",
+      "chaos_kind": "NetworkChaos",
+      "injection_ts": "2026-11-27T18:48:18.188860+00:00",
+      "recovery_ts": "2026-11-27T18:53:18.442599+00:00",
+      "seed": 42,
+      "chaos_manifest_hash": "cd288b06df2ace8e",
+      "validation_passed": true
+    }
+  ],
+  "split": "held-out",
+  "window_start": "2026-11-27T18:47:18.188860+00:00",
+  "window_end": "2026-11-27T18:54:18.442599+00:00",
+  "validation_passed": true
+}
