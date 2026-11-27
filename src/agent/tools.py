@@ -248,10 +248,17 @@ def make_tools(
     def rank_incident_anomalies(start: str, end: str) -> str:
         """Compare composite z-score and N-Sigma rankings against pre-incident metrics."""
         windows = metric_windows(ds, list(SIGNAL_TO_FAULT), start, end)
+        composite = _rank_windows(windows, lambda w: w.composite)
+        nsigma = _rank_windows(windows, lambda w: w.nsigma)
         sections = [
-            _rank_windows("composite", windows, lambda w: w.composite),
-            _rank_windows("n-sigma", windows, lambda w: w.nsigma),
+            heading + ":\n" + "\n".join(_metric_line(w, score) for w, score in ranking)
+            for heading, ranking in (("composite", composite), ("n-sigma", nsigma))
         ]
+        candidates = list(dict.fromkeys(w.service for w, _ in composite[:2] + nsigma[:2]))[:3]
+        sections.append("Candidate signals (before and during):\n" + "\n".join(
+            f"metric:{w.signal}:{w.service} {w.baseline_mean:.3g} -> {w.incident_mean:.3g}"
+            for service in candidates for w in windows if w.service == service
+        ))
         latency = [w for w in windows if w.signal == "p99_latency_ms" and w.ratio is not None]
         latency.sort(key=lambda w: -(w.ratio or 0))
         sections.append("p99 ratio, caller spans include downstream time:\n" + "\n".join(
@@ -320,17 +327,17 @@ def _metric_line(window: MetricWindow, score: float) -> str:
 
 
 def _rank_windows(
-    name: str, windows: list[MetricWindow], score: Callable[[MetricWindow], float],
-) -> str:
-    top: list[str] = []
+    windows: list[MetricWindow], score: Callable[[MetricWindow], float],
+) -> list[tuple[MetricWindow, float]]:
+    top: list[tuple[MetricWindow, float]] = []
     seen: set[str] = set()
     for window, value in sorted(((w, score(w)) for w in windows), key=lambda row: -row[1]):
         if window.service not in seen:
-            top.append(_metric_line(window, value))
+            top.append((window, value))
             seen.add(window.service)
         if len(top) == 5:
             break
-    return name + ":\n" + "\n".join(top)
+    return top
 
 
 def _timing_lines(timings: list[tuple[str, Timing]]) -> str:

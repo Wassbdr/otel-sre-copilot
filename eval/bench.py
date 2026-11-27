@@ -23,10 +23,10 @@ from eval.scenario_runner import (
 from src.agent.llm import llm_settings
 
 log = structlog.get_logger()
-LLM_METHODS = ("agent", "agent_no_prior", "react")
+LLM_METHODS = ("agent", "react", "agent_no_prior")
 METHODS = LLM_METHODS + BASELINE_METHODS
 ACCURACY = ("accuracy_at_1", "accuracy_at_3", "service_at_1", "service_at_3")
-MEANS = ACCURACY + ("latency_s", "total_tokens", "cost_usd", "rate_limit_wait_s")
+MEANS = ACCURACY + ("latency_s", "llm_calls", "total_tokens", "cost_usd", "rate_limit_wait_s")
 LABELS = {
     "agent": "SRE-Copilot",
     "agent_no_prior": "SRE-Copilot without anomaly prior",
@@ -227,8 +227,8 @@ def _report(path: Path, iteration: dict[str, Any]) -> None:
             f"{len(setup['snapshots'])} Astronomy Shop snapshots ({setup['split']}); "
             f"{setup['repeats']} runs per method; {setup['model']}; {setup['hardware']}.", "",
             "| Method | Runs | Top-1 | Top-3 | Service top-1 | Service top-3 | "
-            "Grounding | Citations | Tokens/run | Seconds/run | USD/run |",
-            "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+            "Grounding | Citations | Calls/run | Tokens/run | Seconds/run | USD/run |",
+            "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
         ])
         for method in (*LLM_METHODS, "nsigma", "composite_zscore", "baro", "zscore", "random"):
             if method not in run["methods"]:
@@ -242,6 +242,7 @@ def _report(path: Path, iteration: dict[str, Any]) -> None:
             cells.extend([
                 _format(m["grounding_score"], ".1%"),
                 str(m["evidence_count"]),
+                _format(m.get("llm_calls"), ".1f"),
                 _format(m["total_tokens"], ",.0f"),
                 _format(m["latency_s"], ".3f"),
                 _format(m["cost_usd"], ".4f"),
@@ -275,11 +276,21 @@ def run(args: argparse.Namespace) -> bool:
         args.repeats, getattr(args, "snapshot_set_from", None), recorded_from,
     )
     rows: dict[str, list[dict[str, Any]]] = {m: [] for m in args.methods}
-    for method in (*BASELINE_METHODS, *LLM_METHODS):
-        if method not in rows:
-            continue
-        for snapshot in setup["snapshots"]:
-            for repeat in range(args.repeats):
+    methods_order = [method for method in (*BASELINE_METHODS, *LLM_METHODS) if method in rows]
+
+    def report_progress() -> dict[str, Any]:
+        summary = {
+            m: summarize_rows(r, args.repeats, len(setup["snapshots"])) for m, r in rows.items()
+        }
+        _report(args.output_dir, {
+            "run_id": args.run_id, "change": args.change, "setup": setup, "methods": summary,
+            "rows": rows,
+        })
+        return summary
+
+    for snapshot in setup["snapshots"]:
+        for repeat in range(args.repeats):
+            for method in methods_order:
                 try:
                     result = _measure(
                         args.run_id, snapshot, method, repeat, setup.get("agent_variant", "agent"),
@@ -290,12 +301,7 @@ def run(args: argparse.Namespace) -> bool:
                               snapshot=snapshot["path"], repeat=repeat, error=type(error).__name__)
                     result = {"error": type(error).__name__}
                 rows[method].append({**result, **snapshot, "repeat": repeat})
-
-    methods = {m: summarize_rows(r, args.repeats, len(setup["snapshots"])) for m, r in rows.items()}
-    _report(args.output_dir, {
-        "run_id": args.run_id, "change": args.change, "setup": setup, "methods": methods,
-        "rows": rows,
-    })
+        methods = report_progress()
     log.info("benchmark_report", path=str(args.output_dir / "results.md"), run_id=args.run_id)
     return all(v["completed"] == v["expected"] for v in methods.values())
 

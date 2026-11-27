@@ -8,8 +8,11 @@ deterministic :class:`~src.agent.fake_llm.FakeChatModel` (tests, CI, offline smo
 from __future__ import annotations
 
 import os
+import random
+import time
 from dataclasses import dataclass
 from typing import Any
+from urllib.parse import urlsplit
 
 import structlog
 
@@ -84,7 +87,10 @@ def make_chat_model(max_tokens: int, json_mode: bool = False) -> Any:  # noqa: A
         max_tokens=max_tokens,  # type: ignore[call-arg]
         timeout=timeout,
         http_client=CachedChatClient(timeout=timeout),
-        max_retries=int(os.getenv("LLM_MAX_RETRIES", "2")),
+        max_retries=(
+            0 if urlsplit(settings.base_url).hostname == "integrate.api.nvidia.com"
+            else int(os.getenv("LLM_MAX_RETRIES", "2"))
+        ),
         **kwargs,
     )
 
@@ -98,8 +104,6 @@ def invoke_with_backoff(model: Any, messages: Any) -> Any:
     The OpenAI client's own retries back off for seconds; free tiers such as NIM need minutes.
     Time lost to failed attempts and waits is excluded from the reported latency.
     """
-    import time
-
     attempts = int(os.getenv("LLM_RATE_LIMIT_RETRIES", "6"))
     for i in range(attempts + 1):
         t0 = time.monotonic()
@@ -110,7 +114,7 @@ def invoke_with_backoff(model: Any, messages: Any) -> Any:
         except Exception as e:
             if not any(k in type(e).__name__ for k in _TRANSIENT) or i == attempts:
                 raise
-            wait_s = min(15 * 2**i, 120)
+            wait_s = min(15 * 2**i, 120) * random.uniform(0.8, 1.2)
             log.warning("llm_transient_error", error=type(e).__name__, attempt=i + 1,
                         wait_s=wait_s)
             time.sleep(wait_s)

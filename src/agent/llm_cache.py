@@ -16,8 +16,11 @@ from typing import Any
 import httpx
 
 _NIM_INTERVAL_S = 60 / 15
+_NIM_SLOW_INTERVAL_S = 60 / 9
+_NIM_RECOVERY_S = 300
 _limiter_lock = Lock()
 _last_request_at: float | None = None
+_slow_until = 0.0
 
 
 @dataclass
@@ -50,10 +53,19 @@ def _wait_for_nim() -> float:
     entered = time.monotonic()
     with _limiter_lock:
         if _last_request_at is not None:
-            while (remaining := _last_request_at + _NIM_INTERVAL_S - time.monotonic()) > 0:
+            now = time.monotonic()
+            interval = _NIM_SLOW_INTERVAL_S if now < _slow_until else _NIM_INTERVAL_S
+            remaining = _last_request_at + interval - now
+            if remaining > 0:
                 time.sleep(remaining)
         sent_at = _last_request_at = time.monotonic()
     return sent_at - entered
+
+
+def _slow_nim() -> None:
+    global _slow_until
+    with _limiter_lock:
+        _slow_until = time.monotonic() + _NIM_RECOVERY_S
 
 
 class CachedChatClient(httpx.Client):
@@ -91,6 +103,8 @@ class CachedChatClient(httpx.Client):
 
         started = time.monotonic()
         response = super().send(request, stream=stream, **kwargs)
+        if response.status_code == 429 and request.url.host == "integrate.api.nvidia.com":
+            _slow_nim()
         if cache_path is not None and response.status_code == 200:
             response.read()
             record = {"body": response.json(), "elapsed_s": time.monotonic() - started}

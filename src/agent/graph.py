@@ -59,6 +59,7 @@ log = structlog.get_logger()
 
 AGENT_VERSION = "0.2.0"
 MAX_TOOL_ITERATIONS = int(os.getenv("MAX_TOOL_ITERATIONS", "10"))
+FAST_TOOL_ROUNDS = 2
 # Force at least this many tool iterations, and at least one Prometheus metric sweep, before
 # the agent is allowed to write a report. Without this the LLM tends to call get_service_topology
 # once and then fabricate evidence (grounding_score=0.0).
@@ -92,12 +93,42 @@ def build_graph(
             on_event(event)
 
     budget = ContextBudget()
+    max_rounds = min(MAX_TOOL_ITERATIONS, FAST_TOOL_ROUNDS) if improved or react else (
+        MAX_TOOL_ITERATIONS
+    )
     tools = make_tools(ds, budget, improved=improved, prior=improved and prior)
 
     settings = llm_settings()
     llm = make_chat_model(max_tokens=4096)
     llm_with_tools = llm.bind_tools(tools)
     tool_map = {t.name: t for t in tools}
+
+    def run_tool(
+        name: str, args: dict[str, Any], iteration: int, calls: list[dict[str, Any]],
+    ) -> str:
+        log.info("tool_call", name=name, iteration=iteration)
+        started = time.perf_counter()
+        repeated = improved and any(c["tool_name"] == name and c["args"] == args for c in calls)
+        if repeated:
+            result = "Identical call already answered. Use the earlier result."
+        elif name in tool_map:
+            try:
+                result = str(tool_map[name].invoke(args))
+            except Exception as error:
+                result = f"[TOOL ERROR: {error}]"
+        else:
+            result = f"[UNKNOWN TOOL: {name}]"
+        entry = {
+            "iteration": iteration, "tool_name": name, "args": args,
+            "result_preview": result[:200], "result_excerpt": result[:1200],
+            "query_or_id": [] if repeated else _extract_query_or_id(name, args),
+            "elapsed_s": round(time.perf_counter() - started, 3),
+        }
+        if improved:
+            entry["evidence_ids"] = _evidence_ids(name, result)
+        calls.append(entry)
+        emit({"type": "tool_call", **entry})
+        return result
 
     # ── Node: tool_call_loop ───────────────────────────────────────────────
     def tool_call_loop(state: GraphState) -> GraphState:
@@ -111,18 +142,25 @@ def build_graph(
                 start=state["incident_start_ts"],
                 end=state["incident_end_ts"],
                 namespace=state["affected_namespace"],
-                max_iterations=MAX_TOOL_ITERATIONS,
+                max_iterations=max_rounds,
                 react=react,
                 improved=improved,
                 prior=prior,
             ))
-            human_msg = HumanMessage(
-                content=f"Investigate incident {state['incident_id']} "
-                        f"in namespace {state['affected_namespace']}. "
-                        f"Window: {state['incident_start_ts']} → {state['incident_end_ts']}. "
-                        "Identify the root cause and produce an InvestigationReport JSON."
+            human_content = (
+                f"Investigate incident {state['incident_id']} "
+                f"in namespace {state['affected_namespace']}. "
+                f"Window: {state['incident_start_ts']} → {state['incident_end_ts']}. "
+                "Identify the root cause and produce an InvestigationReport JSON."
             )
-            messages = [system_msg, human_msg]
+            if improved and not react:
+                window = {"start": state["incident_start_ts"], "end": state["incident_end_ts"]}
+                seeds = ["rank_request_rate_drops"]
+                if prior:
+                    seeds.insert(0, "rank_incident_anomalies")
+                initial = [run_tool(name, window, 0, tool_calls_log) for name in seeds]
+                human_content += "\nRecorded tool observations:\n" + "\n\n".join(initial)
+            messages = [system_msg, HumanMessage(content=human_content)]
 
         # If the LLM tried to stop early (last msg is an AIMessage with no tool calls) but we
         # are forcing more investigation, nudge it to actually sweep metrics before concluding.
@@ -156,42 +194,9 @@ def build_graph(
                 tool_args = tc.get("args", {})
                 tool_id = tc.get("id", f"call_{iteration}_{tool_name}")
 
-                log.info("tool_call", name=tool_name, iteration=iteration)
-
-                t_tool = time.perf_counter()
-                repeated = improved and any(
-                    call["tool_name"] == tool_name and call["args"] == tool_args
-                    for call in tool_calls_log
-                )
-                if repeated:
-                    result_str = "Identical call already answered. Use the earlier result."
-                elif tool_name in tool_map:
-                    try:
-                        result_str = tool_map[tool_name].invoke(tool_args)
-                    except Exception as e:
-                        result_str = f"[TOOL ERROR: {e}]"
-                else:
-                    result_str = f"[UNKNOWN TOOL: {tool_name}]"
-
-                # Record tool call for grounding verification
-                entry = {
-                    "iteration": iteration,
-                    "tool_name": tool_name,
-                    "args": tool_args,
-                    "result_preview": str(result_str)[:200],
-                    # Store exact query/id strings for grounding check
-                    "query_or_id": [] if repeated else _extract_query_or_id(tool_name, tool_args),
-                    # Longer excerpt for human-readable traces (demo); not used for grounding.
-                    "result_excerpt": str(result_str)[:1200],
-                    "elapsed_s": round(time.perf_counter() - t_tool, 3),
-                }
-                if improved:
-                    entry["evidence_ids"] = _evidence_ids(tool_name, str(result_str))
-                tool_calls_log.append(entry)
-                emit({"type": "tool_call", **entry})
-
+                result_str = run_tool(tool_name, tool_args, iteration, tool_calls_log)
                 new_tool_messages.append(ToolMessage(
-                    content=str(result_str),
+                    content=result_str,
                     tool_call_id=tool_id,
                     name=tool_name,
                 ))
@@ -229,7 +234,8 @@ def build_graph(
         usage_totals = dict(state.get("token_usage", {}))
         report: InvestigationReport | None = None
         content = ""
-        for attempt in range(1 + int(os.getenv("LLM_REPORT_REPAIRS", "1"))):
+        repairs = int(os.getenv("LLM_REPORT_REPAIRS", "1"))
+        for attempt in range(1 + (min(repairs, 1) if improved or react else repairs)):
             try:
                 response: AIMessage = invoke_with_backoff(report_llm, messages_for_report)
             except Exception as e:
@@ -320,7 +326,7 @@ def build_graph(
         messages: list[Any] = state.get("messages", [])
         iteration = state.get("iteration_count", 0)
 
-        if iteration >= MAX_TOOL_ITERATIONS:
+        if iteration >= max_rounds:
             log.info("iteration_limit_reached", iteration=iteration)
             return "generate_report"
 

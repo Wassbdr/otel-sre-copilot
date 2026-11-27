@@ -115,3 +115,30 @@ def test_recorded_benchmark_has_no_live_fallback(
     monkeypatch.setattr(bench, "run_scenario", lambda *a, **k: pytest.fail("no live call"))
     with pytest.raises(ValueError, match="No live fallback"):
         bench._measure("test", {"scenario_id": "missing"}, "agent", 0, "agent_full", "recorded")
+
+
+def test_live_methods_interleave_for_each_snapshot_and_repeat(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path,
+) -> None:
+    snapshots = [{"path": name, "scenario_id": name} for name in ("case-a", "case-b")]
+    monkeypatch.setattr(bench, "_snapshot_set", lambda *args: {"snapshots": snapshots})
+    monkeypatch.setattr(bench, "_report", lambda *args: None)
+    observed: list[tuple[str, str, int]] = []
+
+    def measure(
+        run_id: str, snapshot: dict[str, str], method: str, repeat: int,
+        agent_variant: str, recorded_from: str | None,
+    ) -> dict[str, object]:
+        observed.append((snapshot["path"], method, repeat))
+        return dict.fromkeys(bench.ACCURACY, 0.5)
+
+    monkeypatch.setattr(bench, "_measure", measure)
+    args = argparse.Namespace(
+        methods=["agent_no_prior", "react", "agent"], run_id="live", repeats=2,
+        scenario_dir=[], split="development", output_dir=tmp_path, change="Test",
+    )
+    assert bench.run(args)
+    assert observed == [
+        (str(snapshot["path"]), method, repeat) for snapshot in snapshots for repeat in range(2)
+        for method in ("agent", "react", "agent_no_prior")
+    ]

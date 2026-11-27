@@ -242,7 +242,7 @@ def _metrics_from_trace(trace_path: Path) -> dict[str, Any]:
     report = (InvestigationReport.model_validate(trace["report"])
               if trace["report"].get("root_causes")
               else InvestigationReport.model_construct(**trace["report"]))
-    grounding = verify(report, trace["tool_calls"])
+    grounding = verify(report, trace.get("tool_calls", []))
     report.grounding_score = grounding.grounding_score
     sr = ScenarioResult(
         scenario_id=trace["scenario_id"],

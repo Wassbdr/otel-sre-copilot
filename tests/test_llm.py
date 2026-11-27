@@ -138,6 +138,61 @@ def test_graph_runs_end_to_end_with_fake_llm(monkeypatch: pytest.MonkeyPatch) ->
     assert verify(report, result["tool_calls_log"]).grounding_score == 1.0
 
 
+@pytest.mark.parametrize(
+    ("react", "prior", "seeded"),
+    [(False, True, ["rank_incident_anomalies", "rank_request_rate_drops"]),
+     (False, False, ["rank_request_rate_drops"]), (True, False, [])],
+)
+def test_fast_graph_limits_llm_calls_and_seeds_only_available_prior(
+    monkeypatch: pytest.MonkeyPatch, react: bool, prior: bool, seeded: list[str],
+) -> None:
+    from src.agent.graph import build_graph
+    from src.agent.schemas import initial_state
+    from src.datasources.replay import ReplayDataSource
+
+    monkeypatch.setenv("LLM_PROVIDER", "fake")
+    graph = build_graph(ReplayDataSource(FIXTURE), improved=not react, react=react, prior=prior)
+    state = initial_state("fixture", "2024-01-15T14:00:00Z", "2024-01-15T14:10:00Z", "otel-demo")
+    result = graph.invoke(state)
+    assert result["token_usage"]["llm_calls"] == 3
+    assert [call["tool_name"] for call in result["tool_calls_log"]] == [
+        *seeded, "get_service_topology", "query_prometheus_range",
+    ]
+
+
+def test_nim_429_slows_subsequent_requests_until_recovery(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path,
+) -> None:
+    from src.agent import llm_cache
+
+    now = 40.0
+
+    def advance(seconds: float) -> None:
+        nonlocal now
+        now += seconds
+
+    monkeypatch.setenv("LLM_CACHE_DIR", str(tmp_path))
+    monkeypatch.setattr(llm_cache, "_last_request_at", None)
+    monkeypatch.setattr(llm_cache, "_slow_until", 0.0)
+    monkeypatch.setattr(llm_cache.time, "monotonic", lambda: now)
+    monkeypatch.setattr(llm_cache.time, "sleep", advance)
+    sent: list[float] = []
+
+    def respond(_: httpx.Request) -> httpx.Response:
+        sent.append(now)
+        return httpx.Response(429 if len(sent) == 1 else 200, json={})
+
+    with llm_cache.CachedChatClient(transport=httpx.MockTransport(respond)) as client:
+        endpoint = "https://integrate.api.nvidia.com/v1/chat/completions"
+        for index in range(2):
+            client.post(endpoint, json={"index": index})
+        assert sent == pytest.approx([40, 40 + 60 / 9])
+        now = 340.0
+        for index in range(2, 4):
+            client.post(endpoint, json={"index": index})
+        assert sent[-2:] == pytest.approx([340, 344])
+
+
 class RateLimitError(Exception):
     pass
 
@@ -156,11 +211,14 @@ class _Flaky:
 def test_backoff_waits_out_rate_limits(monkeypatch: pytest.MonkeyPatch) -> None:
     from src.agent import llm
 
-    monkeypatch.setattr("time.sleep", lambda s: None)
+    delays: list[float] = []
+    monkeypatch.setattr("time.sleep", delays.append)
+    monkeypatch.setattr("random.uniform", lambda low, high: 1.1)
     llm.rate_limit_wait_s(reset=True)
     model = _Flaky(failures=2)
     assert llm.invoke_with_backoff(model, []) == "ok"
     assert model.calls == 3
+    assert delays == [pytest.approx(16.5), pytest.approx(33)]
 
 
 def test_backoff_does_not_retry_real_errors(monkeypatch: pytest.MonkeyPatch) -> None:
