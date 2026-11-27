@@ -25,9 +25,10 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 
-DEFAULT_TRACE = (
-    Path(__file__).resolve().parent.parent / "examples" / "checkout-pod-crash.trace.json"
-)
+_TRACE_NAME = Path("examples") / "checkout-pod-crash.trace.json"
+# Source checkout first; fall back to the working directory (pip install, Docker WORKDIR).
+_REPO_TRACE = Path(__file__).resolve().parent.parent / _TRACE_NAME
+DEFAULT_TRACE = _REPO_TRACE if _REPO_TRACE.exists() else Path.cwd() / _TRACE_NAME
 
 _TOOL_ARG_KEYS = ("query", "logql", "service_name", "trace_id", "pod_name", "namespace")
 

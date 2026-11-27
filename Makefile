@@ -12,6 +12,7 @@ REPEATS           ?= 3
 BENCH_ID          := bench-$(shell date -u +%Y%m%dT%H%M%SZ)
 SCENARIO_DIR      ?= scenarios/mvp
 RUN_ID            ?=
+PYTHON            ?= $(if $(wildcard .venv/bin/python),.venv/bin/python,python3)
 INCIDENT_ID       ?=
 START             ?=
 END               ?=
@@ -21,7 +22,7 @@ setup:
 	@echo "==> WSL2 preflight (inotify limits)"
 	@bash scripts/wsl2_preflight.sh
 	@echo "==> Installing Python dependencies"
-	pip install -e ".[dev]"
+	$(PYTHON) -m pip install -e ".[dev]"
 	@echo "==> Checking kind"
 	@which kind || (echo "Install kind: https://kind.sigs.k8s.io/docs/user/quick-start/#installation" && exit 1)
 	@echo "==> Checking helm"
@@ -90,19 +91,19 @@ down:
 
 # ── Health check ───────────────────────────────────────────────────────────
 health-check:
-	@python3 scripts/health_check.py
+	@$(PYTHON) scripts/health_check.py
 
 # ── Fault injection ────────────────────────────────────────────────────────
 fault:
 	@test -f "$(SCENARIO)" || (echo "ERROR: SCENARIO not found: $(SCENARIO)" && exit 1)
-	@python3 scripts/inject_and_snapshot.py --scenario $(SCENARIO)
+	@$(PYTHON) scripts/inject_and_snapshot.py --scenario $(SCENARIO)
 
 # ── Agent (live mode) ─────────────────────────────────────────────────────
 investigate:
 	@test -n "$(INCIDENT_ID)" || (echo "ERROR: INCIDENT_ID required" && exit 1)
 	@test -n "$(START)"       || (echo "ERROR: START required (ISO-8601)" && exit 1)
 	@test -n "$(END)"         || (echo "ERROR: END required (ISO-8601)" && exit 1)
-	@python3 -m src.agent.run \
+	@$(PYTHON) -m src.agent.run \
 		--incident-id "$(INCIDENT_ID)" \
 		--start "$(START)" \
 		--end "$(END)" \
@@ -110,48 +111,48 @@ investigate:
 
 # ── Evaluation ────────────────────────────────────────────────────────────
 eval:
-	@python3 -m eval.scenario_runner \
+	@$(PYTHON) -m eval.scenario_runner \
 		--scenario-dir "$(SCENARIO_DIR)" \
 		--mode replay
 
 eval-replay:
 	@test -n "$(RUN_ID)" || (echo "ERROR: RUN_ID required" && exit 1)
-	@python3 -m eval.scenario_runner \
+	@$(PYTHON) -m eval.scenario_runner \
 		--scenario-dir "$(SCENARIO_DIR)" \
 		--mode replay \
 		--run-id "$(RUN_ID)"
 
 eval-baselines:
-	@python3 -m eval.scenario_runner \
+	@$(PYTHON) -m eval.scenario_runner \
 		--scenario-dir "$(SCENARIO_DIR)" \
 		--mode baselines-only
 
 compare:
-	@python3 -m eval.compare
+	@$(PYTHON) -m eval.compare
 
 # ── Dev ───────────────────────────────────────────────────────────────────
 test:
-	pytest --cov=src --cov=eval --cov-report=term-missing -q
+	$(PYTHON) -m pytest --cov=src --cov=eval --cov-report=term-missing -q
 
 lint:
-	ruff check src/ eval/ scripts/ tests/
-	mypy src/ eval/ --ignore-missing-imports
+	$(PYTHON) -m ruff check src/ eval/ scripts/ tests/
+	$(PYTHON) -m mypy src/ eval/ --ignore-missing-imports
 
 fmt:
-	ruff format src/ eval/ scripts/ tests/
+	$(PYTHON) -m ruff format src/ eval/ scripts/ tests/
 
 # ── Demo ──────────────────────────────────────────────────────────────────
 demo:  ## Offline: replay the recorded checkout pod-crash investigation (no key, no cluster)
-	@python3 -m src.demo --trace "$(TRACE)"
+	@$(PYTHON) -m src.demo --trace "$(TRACE)"
 
 demo-live:  ## Live LLM on a recorded snapshot (needs LLM_API_KEY or NIM_API_KEY)
-	@python3 -m src.demo --live --snapshot-dir "$(SNAPSHOT)"
+	@$(PYTHON) -m src.demo --live --snapshot-dir "$(SNAPSHOT)"
 
 benchmark:  ## Agent x REPEATS + 3 baselines on every snapshot, then results/
-	@python3 -m eval.scenario_runner --scenario-dir "$(SCENARIO_DIR)" --mode benchmark \
+	@$(PYTHON) -m eval.scenario_runner --scenario-dir "$(SCENARIO_DIR)" --mode benchmark \
 		--repeats $(REPEATS) --run-id $(BENCH_ID)
-	@python3 -m eval.report --run-id $(BENCH_ID)
-	@python3 -m eval.compare --run-id $(BENCH_ID)
+	@$(PYTHON) -m eval.report --run-id $(BENCH_ID)
+	@$(PYTHON) -m eval.compare --run-id $(BENCH_ID)
 
 help:
 	@echo ""
