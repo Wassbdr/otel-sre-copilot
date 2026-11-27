@@ -112,7 +112,7 @@ def compute_per_scenario(sr: ScenarioResult) -> dict[str, object]:
     """Compute per-scenario metrics for detailed artifact logging."""
     gt_service = sr.ground_truth.get("fault_service", "")
     gt_fault = sr.ground_truth.get("fault_type", "")
-    rc = sr.report.root_causes
+    rc = sr.report.root_causes or []
 
     rank = None
     for i, h in enumerate(rc[:3]):
@@ -133,5 +133,8 @@ def compute_per_scenario(sr: ScenarioResult) -> dict[str, object]:
         "grounding_score": sr.grounding_score,
         "latency_s": sr.report.latency_s,
         "cost_usd": sr.report.cost_usd,
+        "prompt_tokens": sr.report.total_prompt_tokens,
+        "completion_tokens": sr.report.total_completion_tokens,
+        "total_tokens": sr.report.total_prompt_tokens + sr.report.total_completion_tokens,
         "hallucination_warning": sr.grounding_score < 0.8,
     }

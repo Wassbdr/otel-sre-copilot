@@ -34,6 +34,7 @@ def run_scenario(
     snapshot_dir: Path,
     mode: str = "replay",
     run_id: str = "",
+    repeat: int = 0,
 ) -> dict[str, object]:
     """Run one scenario: agent (or baseline) + grounding verify + per-scenario metrics."""
     from eval.grounding_verifier import verify
@@ -69,6 +70,7 @@ def run_scenario(
     from src.agent.schemas import initial_state
 
     graph = build_graph(ds)
+    from src.agent.llm import llm_settings
     state = initial_state(
         incident_id=scenario_id,
         incident_start_ts=start,
@@ -77,7 +79,7 @@ def run_scenario(
     )
     state["_investigation_start_ts"] = datetime.now(UTC).isoformat()
 
-    result = graph.invoke(state)
+    result = graph.invoke(state, {"recursion_limit": 100})
     report: InvestigationReport = result["final_report"]
     tool_calls_log: list[dict] = result.get("tool_calls_log", [])
 
@@ -92,10 +94,13 @@ def run_scenario(
         grounding_score=grounding_result.grounding_score,
     )
     per_scenario = compute_per_scenario(sr)
+    per_scenario["repeat"] = repeat
+    per_scenario["llm_calls"] = result.get("token_usage", {}).get("llm_calls", 0)
+    per_scenario["tool_calls"] = len(tool_calls_log)
 
     # Save run artifacts
     if run_id:
-        artifact_dir = _ARTIFACTS_DIR / run_id / "scenarios" / scenario_id
+        artifact_dir = _ARTIFACTS_DIR / run_id / "scenarios" / scenario_id / f"rep{repeat}"
         artifact_dir.mkdir(parents=True, exist_ok=True)
         with open(artifact_dir / "report.json", "w") as f:
             f.write(report.model_dump_json(indent=2))
@@ -109,6 +114,24 @@ def run_scenario(
                 "total": grounding_result.total_count,
                 "failed_items": grounding_result.failed_items,
                 "has_hallucination_warning": grounding_result.has_hallucination_warning,
+            }, f, indent=2)
+        # Self-contained recorded trace: everything `sre-copilot-demo` needs to replay offline.
+        with open(artifact_dir / "trace.json", "w") as f:
+            json.dump({
+                "scenario_id": scenario_id,
+                "snapshot_dir": str(snapshot_dir),
+                "window": {"start": start, "end": end, "namespace": namespace},
+                "model": llm_settings().model,
+                "ground_truth": ground_truth,
+                "tool_calls": tool_calls_log,
+                "report": report.model_dump(mode="json"),
+                "grounding": {
+                    "score": grounding_result.grounding_score,
+                    "verified": grounding_result.verified_count,
+                    "total": grounding_result.total_count,
+                    "failed_items": grounding_result.failed_items,
+                },
+                "metrics": per_scenario,
             }, f, indent=2)
 
     if grounding_result.has_hallucination_warning:
@@ -154,16 +177,8 @@ def _run_baselines(
     return results
 
 
-def run_all(
-    scenario_dir: Path,
-    mode: str,
-    run_id: str = "",
-) -> None:
-    """Run all scenarios in a directory and write aggregated results."""
-    if not run_id:
-        run_id = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
-
-    # Find snapshot directories — use scenario_id from YAML metadata, fallback to stem
+def discover_snapshots(scenario_dir: Path) -> list[Path]:
+    """All snapshots (every seed) of the scenarios defined in scenario_dir, sorted."""
     snapshot_dirs: list[Path] = []
     for scenario_yaml in sorted(scenario_dir.glob("*.yaml")):
         try:
@@ -173,12 +188,29 @@ def run_all(
             scenario_id = str(doc.get("metadata", {}).get("scenario_id", scenario_yaml.stem))
         except Exception:
             scenario_id = scenario_yaml.stem
-        snap_dir = _SNAPSHOTS_DIR / scenario_id
-        if snap_dir.exists() and (snap_dir / "ground_truth.json").exists():
-            snapshot_dirs.append(snap_dir)
-        else:
+        base = scenario_id.rsplit("-seed", 1)[0]
+        found = sorted(
+            d for d in _SNAPSHOTS_DIR.glob(f"{base}-seed*")
+            if (d / "ground_truth.json").exists() and (d / "prometheus").exists()
+        )
+        if not found:
             log.warning("snapshot_missing", scenario=scenario_id,
                         hint=f"Run: make fault SCENARIO={scenario_yaml}")
+        snapshot_dirs.extend(found)
+    return snapshot_dirs
+
+
+def run_all(
+    scenario_dir: Path,
+    mode: str,
+    run_id: str = "",
+    repeats: int = 1,
+) -> None:
+    """Run all scenarios in a directory and write aggregated results."""
+    if not run_id:
+        run_id = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+
+    snapshot_dirs = discover_snapshots(scenario_dir)
 
     if not snapshot_dirs:
         log.error("no_snapshots_found", scenario_dir=str(scenario_dir))
@@ -188,22 +220,53 @@ def run_all(
 
     all_results: list[dict[str, object]] = []
     for snap_dir in snapshot_dirs:
+        with open(snap_dir / "ground_truth.json") as f:
+            gt = json.load(f)
+        row: dict[str, object] = {
+            "snapshot_dir": str(snap_dir),
+            "scenario_id": gt.get("scenario_id", snap_dir.name),
+            "scenario": str(gt.get("scenario_id", snap_dir.name)).rsplit("-seed", 1)[0],
+            "seed": gt.get("seed"),
+            "validation_passed": gt.get("validation_passed"),
+        }
         try:
-            result = run_scenario(snap_dir, mode=mode, run_id=run_id)
-            all_results.append({"snapshot_dir": str(snap_dir), **result})
+            if mode in ("baselines-only", "benchmark"):
+                row.update(run_scenario(snap_dir, mode="baselines-only", run_id=run_id))
+            if mode in ("replay", "benchmark"):
+                runs: list[object] = []
+                for k in range(repeats):
+                    try:
+                        runs.append(run_scenario(snap_dir, mode="replay", run_id=run_id,
+                                                 repeat=k)["agent"])
+                    except Exception as e:  # one failed LLM run must not lose the others
+                        log.error("agent_run_failed", snapshot_dir=str(snap_dir), repeat=k,
+                                  error=str(e))
+                        runs.append({"repeat": k, "error": str(e)})
+                row["agent_runs"] = runs
+                ok = [r for r in runs if isinstance(r, dict) and "error" not in r]
+                if ok:
+                    row["agent"] = ok[0]
         except Exception as e:
             log.error("scenario_failed", snapshot_dir=str(snap_dir), error=str(e))
-            all_results.append({"snapshot_dir": str(snap_dir), "error": str(e)})
+            row["error"] = str(e)
+        all_results.append(row)
+        # Write after every snapshot so a long run that dies keeps its partial results.
+        _write_summary(all_results, run_id, mode, repeats, quiet=True)
 
     # Compute aggregate metrics
-    _write_summary(all_results, run_id, mode)
+    _write_summary(all_results, run_id, mode, repeats)
 
 
 def _write_summary(
     all_results: list[dict[str, object]],
     run_id: str,
     mode: str,
+    repeats: int = 1,
+    quiet: bool = False,
 ) -> None:
+    import platform
+
+    from src.agent.llm import llm_settings
 
     artifact_dir = _ARTIFACTS_DIR / run_id
     artifact_dir.mkdir(parents=True, exist_ok=True)
@@ -214,7 +277,7 @@ def _write_summary(
 
     # If agent mode: rehydrate ScenarioResult objects for aggregate metrics
     # (simplified: read grounding from per-scenario files)
-    if mode != "baselines-only":
+    if mode != "baselines-only" and not quiet:
         scenario_results: list[dict] = [
             r.get("agent", {}) for r in all_results if "agent" in r
         ]
@@ -223,8 +286,13 @@ def _write_summary(
     config = {
         "run_id": run_id,
         "mode": mode,
-        "model": os.getenv("NIM_MODEL", "meta/llama-3.1-70b-instruct"),
+        "model": llm_settings().model if mode != "baselines-only" else None,
+        "llm_base_url": llm_settings().base_url if mode != "baselines-only" else None,
+        "repeats": repeats,
         "seed": int(os.getenv("RANDOM_SEED", "42")),
+        "snapshots": [r["snapshot_dir"] for r in all_results],
+        "hardware": f"{platform.machine()} {os.cpu_count()} vCPU, {platform.system()}, no GPU",
+        "python": platform.python_version(),
         "agent_version": "0.1.0",
         "n_scenarios": len(all_results),
         "ts": datetime.now(UTC).isoformat(),
@@ -232,8 +300,9 @@ def _write_summary(
     with open(artifact_dir / "config.json", "w") as f:
         json.dump(config, f, indent=2)
 
-    log.info("eval_complete", run_id=run_id, artifact_dir=str(artifact_dir))
-    print(f"\nArtifacts written to: artifacts/{run_id}/")
+    if not quiet:
+        log.info("eval_complete", run_id=run_id, artifact_dir=str(artifact_dir))
+        print(f"\nArtifacts written to: artifacts/{run_id}/")
 
 
 def _print_table(results: list[dict], label: str, run_id: str) -> None:
@@ -266,8 +335,11 @@ def main() -> None:
     parser.add_argument("--scenario-dir", type=Path, default=Path("scenarios/mvp"))
     parser.add_argument("--snapshot-dir", type=Path, default=None,
                         help="Single snapshot dir (use with --mode single)")
-    parser.add_argument("--mode", choices=["replay", "baselines-only", "single"],
-                        default="replay")
+    parser.add_argument("--mode", choices=["replay", "baselines-only", "benchmark", "single"],
+                        default="replay",
+                        help="benchmark = baselines + agent on every snapshot")
+    parser.add_argument("--repeats", type=int, default=1,
+                        help="Agent runs per snapshot (variance across LLM runs)")
     parser.add_argument("--run-id", default="", help="Override run ID")
     parser.add_argument("--print-report", action="store_true")
     args = parser.parse_args()
@@ -278,7 +350,7 @@ def main() -> None:
         if args.print_report:
             print(json.dumps(result, indent=2))
     else:
-        run_all(args.scenario_dir, mode=args.mode, run_id=args.run_id)
+        run_all(args.scenario_dir, mode=args.mode, run_id=args.run_id, repeats=args.repeats)
 
 
 if __name__ == "__main__":

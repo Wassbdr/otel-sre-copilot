@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
 from pathlib import Path
 
@@ -28,7 +27,7 @@ _METRIC_HEADERS = [
     ("FT Acc", "fault_type_correct"),
     ("Grounding", "grounding_score"),
     ("Latency(s)", "latency_s"),
-    ("Cost($)", "cost_usd"),
+    ("Tokens", "total_tokens"),
 ]
 
 _METHODS = ["random", "zscore", "composite_zscore", "agent"]
@@ -48,7 +47,11 @@ def load_results(run_id: str) -> dict[str, list[dict]]:
         if "error" in scenario:
             continue
         for method in _METHODS:
-            if method in scenario:
+            if method == "agent" and scenario.get("agent_runs"):
+                methods[method].extend(
+                    r for r in scenario["agent_runs"] if isinstance(r, dict) and "error" not in r
+                )
+            elif method in scenario:
                 methods[method].append(scenario[method])
 
     return methods
@@ -60,11 +63,8 @@ def aggregate(results: list[dict]) -> dict[str, float]:
     n = len(results)
     out = {}
     for _, key in _METRIC_HEADERS:
-        vals = [r.get(key, 0.0) for r in results]
-        if key == "cost_usd":
-            out[key] = sum(vals)
-        else:
-            out[key] = sum(vals) / n
+        vals = [r.get(key) or 0.0 for r in results]
+        out[key] = sum(vals) / n
     return out
 
 
@@ -94,8 +94,8 @@ def render_table(aggregated: dict[str, dict[str, float]]) -> str:
         cells = [method_labels.get(method, method)]
         for _, key in _METRIC_HEADERS:
             v = agg.get(key, 0.0)
-            if key == "cost_usd":
-                cells.append(f"${v:.4f}")
+            if key == "total_tokens":
+                cells.append(f"{v:,.0f}")
             elif key == "latency_s":
                 cells.append(f"{v:.1f}s")
             else:
@@ -114,10 +114,9 @@ def main() -> None:
     if args.run_id:
         run_id = args.run_id
     else:
-        dirs = sorted(_ARTIFACTS_DIR.iterdir(), reverse=True)
-        run_id = next(
-            (d.name for d in dirs if (d / "raw_results.json").exists()), None
-        )
+        from eval.report import latest_run_id
+
+        run_id = latest_run_id()
         if not run_id:
             print("No eval runs found. Run: make eval && make eval-baselines")
             sys.exit(1)
@@ -136,11 +135,14 @@ def main() -> None:
         f.write(f"# Baseline Comparison — run: {run_id}\n\n")
         f.write(table)
         f.write("\n\n## Notes\n")
-        f.write(f"- Model: {os.getenv('NIM_MODEL', 'meta/llama-3.1-70b-instruct')}\n")
-        f.write(f"- Seed: {os.getenv('RANDOM_SEED', '42')}\n")
+        config_path = _ARTIFACTS_DIR / run_id / "config.json"
+        config = json.loads(config_path.read_text()) if config_path.exists() else {}
+        f.write(f"- Model: {config.get('model')} ({config.get('repeats', 1)} runs/snapshot)\n")
+        f.write(f"- Seed: {config.get('seed', 42)}\n")
         f.write("- Grounding score: fraction of evidence items verified against tool_calls_log\n")
         f.write("- Random baseline grounding_score=0.0 by design (no evidence items)\n")
-        f.write("- Reproduce: `make eval-replay RUN_ID=" + run_id + "`\n")
+        f.write("- Agent rows average every repeated run; see results/benchmark.md for variance\n")
+        f.write(f"- Reproduce: `python -m eval.compare --run-id {run_id}`\n")
 
     print("Written to: results/baseline_comparison.md")
 
