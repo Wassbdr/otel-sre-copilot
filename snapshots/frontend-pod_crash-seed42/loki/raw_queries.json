@@ -1,0 +1,257 @@
+[
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?frontend\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T07:11:45.700215+00:00",
+    "end": "2026-11-27T07:18:45.938616+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?frontend\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T07:11:45.700215+00:00",
+    "end": "2026-11-27T07:18:45.938616+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?cart\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T07:11:45.700215+00:00",
+    "end": "2026-11-27T07:18:45.938616+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?cart\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T07:11:45.700215+00:00",
+    "end": "2026-11-27T07:18:45.938616+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?checkout\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T07:11:45.700215+00:00",
+    "end": "2026-11-27T07:18:45.938616+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?checkout\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T07:11:45.700215+00:00",
+    "end": "2026-11-27T07:18:45.938616+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?currency\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T07:11:45.700215+00:00",
+    "end": "2026-11-27T07:18:45.938616+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?currency\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T07:11:45.700215+00:00",
+    "end": "2026-11-27T07:18:45.938616+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?email\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T07:11:45.700215+00:00",
+    "end": "2026-11-27T07:18:45.938616+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?email\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T07:11:45.700215+00:00",
+    "end": "2026-11-27T07:18:45.938616+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?payment\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T07:11:45.700215+00:00",
+    "end": "2026-11-27T07:18:45.938616+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?payment\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T07:11:45.700215+00:00",
+    "end": "2026-11-27T07:18:45.938616+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?product-catalog\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T07:11:45.700215+00:00",
+    "end": "2026-11-27T07:18:45.938616+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?product-catalog\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T07:11:45.700215+00:00",
+    "end": "2026-11-27T07:18:45.938616+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?recommendation\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T07:11:45.700215+00:00",
+    "end": "2026-11-27T07:18:45.938616+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?recommendation\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T07:11:45.700215+00:00",
+    "end": "2026-11-27T07:18:45.938616+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?shipping\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T07:11:45.700215+00:00",
+    "end": "2026-11-27T07:18:45.938616+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?shipping\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T07:11:45.700215+00:00",
+    "end": "2026-11-27T07:18:45.938616+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?ad\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T07:11:45.700215+00:00",
+    "end": "2026-11-27T07:18:45.938616+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?ad\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T07:11:45.700215+00:00",
+    "end": "2026-11-27T07:18:45.938616+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?load-generator\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T07:11:45.700215+00:00",
+    "end": "2026-11-27T07:18:45.938616+00:00",
+    "result": [
+      {
+        "stream": {
+          "detected_level": "ERROR",
+          "job": "opentelemetry-demo/load-generator",
+          "level": "ERROR",
+          "service_name": "opentelemetry-demo/load-generator"
+        },
+        "values": [
+          [
+            "1795763876318239488",
+            "{\"body\":\"Error in change currency task: Page.select_option: Timeout 60000ms exceeded.\\nCall log:\\n  - waiting for locator(\\\"[name=\\\\\\\"currency_code\\\\\\\"]\\\")\\n\",\"traceid\":\"f662a6e9379f91914b3d2716d08e6c19\",\"spanid\":\"6c9f53ccb59f5451\",\"severity\":\"ERROR\",\"flags\":3,\"attributes\":{\"otelServiceName\":\"load-generator\",\"otelSpanID\":\"6c9f53ccb59f5451\",\"otelTraceID\":\"f662a6e9379f91914b3d2716d08e6c19\",\"otelTraceSampled\":true},\"resources\":{\"k8s.namespace.name\":\"otel-demo\",\"service.criticality\":\"low\",\"service.name\":\"load-generator\",\"service.namespace\":\"opentelemetry-demo\",\"service.version\":\"2.2.0\",\"telemetry.sdk.language\":\"python\",\"telemetry.sdk.name\":\"opentelemetry\",\"telemetry.sdk.version\":\"1.42.0\"},\"instrumentation_scope\":{\"name\":\"root\"}}"
+          ],
+          [
+            "1795763876318239488",
+            "{\"body\":\"Error in change currency task: Page.select_option: Timeout 60000ms exceeded.\\nCall log:\\n  - waiting for locator(\\\"[name=\\\\\\\"currency_code\\\\\\\"]\\\")\\n\",\"traceid\":\"f662a6e9379f91914b3d2716d08e6c19\",\"spanid\":\"6c9f53ccb59f5451\",\"severity\":\"ERROR\",\"flags\":3,\"attributes\":{\"code.file.path\":\"/usr/src/app/locustfile.py\",\"code.function.name\":\"open_cart_page_and_change_currency\",\"code.line.number\":278,\"otelServiceName\":\"load-generator\",\"otelSpanID\":\"6c9f53ccb59f5451\",\"otelTraceID\":\"f662a6e9379f91914b3d2716d08e6c19\",\"otelTraceSampled\":true},\"resources\":{\"k8s.namespace.name\":\"otel-demo\",\"service.criticality\":\"low\",\"service.name\":\"load-generator\",\"service.namespace\":\"opentelemetry-demo\",\"service.version\":\"2.2.0\",\"telemetry.sdk.language\":\"python\",\"telemetry.sdk.name\":\"opentelemetry\",\"telemetry.sdk.version\":\"1.42.0\"},\"instrumentation_scope\":{\"name\":\"root\"}}"
+          ],
+          [
+            "1795763815107631104",
+            "{\"body\":\"Error in change currency task: Page.select_option: Timeout 60000ms exceeded.\\nCall log:\\n  - waiting for locator(\\\"[name=\\\\\\\"currency_code\\\\\\\"]\\\")\\n\",\"traceid\":\"d5561e1dba41dda4956e1bf67e0fbb95\",\"spanid\":\"fa74865b68854867\",\"severity\":\"ERROR\",\"flags\":3,\"attributes\":{\"otelServiceName\":\"load-generator\",\"otelSpanID\":\"fa74865b68854867\",\"otelTraceID\":\"d5561e1dba41dda4956e1bf67e0fbb95\",\"otelTraceSampled\":true},\"resources\":{\"k8s.namespace.name\":\"otel-demo\",\"service.criticality\":\"low\",\"service.name\":\"load-generator\",\"service.namespace\":\"opentelemetry-demo\",\"service.version\":\"2.2.0\",\"telemetry.sdk.language\":\"python\",\"telemetry.sdk.name\":\"opentelemetry\",\"telemetry.sdk.version\":\"1.42.0\"},\"instrumentation_scope\":{\"name\":\"root\"}}"
+          ],
+          [
+            "1795763815107631104",
+            "{\"body\":\"Error in change currency task: Page.select_option: Timeout 60000ms exceeded.\\nCall log:\\n  - waiting for locator(\\\"[name=\\\\\\\"currency_code\\\\\\\"]\\\")\\n\",\"traceid\":\"d5561e1dba41dda4956e1bf67e0fbb95\",\"spanid\":\"fa74865b68854867\",\"severity\":\"ERROR\",\"flags\":3,\"attributes\":{\"code.file.path\":\"/usr/src/app/locustfile.py\",\"code.function.name\":\"open_cart_page_and_change_currency\",\"code.line.number\":278,\"otelServiceName\":\"load-generator\",\"otelSpanID\":\"fa74865b68854867\",\"otelTraceID\":\"d5561e1dba41dda4956e1bf67e0fbb95\",\"otelTraceSampled\":true},\"resources\":{\"k8s.namespace.name\":\"otel-demo\",\"service.criticality\":\"low\",\"service.name\":\"load-generator\",\"service.namespace\":\"opentelemetry-demo\",\"service.version\":\"2.2.0\",\"telemetry.sdk.language\":\"python\",\"telemetry.sdk.name\":\"opentelemetry\",\"telemetry.sdk.version\":\"1.42.0\"},\"instrumentation_scope\":{\"name\":\"root\"}}"
+          ],
+          [
+            "1795763753951516416",
+            "{\"body\":\"Error in add to cart task: Timeout 15000ms exceeded while waiting for event \\\"response\\\"\\n=========================== logs ===========================\\nwaiting for event \\\"response\\\"\\n============================================================\",\"traceid\":\"9f1bcb38de18061b5ee24229ca31f7f1\",\"spanid\":\"9f8c6811eac87e73\",\"severity\":\"ERROR\",\"flags\":3,\"attributes\":{\"otelServiceName\":\"load-generator\",\"otelSpanID\":\"9f8c6811eac87e73\",\"otelTraceID\":\"9f1bcb38de18061b5ee24229ca31f7f1\",\"otelTraceSampled\":true},\"resources\":{\"k8s.namespace.name\":\"otel-demo\",\"service.criticality\":\"low\",\"service.name\":\"load-generator\",\"service.namespace\":\"opentelemetry-demo\",\"service.version\":\"2.2.0\",\"telemetry.sdk.language\":\"python\",\"telemetry.sdk.name\":\"opentelemetry\",\"telemetry.sdk.version\":\"1.42.0\"},\"instrumentation_scope\":{\"name\":\"root\"}}"
+          ],
+          [
+            "1795763753951516416",
+            "{\"body\":\"Error in add to cart task: Timeout 15000ms exceeded while waiting for event \\\"response\\\"\\n=========================== logs ===========================\\nwaiting for event \\\"response\\\"\\n============================================================\",\"traceid\":\"9f1bcb38de18061b5ee24229ca31f7f1\",\"spanid\":\"9f8c6811eac87e73\",\"severity\":\"ERROR\",\"flags\":3,\"attributes\":{\"code.file.path\":\"/usr/src/app/locustfile.py\",\"code.function.name\":\"add_product_to_cart\",\"code.line.number\":302,\"otelServiceName\":\"load-generator\",\"otelSpanID\":\"9f8c6811eac87e73\",\"otelTraceID\":\"9f1bcb38de18061b5ee24229ca31f7f1\",\"otelTraceSampled\":true},\"resources\":{\"k8s.namespace.name\":\"otel-demo\",\"service.criticality\":\"low\",\"service.name\":\"load-generator\",\"service.namespace\":\"opentelemetry-demo\",\"service.version\":\"2.2.0\",\"telemetry.sdk.language\":\"python\",\"telemetry.sdk.name\":\"opentelemetry\",\"telemetry.sdk.version\":\"1.42.0\"},\"instrumentation_scope\":{\"name\":\"root\"}}"
+          ],
+          [
+            "1795763737796657408",
+            "{\"body\":\"Error in add to cart task: Timeout 15000ms exceeded while waiting for event \\\"response\\\"\\n=========================== logs ===========================\\nwaiting for event \\\"response\\\"\\n============================================================\",\"traceid\":\"393b81b0d92a014270abbc3cf519f20a\",\"spanid\":\"8bab3d2ddb5951b9\",\"severity\":\"ERROR\",\"flags\":3,\"attributes\":{\"otelServiceName\":\"load-generator\",\"otelSpanID\":\"8bab3d2ddb5951b9\",\"otelTraceID\":\"393b81b0d92a014270abbc3cf519f20a\",\"otelTraceSampled\":true},\"resources\":{\"k8s.namespace.name\":\"otel-demo\",\"service.criticality\":\"low\",\"service.name\":\"load-generator\",\"service.namespace\":\"opentelemetry-demo\",\"service.version\":\"2.2.0\",\"telemetry.sdk.language\":\"python\",\"telemetry.sdk.name\":\"opentelemetry\",\"telemetry.sdk.version\":\"1.42.0\"},\"instrumentation_scope\":{\"name\":\"root\"}}"
+          ],
+          [
+            "1795763737796657408",
+            "{\"body\":\"Error in add to cart task: Timeout 15000ms exceeded while waiting for event \\\"response\\\"\\n=========================== logs ===========================\\nwaiting for event \\\"response\\\"\\n============================================================\",\"traceid\":\"393b81b0d92a014270abbc3cf519f20a\",\"spanid\":\"8bab3d2ddb5951b9\",\"severity\":\"ERROR\",\"flags\":3,\"attributes\":{\"code.file.path\":\"/usr/src/app/locustfile.py\",\"code.function.name\":\"add_product_to_cart\",\"code.line.number\":302,\"otelServiceName\":\"load-generator\",\"otelSpanID\":\"8bab3d2ddb5951b9\",\"otelTraceID\":\"393b81b0d92a014270abbc3cf519f20a\",\"otelTraceSampled\":true},\"resources\":{\"k8s.namespace.name\":\"otel-demo\",\"service.criticality\":\"low\",\"service.name\":\"load-generator\",\"service.namespace\":\"opentelemetry-demo\",\"service.version\":\"2.2.0\",\"telemetry.sdk.language\":\"python\",\"telemetry.sdk.name\":\"opentelemetry\",\"telemetry.sdk.version\":\"1.42.0\"},\"instrumentation_scope\":{\"name\":\"root\"}}"
+          ],
+          [
+            "1795763721640484096",
+            "{\"body\":\"Error in add to cart task: Timeout 15000ms exceeded while waiting for event \\\"response\\\"\\n=========================== logs ===========================\\nwaiting for event \\\"response\\\"\\n============================================================\",\"traceid\":\"8723899f9bb302f7f92bdcfb3d0eb8f8\",\"spanid\":\"ac5809e1a1732154\",\"severity\":\"ERROR\",\"flags\":3,\"attributes\":{\"otelServiceName\":\"load-generator\",\"otelSpanID\":\"ac5809e1a1732154\",\"otelTraceID\":\"8723899f9bb302f7f92bdcfb3d0eb8f8\",\"otelTraceSampled\":true},\"resources\":{\"k8s.namespace.name\":\"otel-demo\",\"service.criticality\":\"low\",\"service.name\":\"load-generator\",\"service.namespace\":\"opentelemetry-demo\",\"service.version\":\"2.2.0\",\"telemetry.sdk.language\":\"python\",\"telemetry.sdk.name\":\"opentelemetry\",\"telemetry.sdk.version\":\"1.42.0\"},\"instrumentation_scope\":{\"name\":\"root\"}}"
+          ],
+          [
+            "1795763721640484096",
+            "{\"body\":\"Error in add to cart task: Timeout 15000ms exceeded while waiting for event \\\"response\\\"\\n=========================== logs ===========================\\nwaiting for event \\\"response\\\"\\n============================================================\",\"traceid\":\"8723899f9bb302f7f92bdcfb3d0eb8f8\",\"spanid\":\"ac5809e1a1732154\",\"severity\":\"ERROR\",\"flags\":3,\"attributes\":{\"code.file.path\":\"/usr/src/app/locustfile.py\",\"code.function.name\":\"add_product_to_cart\",\"code.line.number\":302,\"otelServiceName\":\"load-generator\",\"otelSpanID\":\"ac5809e1a1732154\",\"otelTraceID\":\"8723899f9bb302f7f92bdcfb3d0eb8f8\",\"otelTraceSampled\":true},\"resources\":{\"k8s.namespace.name\":\"otel-demo\",\"service.criticality\":\"low\",\"service.name\":\"load-generator\",\"service.namespace\":\"opentelemetry-demo\",\"service.version\":\"2.2.0\",\"telemetry.sdk.language\":\"python\",\"telemetry.sdk.name\":\"opentelemetry\",\"telemetry.sdk.version\":\"1.42.0\"},\"instrumentation_scope\":{\"name\":\"root\"}}"
+          ],
+          [
+            "1795763705535297536",
+            "{\"body\":\"Error in change currency task: Page.select_option: Timeout 60000ms exceeded.\\nCall log:\\n  - waiting for locator(\\\"[name=\\\\\\\"currency_code\\\\\\\"]\\\")\\n\",\"traceid\":\"610dccf1d99887ac1fa48196c0976377\",\"spanid\":\"764d901e7afeda9a\",\"severity\":\"ERROR\",\"flags\":3,\"attributes\":{\"otelServiceName\":\"load-generator\",\"otelSpanID\":\"764d901e7afeda9a\",\"otelTraceID\":\"610dccf1d99887ac1fa48196c0976377\",\"otelTraceSampled\":true},\"resources\":{\"k8s.namespace.name\":\"otel-demo\",\"service.criticality\":\"low\",\"service.name\":\"load-generator\",\"service.namespace\":\"opentelemetry-demo\",\"service.version\":\"2.2.0\",\"telemetry.sdk.language\":\"python\",\"telemetry.sdk.name\":\"opentelemetry\",\"telemetry.sdk.version\":\"1.42.0\"},\"instrumentation_scope\":{\"name\":\"root\"}}"
+          ],
+          [
+            "1795763705535297536",
+            "{\"body\":\"Error in change currency task: Page.select_option: Timeout 60000ms exceeded.\\nCall log:\\n  - waiting for locator(\\\"[name=\\\\\\\"currency_code\\\\\\\"]\\\")\\n\",\"traceid\":\"610dccf1d99887ac1fa48196c0976377\",\"spanid\":\"764d901e7afeda9a\",\"severity\":\"ERROR\",\"flags\":3,\"attributes\":{\"code.file.path\":\"/usr/src/app/locustfile.py\",\"code.function.name\":\"open_cart_page_and_change_currency\",\"code.line.number\":278,\"otelServiceName\":\"load-generator\",\"otelSpanID\":\"764d901e7afeda9a\",\"otelTraceID\":\"610dccf1d99887ac1fa48196c0976377\",\"otelTraceSampled\":true},\"resources\":{\"k8s.namespace.name\":\"otel-demo\",\"service.criticality\":\"low\",\"service.name\":\"load-generator\",\"service.namespace\":\"opentelemetry-demo\",\"service.version\":\"2.2.0\",\"telemetry.sdk.language\":\"python\",\"telemetry.sdk.name\":\"opentelemetry\",\"telemetry.sdk.version\":\"1.42.0\"},\"instrumentation_scope\":{\"name\":\"root\"}}"
+          ],
+          [
+            "1795763644342687744",
+            "{\"body\":\"Error in add to cart task: Timeout 15000ms exceeded while waiting for event \\\"response\\\"\\n=========================== logs ===========================\\nwaiting for event \\\"response\\\"\\n============================================================\",\"traceid\":\"b51b468b24c985056024776b98f63549\",\"spanid\":\"abb82b1326a0d934\",\"severity\":\"ERROR\",\"flags\":3,\"attributes\":{\"otelServiceName\":\"load-generator\",\"otelSpanID\":\"abb82b1326a0d934\",\"otelTraceID\":\"b51b468b24c985056024776b98f63549\",\"otelTraceSampled\":true},\"resources\":{\"k8s.namespace.name\":\"otel-demo\",\"service.criticality\":\"low\",\"service.name\":\"load-generator\",\"service.namespace\":\"opentelemetry-demo\",\"service.version\":\"2.2.0\",\"telemetry.sdk.language\":\"python\",\"telemetry.sdk.name\":\"opentelemetry\",\"telemetry.sdk.version\":\"1.42.0\"},\"instrumentation_scope\":{\"name\":\"root\"}}"
+          ],
+          [
+            "1795763644342687744",
+            "{\"body\":\"Error in add to cart task: Timeout 15000ms exceeded while waiting for event \\\"response\\\"\\n=========================== logs ===========================\\nwaiting for event \\\"response\\\"\\n============================================================\",\"traceid\":\"b51b468b24c985056024776b98f63549\",\"spanid\":\"abb82b1326a0d934\",\"severity\":\"ERROR\",\"flags\":3,\"attributes\":{\"code.file.path\":\"/usr/src/app/locustfile.py\",\"code.function.name\":\"add_product_to_cart\",\"code.line.number\":302,\"otelServiceName\":\"load-generator\",\"otelSpanID\":\"abb82b1326a0d934\",\"otelTraceID\":\"b51b468b24c985056024776b98f63549\",\"otelTraceSampled\":true},\"resources\":{\"k8s.namespace.name\":\"otel-demo\",\"service.criticality\":\"low\",\"service.name\":\"load-generator\",\"service.namespace\":\"opentelemetry-demo\",\"service.version\":\"2.2.0\",\"telemetry.sdk.language\":\"python\",\"telemetry.sdk.name\":\"opentelemetry\",\"telemetry.sdk.version\":\"1.42.0\"},\"instrumentation_scope\":{\"name\":\"root\"}}"
+          ],
+          [
+            "1795763628221650176",
+            "{\"body\":\"Error in change currency task: Page.select_option: Timeout 60000ms exceeded.\\nCall log:\\n  - waiting for locator(\\\"[name=\\\\\\\"currency_code\\\\\\\"]\\\")\\n\",\"traceid\":\"4f25c989c96c0942ca3ec14e74184593\",\"spanid\":\"70b5ebcf933a8862\",\"severity\":\"ERROR\",\"flags\":3,\"attributes\":{\"otelServiceName\":\"load-generator\",\"otelSpanID\":\"70b5ebcf933a8862\",\"otelTraceID\":\"4f25c989c96c0942ca3ec14e74184593\",\"otelTraceSampled\":true},\"resources\":{\"k8s.namespace.name\":\"otel-demo\",\"service.criticality\":\"low\",\"service.name\":\"load-generator\",\"service.namespace\":\"opentelemetry-demo\",\"service.version\":\"2.2.0\",\"telemetry.sdk.language\":\"python\",\"telemetry.sdk.name\":\"opentelemetry\",\"telemetry.sdk.version\":\"1.42.0\"},\"instrumentation_scope\":{\"name\":\"root\"}}"
+          ],
+          [
+            "1795763628221650176",
+            "{\"body\":\"Error in change currency task: Page.select_option: Timeout 60000ms exceeded.\\nCall log:\\n  - waiting for locator(\\\"[name=\\\\\\\"currency_code\\\\\\\"]\\\")\\n\",\"traceid\":\"4f25c989c96c0942ca3ec14e74184593\",\"spanid\":\"70b5ebcf933a8862\",\"severity\":\"ERROR\",\"flags\":3,\"attributes\":{\"code.file.path\":\"/usr/src/app/locustfile.py\",\"code.function.name\":\"open_cart_page_and_change_currency\",\"code.line.number\":278,\"otelServiceName\":\"load-generator\",\"otelSpanID\":\"70b5ebcf933a8862\",\"otelTraceID\":\"4f25c989c96c0942ca3ec14e74184593\",\"otelTraceSampled\":true},\"resources\":{\"k8s.namespace.name\":\"otel-demo\",\"service.criticality\":\"low\",\"service.name\":\"load-generator\",\"service.namespace\":\"opentelemetry-demo\",\"service.version\":\"2.2.0\",\"telemetry.sdk.language\":\"python\",\"telemetry.sdk.name\":\"opentelemetry\",\"telemetry.sdk.version\":\"1.42.0\"},\"instrumentation_scope\":{\"name\":\"root\"}}"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?load-generator\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T07:11:45.700215+00:00",
+    "end": "2026-11-27T07:18:45.938616+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?accounting\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T07:11:45.700215+00:00",
+    "end": "2026-11-27T07:18:45.938616+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?accounting\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T07:11:45.700215+00:00",
+    "end": "2026-11-27T07:18:45.938616+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?fraud-detection\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T07:11:45.700215+00:00",
+    "end": "2026-11-27T07:18:45.938616+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?fraud-detection\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T07:11:45.700215+00:00",
+    "end": "2026-11-27T07:18:45.938616+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?quote\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T07:11:45.700215+00:00",
+    "end": "2026-11-27T07:18:45.938616+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?quote\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T07:11:45.700215+00:00",
+    "end": "2026-11-27T07:18:45.938616+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?flagd\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T07:11:45.700215+00:00",
+    "end": "2026-11-27T07:18:45.938616+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?flagd\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T07:11:45.700215+00:00",
+    "end": "2026-11-27T07:18:45.938616+00:00",
+    "result": []
+  }
+]

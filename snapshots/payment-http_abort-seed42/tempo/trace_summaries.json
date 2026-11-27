@@ -1,114 +1,170 @@
 [
   {
-    "traceID": "11c159ffb8b3c0c614809bd7e3c811f8",
+    "traceID": "9ba9a86e7b1a96e76f061d21478a528c",
+    "rootServiceName": "load-generator",
+    "rootTraceName": "user_checkout_multi",
+    "startTimeUnixNano": "1795760945471807372",
+    "durationMs": 15034
+  },
+  {
+    "traceID": "6b4a10a8271f9236de47c3ad94605f49",
     "rootServiceName": "load-generator",
     "rootTraceName": "user_checkout_single",
-    "startTimeUnixNano": "1781821055029234424",
-    "durationMs": 15152
+    "startTimeUnixNano": "1795760939710098734",
+    "durationMs": 15021
   },
   {
-    "traceID": "78b673150fed20df77e30e62db8693e6",
-    "rootServiceName": "load-generator",
-    "rootTraceName": "user_checkout_multi",
-    "startTimeUnixNano": "1781821019712842759",
-    "durationMs": 15179
-  },
-  {
-    "traceID": "fa4ca461ccffcc1a7d00d61a2b59f8a7",
-    "rootServiceName": "load-generator",
-    "rootTraceName": "user_checkout_multi",
-    "startTimeUnixNano": "1781821001016614247",
-    "durationMs": 15368
-  },
-  {
-    "traceID": "c26fe87ad8199507bad473e2c9158358",
-    "rootServiceName": "load-generator",
-    "rootTraceName": "user_checkout_multi",
-    "startTimeUnixNano": "1781820945565551848",
-    "durationMs": 21321
-  },
-  {
-    "traceID": "cd04e4128ba7b337c52181f0d5624463",
-    "rootServiceName": "load-generator",
-    "rootTraceName": "user_checkout_multi",
-    "startTimeUnixNano": "1781820915489205777",
-    "durationMs": 18023
-  },
-  {
-    "traceID": "90f7d54118e168ef50732ee01eff6dbb",
+    "traceID": "1a38eb4a1d86eea83549ab8efc7f9a49",
     "rootServiceName": "load-generator",
     "rootTraceName": "user_checkout_single",
-    "startTimeUnixNano": "1781820898795881837",
-    "durationMs": 15086
+    "startTimeUnixNano": "1795760905930382606",
+    "durationMs": 15016
   },
   {
-    "traceID": "d12c508e7b4e51529bb0fa902a8a5a42",
+    "traceID": "adfed7efa57efb944e7b6305d04dd50e",
+    "rootServiceName": "load-generator",
+    "rootTraceName": "user_checkout_multi",
+    "startTimeUnixNano": "1795760904708630465",
+    "durationMs": 15042
+  },
+  {
+    "traceID": "473ff9d68471ccfc3afdabcde08afe16",
     "rootServiceName": "load-generator",
     "rootTraceName": "user_checkout_single",
-    "startTimeUnixNano": "1781820869853460173",
-    "durationMs": 15065
+    "startTimeUnixNano": "1795760870681818420",
+    "durationMs": 15015
   },
   {
-    "traceID": "7264889e7fabfe7892768e83313849f1",
+    "traceID": "2170638abc450c6f40f31cb731aaee3b",
     "rootServiceName": "load-generator",
     "rootTraceName": "user_checkout_multi",
-    "startTimeUnixNano": "1781820867466372315",
-    "durationMs": 15214
+    "startTimeUnixNano": "1795760827831388088",
+    "durationMs": 15054
   },
   {
-    "traceID": "ac165972b3fb9626319cfb4b6768144c",
-    "rootServiceName": "load-generator",
-    "rootTraceName": "user_checkout_multi",
-    "startTimeUnixNano": "1781820859294660065",
-    "durationMs": 15101
-  },
-  {
-    "traceID": "b0c37d882f11582fc6518baa6c0eb27b",
-    "rootServiceName": "load-generator",
-    "rootTraceName": "user_checkout_multi",
-    "startTimeUnixNano": "1781820857859203593",
-    "durationMs": 15066
-  },
-  {
-    "traceID": "1813d662bbbfe6cc00b33b6dea47fef8",
-    "rootServiceName": "load-generator",
-    "rootTraceName": "user_get_recommendations",
-    "startTimeUnixNano": "1781820805480002271",
-    "durationMs": 57
-  },
-  {
-    "traceID": "70e19e3d26a8742dfe322e3955d93331",
+    "traceID": "925a2474e1b125f04fe603600bfac0e2",
     "rootServiceName": "load-generator",
     "rootTraceName": "user_checkout_single",
-    "startTimeUnixNano": "1781820800289786016",
-    "durationMs": 15166
+    "startTimeUnixNano": "1795760808206058699",
+    "durationMs": 15014
   },
   {
-    "traceID": "c4ed983026ba992d6f5ec31e60119858",
+    "traceID": "7f14e7f9547a9ec372cd3e0c4799021b",
     "rootServiceName": "load-generator",
     "rootTraceName": "user_checkout_multi",
-    "startTimeUnixNano": "1781820769494549433",
-    "durationMs": 18216
+    "startTimeUnixNano": "1795760756786075770",
+    "durationMs": 15032
   },
   {
-    "traceID": "9d2952e3f65a49afb13b3f3ac987a50a",
+    "traceID": "ce17a2c2f6dff3bf9145ee4ab2dcfe65",
     "rootServiceName": "load-generator",
-    "rootTraceName": "user_browse_product",
-    "startTimeUnixNano": "1781820737193134080",
-    "durationMs": 47
+    "rootTraceName": "user_checkout_single",
+    "startTimeUnixNano": "1795760742646252776",
+    "durationMs": 15021
   },
   {
-    "traceID": "cec47b7ebecf09a0a7849cd0a02c9ae2",
-    "rootServiceName": "load-generator",
-    "rootTraceName": "user_get_recommendations",
-    "startTimeUnixNano": "1781821061157297389",
-    "durationMs": 543
-  },
-  {
-    "traceID": "9bd444da29f61184533d5f34bf80144d",
+    "traceID": "e1158ed7706d882a5d94288037c0231b",
     "rootServiceName": "load-generator",
     "rootTraceName": "user_checkout_multi",
-    "startTimeUnixNano": "1781821065026334509",
-    "durationMs": 15428
+    "startTimeUnixNano": "1795760706809145667",
+    "durationMs": 15025
+  },
+  {
+    "traceID": "5a007f238be7692a3eeb4d33fb1cf825",
+    "rootServiceName": "load-generator",
+    "rootTraceName": "user_checkout_multi",
+    "startTimeUnixNano": "1795760648015808639",
+    "durationMs": 15040
+  },
+  {
+    "traceID": "2c3e08a53ca2a8eeede10c4985bb12fc",
+    "rootServiceName": "load-generator",
+    "rootTraceName": "user_checkout_single",
+    "startTimeUnixNano": "1795760630208822896",
+    "durationMs": 15034
+  },
+  {
+    "traceID": "24590a49c65f55a6cd57d89f0d7dfc1c",
+    "rootServiceName": "load-generator",
+    "rootTraceName": "user_checkout_single",
+    "startTimeUnixNano": "1795760623743991686",
+    "durationMs": 15021
+  },
+  {
+    "traceID": "3a6c393e68dbce483532976cbea898f2",
+    "rootServiceName": "load-generator",
+    "rootTraceName": "user_checkout_multi",
+    "startTimeUnixNano": "1795760616255874449",
+    "durationMs": 15025
+  },
+  {
+    "traceID": "5ff5219a9746c505461e68a9e7e2dfe6",
+    "rootServiceName": "load-generator",
+    "rootTraceName": "browser_change_currency",
+    "startTimeUnixNano": "1795760560912260754",
+    "durationMs": 2254
+  },
+  {
+    "traceID": "50967f9c799d1976e0411f149b5c5a14",
+    "rootServiceName": "frontend-proxy",
+    "rootTraceName": "ingress",
+    "startTimeUnixNano": "1795760557639791000",
+    "durationMs": 3110
+  },
+  {
+    "traceID": "6654bcfde71547bb71cf2080881b139a",
+    "rootServiceName": "load-generator",
+    "rootTraceName": "browser_change_currency",
+    "startTimeUnixNano": "1795760557498096434",
+    "durationMs": 2237
+  },
+  {
+    "traceID": "5dc1f9380a7ec7de11632f83bb509c65",
+    "rootServiceName": "frontend-proxy",
+    "rootTraceName": "ingress",
+    "startTimeUnixNano": "1795760554247776000",
+    "durationMs": 3117
+  },
+  {
+    "traceID": "33c969c36f11f3fd730de7f334713dd4",
+    "rootServiceName": "load-generator",
+    "rootTraceName": "browser_change_currency",
+    "startTimeUnixNano": "1795760550694797298",
+    "durationMs": 2245
+  },
+  {
+    "traceID": "4e2fb73837e8991a86c37777effc66f4",
+    "rootServiceName": "frontend-proxy",
+    "rootTraceName": "ingress",
+    "startTimeUnixNano": "1795760697763857000",
+    "durationMs": 3379
+  },
+  {
+    "traceID": "4c00cdf25e8a3dd2b90b2de463829df2",
+    "rootServiceName": "load-generator",
+    "rootTraceName": "browser_add_to_cart",
+    "startTimeUnixNano": "1795760697634282279",
+    "durationMs": 2488
+  },
+  {
+    "traceID": "e7ea0ae7c6e279cb733ba8c432b62d4",
+    "rootServiceName": "frontend-proxy",
+    "rootTraceName": "ingress",
+    "startTimeUnixNano": "1795760694164271000",
+    "durationMs": 3335
+  },
+  {
+    "traceID": "dec8546c75a08201560ad643860231c",
+    "rootServiceName": "load-generator",
+    "rootTraceName": "browser_add_to_cart",
+    "startTimeUnixNano": "1795760694026133656",
+    "durationMs": 2447
+  },
+  {
+    "traceID": "2dcf0e0f9731cd757751eda644be5b79",
+    "rootServiceName": "load-generator",
+    "rootTraceName": "browser_add_to_cart",
+    "startTimeUnixNano": "1795760690319840651",
+    "durationMs": 2506
   }
 ]

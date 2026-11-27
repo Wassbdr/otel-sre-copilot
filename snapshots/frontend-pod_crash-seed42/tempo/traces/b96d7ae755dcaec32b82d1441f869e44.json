@@ -1,0 +1,382 @@
+{
+  "batches": [
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "service.criticality",
+            "value": {
+              "stringValue": "low"
+            }
+          },
+          {
+            "key": "service.namespace",
+            "value": {
+              "stringValue": "opentelemetry-demo"
+            }
+          },
+          {
+            "key": "service.version",
+            "value": {
+              "stringValue": "2.2.0"
+            }
+          },
+          {
+            "key": "telemetry.sdk.language",
+            "value": {
+              "stringValue": "python"
+            }
+          },
+          {
+            "key": "telemetry.sdk.name",
+            "value": {
+              "stringValue": "opentelemetry"
+            }
+          },
+          {
+            "key": "telemetry.sdk.version",
+            "value": {
+              "stringValue": "1.42.0"
+            }
+          },
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "load-generator"
+            }
+          },
+          {
+            "key": "k8s.namespace.name",
+            "value": {
+              "stringValue": "otel-demo"
+            }
+          }
+        ]
+      },
+      "scopeSpans": [
+        {
+          "scope": {
+            "name": "opentelemetry.instrumentation.requests",
+            "version": "0.63b0"
+          },
+          "spans": [
+            {
+              "traceId": "uW1651XcrsMrgtFEH4aeRA==",
+              "spanId": "Jn0r/dl6Lfk=",
+              "parentSpanId": "AH5XLjvTOWg=",
+              "name": "GET",
+              "kind": "SPAN_KIND_CLIENT",
+              "startTimeUnixNano": "1795763825954875061",
+              "endTimeUnixNano": "1795763825956567570",
+              "attributes": [
+                {
+                  "key": "user_agent.original",
+                  "value": {
+                    "stringValue": "python-requests/2.34.2"
+                  }
+                },
+                {
+                  "key": "http.method",
+                  "value": {
+                    "stringValue": "GET"
+                  }
+                },
+                {
+                  "key": "http.url",
+                  "value": {
+                    "stringValue": "http://frontend-proxy:8080/api/products/2ZYFJ3GM2N"
+                  }
+                },
+                {
+                  "key": "http.status_code",
+                  "value": {
+                    "intValue": "503"
+                  }
+                }
+              ],
+              "status": {
+                "code": "STATUS_CODE_ERROR"
+              }
+            }
+          ]
+        },
+        {
+          "scope": {
+            "name": "locustfile"
+          },
+          "spans": [
+            {
+              "traceId": "uW1651XcrsMrgtFEH4aeRA==",
+              "spanId": "AH5XLjvTOWg=",
+              "name": "user_browse_product",
+              "kind": "SPAN_KIND_INTERNAL",
+              "startTimeUnixNano": "1795763825954235126",
+              "endTimeUnixNano": "1795763825956709783",
+              "attributes": [
+                {
+                  "key": "demo.product.id",
+                  "value": {
+                    "stringValue": "2ZYFJ3GM2N"
+                  }
+                }
+              ],
+              "status": {}
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "service.criticality",
+            "value": {
+              "stringValue": "critical"
+            }
+          },
+          {
+            "key": "service.namespace",
+            "value": {
+              "stringValue": "opentelemetry-demo"
+            }
+          },
+          {
+            "key": "service.version",
+            "value": {
+              "stringValue": "2.2.0"
+            }
+          },
+          {
+            "key": "telemetry.sdk.language",
+            "value": {
+              "stringValue": "cpp"
+            }
+          },
+          {
+            "key": "telemetry.sdk.name",
+            "value": {
+              "stringValue": "envoy"
+            }
+          },
+          {
+            "key": "telemetry.sdk.version",
+            "value": {
+              "stringValue": "b579d07d3ad7ee11d32b105e91a5a39ad24718d7/1.39.1/Clean/RELEASE/BoringSSL"
+            }
+          },
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "frontend-proxy"
+            }
+          },
+          {
+            "key": "k8s.namespace.name",
+            "value": {
+              "stringValue": "otel-demo"
+            }
+          }
+        ]
+      },
+      "scopeSpans": [
+        {
+          "scope": {
+            "name": "envoy",
+            "version": "b579d07d3ad7ee11d32b105e91a5a39ad24718d7/1.39.1/Clean/RELEASE/BoringSSL"
+          },
+          "spans": [
+            {
+              "traceId": "uW1651XcrsMrgtFEH4aeRA==",
+              "spanId": "K1DbHJVRqk0=",
+              "parentSpanId": "pmH7Y9cdgsM=",
+              "name": "router frontend egress",
+              "kind": "SPAN_KIND_CLIENT",
+              "startTimeUnixNano": "1795763825955785000",
+              "endTimeUnixNano": "1795763825956009000",
+              "attributes": [
+                {
+                  "key": "error",
+                  "value": {
+                    "stringValue": "true"
+                  }
+                },
+                {
+                  "key": "error.reason",
+                  "value": {
+                    "stringValue": "remote connection failure"
+                  }
+                },
+                {
+                  "key": "http.protocol",
+                  "value": {
+                    "stringValue": "-"
+                  }
+                },
+                {
+                  "key": "upstream_address",
+                  "value": {
+                    "stringValue": "10.96.17.8:8080"
+                  }
+                },
+                {
+                  "key": "peer.address",
+                  "value": {
+                    "stringValue": "10.96.17.8:8080"
+                  }
+                },
+                {
+                  "key": "component",
+                  "value": {
+                    "stringValue": "proxy"
+                  }
+                },
+                {
+                  "key": "upstream_cluster",
+                  "value": {
+                    "stringValue": "frontend"
+                  }
+                },
+                {
+                  "key": "upstream_cluster.name",
+                  "value": {
+                    "stringValue": "frontend"
+                  }
+                },
+                {
+                  "key": "http.status_code",
+                  "value": {
+                    "stringValue": "0"
+                  }
+                },
+                {
+                  "key": "response_flags",
+                  "value": {
+                    "stringValue": "UF"
+                  }
+                }
+              ],
+              "status": {}
+            },
+            {
+              "traceId": "uW1651XcrsMrgtFEH4aeRA==",
+              "spanId": "pmH7Y9cdgsM=",
+              "parentSpanId": "Jn0r/dl6Lfk=",
+              "name": "ingress",
+              "kind": "SPAN_KIND_SERVER",
+              "startTimeUnixNano": "1795763825955610000",
+              "endTimeUnixNano": "1795763825956070000",
+              "attributes": [
+                {
+                  "key": "node_id",
+                  "value": {
+                    "stringValue": ""
+                  }
+                },
+                {
+                  "key": "zone",
+                  "value": {
+                    "stringValue": ""
+                  }
+                },
+                {
+                  "key": "guid:x-request-id",
+                  "value": {
+                    "stringValue": "2bc7ef63-25aa-9a42-bfd6-ce610b90f9de"
+                  }
+                },
+                {
+                  "key": "downstream_cluster",
+                  "value": {
+                    "stringValue": "-"
+                  }
+                },
+                {
+                  "key": "user_agent",
+                  "value": {
+                    "stringValue": "python-requests/2.34.2"
+                  }
+                },
+                {
+                  "key": "http.protocol",
+                  "value": {
+                    "stringValue": "HTTP/1.1"
+                  }
+                },
+                {
+                  "key": "peer.address",
+                  "value": {
+                    "stringValue": "10.244.0.38"
+                  }
+                },
+                {
+                  "key": "request_size",
+                  "value": {
+                    "stringValue": "0"
+                  }
+                },
+                {
+                  "key": "response_size",
+                  "value": {
+                    "stringValue": "98"
+                  }
+                },
+                {
+                  "key": "component",
+                  "value": {
+                    "stringValue": "proxy"
+                  }
+                },
+                {
+                  "key": "upstream_cluster",
+                  "value": {
+                    "stringValue": "frontend"
+                  }
+                },
+                {
+                  "key": "upstream_cluster.name",
+                  "value": {
+                    "stringValue": "frontend"
+                  }
+                },
+                {
+                  "key": "http.status_code",
+                  "value": {
+                    "stringValue": "503"
+                  }
+                },
+                {
+                  "key": "response_flags",
+                  "value": {
+                    "stringValue": "UF"
+                  }
+                },
+                {
+                  "key": "error",
+                  "value": {
+                    "stringValue": "true"
+                  }
+                },
+                {
+                  "key": "http.method",
+                  "value": {
+                    "stringValue": "GET"
+                  }
+                },
+                {
+                  "key": "http.url",
+                  "value": {
+                    "stringValue": "http://frontend-proxy:8080/api/products/2ZYFJ3GM2N"
+                  }
+                }
+              ],
+              "status": {
+                "code": "STATUS_CODE_ERROR"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

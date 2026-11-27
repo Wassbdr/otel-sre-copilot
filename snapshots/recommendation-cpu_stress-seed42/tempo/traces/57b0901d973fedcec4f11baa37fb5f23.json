@@ -1,0 +1,409 @@
+{
+  "batches": [
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "host.name",
+            "value": {
+              "stringValue": "flagd-5479744bb9-fswtc"
+            }
+          },
+          {
+            "key": "os.description",
+            "value": {
+              "stringValue": "Debian GNU/Linux Debian GNU/Linux 13 (trixie) (Linux flagd-5479744bb9-fswtc 6.8.0-1060-aws #63~22.04.1-Ubuntu SMP Tue Jun 30 02:32:53 UTC 2026 x86_64)"
+            }
+          },
+          {
+            "key": "os.type",
+            "value": {
+              "stringValue": "linux"
+            }
+          },
+          {
+            "key": "process.runtime.version",
+            "value": {
+              "stringValue": "go1.25.10"
+            }
+          },
+          {
+            "key": "service.criticality",
+            "value": {
+              "stringValue": "low"
+            }
+          },
+          {
+            "key": "service.namespace",
+            "value": {
+              "stringValue": "opentelemetry-demo"
+            }
+          },
+          {
+            "key": "service.version",
+            "value": {
+              "stringValue": "2.2.0"
+            }
+          },
+          {
+            "key": "telemetry.sdk.language",
+            "value": {
+              "stringValue": "go"
+            }
+          },
+          {
+            "key": "telemetry.sdk.name",
+            "value": {
+              "stringValue": "opentelemetry"
+            }
+          },
+          {
+            "key": "telemetry.sdk.version",
+            "value": {
+              "stringValue": "1.43.0"
+            }
+          },
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "flagd"
+            }
+          },
+          {
+            "key": "k8s.namespace.name",
+            "value": {
+              "stringValue": "otel-demo"
+            }
+          }
+        ]
+      },
+      "scopeSpans": [
+        {
+          "scope": {
+            "name": "connectrpc.com/otelconnect",
+            "version": "semver:0.6.0-dev"
+          },
+          "spans": [
+            {
+              "traceId": "V7CQHZc/7c7E8RuqN/tfIw==",
+              "spanId": "lSjevqhtrBE=",
+              "parentSpanId": "j+Q2pS6pl0g=",
+              "name": "flagd.evaluation.v1.Service/EventStream",
+              "kind": "SPAN_KIND_SERVER",
+              "startTimeUnixNano": "1795761276027205074",
+              "endTimeUnixNano": "1795761279447810288",
+              "attributes": [
+                {
+                  "key": "rpc.system",
+                  "value": {
+                    "stringValue": "connect_rpc"
+                  }
+                },
+                {
+                  "key": "rpc.service",
+                  "value": {
+                    "stringValue": "flagd.evaluation.v1.Service"
+                  }
+                },
+                {
+                  "key": "rpc.method",
+                  "value": {
+                    "stringValue": "EventStream"
+                  }
+                }
+              ],
+              "events": [
+                {
+                  "timeUnixNano": "1795761276027239294",
+                  "name": "message",
+                  "attributes": [
+                    {
+                      "key": "message.type",
+                      "value": {
+                        "stringValue": "RECEIVED"
+                      }
+                    },
+                    {
+                      "key": "message.id",
+                      "value": {
+                        "intValue": "1"
+                      }
+                    },
+                    {
+                      "key": "message.uncompressed_size",
+                      "value": {
+                        "intValue": "0"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "timeUnixNano": "1795761276027381456",
+                  "name": "message",
+                  "attributes": [
+                    {
+                      "key": "message.type",
+                      "value": {
+                        "stringValue": "SENT"
+                      }
+                    },
+                    {
+                      "key": "message.id",
+                      "value": {
+                        "intValue": "1"
+                      }
+                    },
+                    {
+                      "key": "message.uncompressed_size",
+                      "value": {
+                        "intValue": "18"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "status": {}
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "service.criticality",
+            "value": {
+              "stringValue": "critical"
+            }
+          },
+          {
+            "key": "service.namespace",
+            "value": {
+              "stringValue": "opentelemetry-demo"
+            }
+          },
+          {
+            "key": "service.version",
+            "value": {
+              "stringValue": "2.2.0"
+            }
+          },
+          {
+            "key": "telemetry.sdk.language",
+            "value": {
+              "stringValue": "cpp"
+            }
+          },
+          {
+            "key": "telemetry.sdk.name",
+            "value": {
+              "stringValue": "envoy"
+            }
+          },
+          {
+            "key": "telemetry.sdk.version",
+            "value": {
+              "stringValue": "b579d07d3ad7ee11d32b105e91a5a39ad24718d7/1.39.1/Clean/RELEASE/BoringSSL"
+            }
+          },
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "frontend-proxy"
+            }
+          },
+          {
+            "key": "k8s.namespace.name",
+            "value": {
+              "stringValue": "otel-demo"
+            }
+          }
+        ]
+      },
+      "scopeSpans": [
+        {
+          "scope": {
+            "name": "envoy",
+            "version": "b579d07d3ad7ee11d32b105e91a5a39ad24718d7/1.39.1/Clean/RELEASE/BoringSSL"
+          },
+          "spans": [
+            {
+              "traceId": "V7CQHZc/7c7E8RuqN/tfIw==",
+              "spanId": "o9EDNrh9wYI=",
+              "name": "ingress",
+              "kind": "SPAN_KIND_SERVER",
+              "startTimeUnixNano": "1795761276026640000",
+              "endTimeUnixNano": "1795761279447518000",
+              "attributes": [
+                {
+                  "key": "node_id",
+                  "value": {
+                    "stringValue": ""
+                  }
+                },
+                {
+                  "key": "zone",
+                  "value": {
+                    "stringValue": ""
+                  }
+                },
+                {
+                  "key": "guid:x-request-id",
+                  "value": {
+                    "stringValue": "7b58f109-0bce-9931-9eee-bcc8d74a63ac"
+                  }
+                },
+                {
+                  "key": "downstream_cluster",
+                  "value": {
+                    "stringValue": "-"
+                  }
+                },
+                {
+                  "key": "user_agent",
+                  "value": {
+                    "stringValue": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/149.0.0.0 Safari/537.36"
+                  }
+                },
+                {
+                  "key": "http.protocol",
+                  "value": {
+                    "stringValue": "HTTP/1.1"
+                  }
+                },
+                {
+                  "key": "peer.address",
+                  "value": {
+                    "stringValue": "10.244.0.38"
+                  }
+                },
+                {
+                  "key": "request_size",
+                  "value": {
+                    "stringValue": "7"
+                  }
+                },
+                {
+                  "key": "response_size",
+                  "value": {
+                    "stringValue": "41"
+                  }
+                },
+                {
+                  "key": "component",
+                  "value": {
+                    "stringValue": "proxy"
+                  }
+                },
+                {
+                  "key": "upstream_cluster",
+                  "value": {
+                    "stringValue": "flagservice"
+                  }
+                },
+                {
+                  "key": "upstream_cluster.name",
+                  "value": {
+                    "stringValue": "flagservice"
+                  }
+                },
+                {
+                  "key": "http.status_code",
+                  "value": {
+                    "stringValue": "200"
+                  }
+                },
+                {
+                  "key": "response_flags",
+                  "value": {
+                    "stringValue": "DC"
+                  }
+                },
+                {
+                  "key": "http.method",
+                  "value": {
+                    "stringValue": "POST"
+                  }
+                },
+                {
+                  "key": "http.url",
+                  "value": {
+                    "stringValue": "http://frontend-proxy:8080/flagservice/flagd.evaluation.v1.Service/EventStream"
+                  }
+                }
+              ],
+              "status": {}
+            },
+            {
+              "traceId": "V7CQHZc/7c7E8RuqN/tfIw==",
+              "spanId": "j+Q2pS6pl0g=",
+              "parentSpanId": "o9EDNrh9wYI=",
+              "name": "router flagservice egress",
+              "kind": "SPAN_KIND_CLIENT",
+              "startTimeUnixNano": "1795761276026756000",
+              "endTimeUnixNano": "1795761279447656000",
+              "attributes": [
+                {
+                  "key": "canceled",
+                  "value": {
+                    "stringValue": "true"
+                  }
+                },
+                {
+                  "key": "http.protocol",
+                  "value": {
+                    "stringValue": "HTTP/1.1"
+                  }
+                },
+                {
+                  "key": "upstream_address",
+                  "value": {
+                    "stringValue": "10.96.139.189:8013"
+                  }
+                },
+                {
+                  "key": "peer.address",
+                  "value": {
+                    "stringValue": "10.96.139.189:8013"
+                  }
+                },
+                {
+                  "key": "component",
+                  "value": {
+                    "stringValue": "proxy"
+                  }
+                },
+                {
+                  "key": "upstream_cluster",
+                  "value": {
+                    "stringValue": "flagservice"
+                  }
+                },
+                {
+                  "key": "upstream_cluster.name",
+                  "value": {
+                    "stringValue": "flagservice"
+                  }
+                },
+                {
+                  "key": "http.status_code",
+                  "value": {
+                    "stringValue": "200"
+                  }
+                },
+                {
+                  "key": "response_flags",
+                  "value": {
+                    "stringValue": "-"
+                  }
+                }
+              ],
+              "status": {}
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
