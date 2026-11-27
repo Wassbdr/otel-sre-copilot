@@ -157,11 +157,30 @@ def run_kubectl(
     raise RuntimeError(f"kubectl failed: {last_stderr}")
 
 
+def apply_seed(meta: dict[str, object], chaos: dict[str, object], seed: int) -> None:
+    """Re-target a scenario at another seed: the seed is part of the snapshot id and of the
+    Chaos Mesh resource name, so replicate captures never overwrite each other."""
+    old = int(meta.get("seed", 42))  # type: ignore[call-overload]
+    meta["seed"] = seed
+    sid = str(meta.get("scenario_id", ""))
+    meta["scenario_id"] = sid.replace(f"seed{old}", f"seed{seed}") if f"seed{old}" in sid \
+        else f"{sid}-seed{seed}"
+    cmeta = chaos.setdefault("metadata", {})
+    assert isinstance(cmeta, dict)
+    name = str(cmeta.get("name", "fault"))
+    cmeta["name"] = name.replace(f"seed{old}", f"seed{seed}") if f"seed{old}" in name \
+        else f"{name}-seed{seed}"
+
+
 def inject(
     scenario_path: Path,
     dry_run: bool = False,
+    seed: int | None = None,
+    baseline_minutes: int = 30,
 ) -> None:
     meta, chaos = parse_scenario(scenario_path)
+    if seed is not None:
+        apply_seed(meta, chaos, seed)
 
     scenario_id = str(meta.get("scenario_id", scenario_path.stem))
     fault_duration_s = int(meta.get("fault_duration_s", 300))   # default 5 min
@@ -219,7 +238,9 @@ def inject(
     # capture. Decouple the burst from peak stress: after recovery, let the node cool down, then
     # query. The fault-window data is already retained in Prometheus, so a later query still sees
     # the spike. Defaults to 0 (non-stress faults snapshot immediately, as before).
-    settle_s = int(meta.get("snapshot_settle_s", 0))
+    # Never shorter than window_extra_s: the window ends window_extra_s after recovery, so
+    # snapshotting earlier would miss the recovery tail.
+    settle_s = max(int(meta.get("snapshot_settle_s", 0)), window_extra_s)
     if not dry_run and settle_s > 0:
         log.info("settling_before_snapshot", seconds=settle_s)
         time.sleep(settle_s)
@@ -232,6 +253,9 @@ def inject(
             start=snapshot_start,
             end=snapshot_end,
             namespace=namespace,
+            baseline_start=(
+                injection_ts - timedelta(seconds=window_extra_s, minutes=baseline_minutes)
+            ).isoformat(),
         )
         gt["validation_passed"] = validate_snapshot(output_dir, gt)
 
@@ -505,9 +529,14 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Inject Chaos Mesh fault + snapshot telemetry")
     parser.add_argument("--scenario", required=True, type=Path, help="Path to scenario YAML")
     parser.add_argument("--dry-run", action="store_true", help="Validate without injecting")
+    parser.add_argument("--seed", type=int, default=None,
+                        help="Override the scenario seed (replicate capture, own snapshot id)")
+    parser.add_argument("--baseline-minutes", type=int, default=30,
+                        help="Length of the pre-fault baseline window to capture")
     args = parser.parse_args()
 
-    inject(args.scenario, dry_run=args.dry_run)
+    inject(args.scenario, dry_run=args.dry_run, seed=args.seed,
+           baseline_minutes=args.baseline_minutes)
 
 
 if __name__ == "__main__":

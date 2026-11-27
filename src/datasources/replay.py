@@ -74,6 +74,17 @@ class ReplayDataSource:
                 and entry.get("end") == end
             ):
                 return entry.get("result", [])  # type: ignore[return-value]
+        # A window that ends where the snapshot's baseline ends is a baseline request, whatever
+        # its start (baselines may ask for a longer lookback than was captured).
+        for entry in self._prom_queries:  # type: ignore[union-attr]
+            if (
+                entry.get("type") == "range"
+                and entry.get("is_baseline")
+                and entry.get("query") == query
+                and entry.get("step", "30s") == step
+                and entry.get("end") == end
+            ):
+                return entry.get("result", [])  # type: ignore[return-value]
         # Fall back: same PromQL+step, any window (the agent's LLM may not echo the exact
         # window). Prefer a non-baseline (fault-window) entry so the agent sees fault data.
         candidates = [

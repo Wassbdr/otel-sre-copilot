@@ -18,14 +18,11 @@ chaos_manifest:
     name: frontend-pod-crash-seed42
     namespace: chaos-mesh
   spec:
-    action: pod-kill
+    action: pod-failure
     mode: one
     selector:
       namespaces:
         - otel-demo
       labelSelectors:
         app.kubernetes.io/component: frontend
-    scheduler:
-      cron: "@every 60s"
     duration: "300s"
-    gracePeriod: 0
