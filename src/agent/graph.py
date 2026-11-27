@@ -10,16 +10,18 @@ from __future__ import annotations
 
 import json
 import os
+import time
+from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any, TypedDict
 
 import structlog
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
-from langchain_openai import ChatOpenAI
 from langgraph.graph import END, START, StateGraph
 from pydantic import ValidationError
 
 from src.agent.context_manager import ContextBudget
+from src.agent.llm import llm_settings, make_chat_model
 from src.agent.prompts import build_system_prompt
 from src.agent.schemas import InvestigationReport
 from src.agent.tools import make_tools
@@ -43,6 +45,7 @@ class GraphState(TypedDict, total=False):
     logs_context: str
     hypotheses: list[dict[str, Any]]
     iteration_count: int
+    token_usage: dict[str, int]
     final_report: InvestigationReport | None
 
 log = structlog.get_logger()
@@ -54,20 +57,34 @@ MAX_TOOL_ITERATIONS = int(os.getenv("MAX_TOOL_ITERATIONS", "8"))
 MIN_TOOL_ITERATIONS = int(os.getenv("MIN_TOOL_ITERATIONS", "3"))
 
 
-def build_graph(ds: DataSource) -> StateGraph:
-    """Build and compile the investigation StateGraph for the given DataSource."""
+EventCallback = Callable[[dict[str, Any]], None]
+
+
+def _add_usage(totals: dict[str, int], response: AIMessage) -> dict[str, int]:
+    usage = getattr(response, "usage_metadata", None) or {}
+    return {
+        "prompt_tokens": totals.get("prompt_tokens", 0) + int(usage.get("input_tokens", 0)),
+        "completion_tokens": totals.get("completion_tokens", 0)
+        + int(usage.get("output_tokens", 0)),
+        "llm_calls": totals.get("llm_calls", 0) + 1,
+    }
+
+
+def build_graph(ds: DataSource, on_event: EventCallback | None = None) -> StateGraph:
+    """Build and compile the investigation StateGraph for the given DataSource.
+
+    ``on_event`` receives every LLM step and tool call as it happens (used by the live demo).
+    """
+
+    def emit(event: dict[str, Any]) -> None:
+        if on_event is not None:
+            on_event(event)
 
     budget = ContextBudget()
     tools = make_tools(ds, budget)
 
-    # LLM: NVIDIA NIM API (OpenAI-compatible)
-    llm = ChatOpenAI(
-        model=os.getenv("NIM_MODEL", "meta/llama-3.1-70b-instruct"),
-        openai_api_key=os.getenv("NIM_API_KEY", ""),
-        openai_api_base=os.getenv("NIM_BASE_URL", "https://integrate.api.nvidia.com/v1"),
-        temperature=0,
-        max_tokens=4096,
-    )
+    settings = llm_settings()
+    llm = make_chat_model(max_tokens=4096)
     llm_with_tools = llm.bind_tools(tools)
     tool_map = {t.name: t for t in tools}
 
@@ -106,7 +123,13 @@ def build_graph(ds: DataSource) -> StateGraph:
             ))]
 
         # Call LLM
+        t0 = time.perf_counter()
         response: AIMessage = llm_with_tools.invoke(messages)  # type: ignore[assignment]
+        token_usage = _add_usage(state.get("token_usage", {}), response)
+        emit({"type": "llm", "iteration": iteration,
+              "elapsed_s": round(time.perf_counter() - t0, 2),
+              "content": str(response.content)[:500],
+              "n_tool_calls": len(getattr(response, "tool_calls", None) or [])})
         messages = messages + [response]
 
         # Execute any tool calls
@@ -119,6 +142,7 @@ def build_graph(ds: DataSource) -> StateGraph:
 
                 log.info("tool_call", name=tool_name, iteration=iteration)
 
+                t_tool = time.perf_counter()
                 if tool_name in tool_map:
                     try:
                         result_str = tool_map[tool_name].invoke(tool_args)
@@ -128,14 +152,19 @@ def build_graph(ds: DataSource) -> StateGraph:
                     result_str = f"[UNKNOWN TOOL: {tool_name}]"
 
                 # Record tool call for grounding verification
-                tool_calls_log.append({
+                entry = {
                     "iteration": iteration,
                     "tool_name": tool_name,
                     "args": tool_args,
                     "result_preview": str(result_str)[:200],
                     # Store exact query/id strings for grounding check
                     "query_or_id": _extract_query_or_id(tool_name, tool_args),
-                })
+                    # Longer excerpt for human-readable traces (demo); not used for grounding.
+                    "result_excerpt": str(result_str)[:1200],
+                    "elapsed_s": round(time.perf_counter() - t_tool, 3),
+                }
+                tool_calls_log.append(entry)
+                emit({"type": "tool_call", **entry})
 
                 new_tool_messages.append(ToolMessage(
                     content=str(result_str),
@@ -147,6 +176,7 @@ def build_graph(ds: DataSource) -> StateGraph:
             "messages": messages + new_tool_messages,
             "tool_calls_log": tool_calls_log,
             "iteration_count": iteration + 1,
+            "token_usage": token_usage,
         }
 
     # ── Node: generate_report ──────────────────────────────────────────────
@@ -164,14 +194,8 @@ def build_graph(ds: DataSource) -> StateGraph:
         )
         messages_for_report = messages + [finalize_msg]
 
-        report_llm = ChatOpenAI(
-            model=os.getenv("NIM_MODEL", "meta/llama-3.1-70b-instruct"),
-            openai_api_key=os.getenv("NIM_API_KEY", ""),
-            openai_api_base=os.getenv("NIM_BASE_URL", "https://integrate.api.nvidia.com/v1"),
-            temperature=0,
-            max_tokens=2048,
-            model_kwargs={"response_format": {"type": "json_object"}},
-        )
+        report_llm = make_chat_model(max_tokens=int(os.getenv("LLM_REPORT_MAX_TOKENS", "4096")),
+                                     json_mode=True)
 
         response: AIMessage = report_llm.invoke(messages_for_report)  # type: ignore[assignment]
         inv_end = datetime.now(UTC).isoformat()
@@ -179,16 +203,18 @@ def build_graph(ds: DataSource) -> StateGraph:
         # Parse and validate
         content = response.content if isinstance(response.content, str) else str(response.content)
 
-        # Inject timing and token metadata
-        usage = getattr(response, "usage_metadata", None)
-        prompt_tokens = usage.get("input_tokens", 0) if usage else 0
-        completion_tokens = usage.get("output_tokens", 0) if usage else 0
+        # Token totals cover every LLM call of the investigation, not just the report call.
+        usage_totals = _add_usage(state.get("token_usage", {}), response)
+        prompt_tokens = usage_totals["prompt_tokens"]
+        completion_tokens = usage_totals["completion_tokens"]
+        emit({"type": "report_llm", "prompt_tokens": prompt_tokens,
+              "completion_tokens": completion_tokens, "llm_calls": usage_totals["llm_calls"]})
         latency_s = (
             datetime.fromisoformat(inv_end) - datetime.fromisoformat(inv_start)
         ).total_seconds()
 
         try:
-            raw = json.loads(content)
+            raw = json.loads(_strip_json_fences(content))
             raw.update({
                 "incident_id": state["incident_id"],
                 "investigation_start_ts": inv_start,
@@ -197,7 +223,7 @@ def build_graph(ds: DataSource) -> StateGraph:
                 "total_prompt_tokens": prompt_tokens,
                 "total_completion_tokens": completion_tokens,
                 "cost_usd": estimate_cost(prompt_tokens, completion_tokens),
-                "llm_model": os.getenv("NIM_MODEL", "meta/llama-3.1-70b-instruct"),
+                "llm_model": settings.model,
                 "agent_version": "0.1.0",
                 "fault_type_classification": (
                     raw.get("root_causes", [{}])[0].get("fault_type", "unknown")
@@ -207,17 +233,25 @@ def build_graph(ds: DataSource) -> StateGraph:
             report = InvestigationReport.model_validate(raw)
         except (json.JSONDecodeError, ValidationError, IndexError) as e:
             log.error("report_parse_failed", error=str(e), content_preview=content[:300])
-            # Return a minimal valid report rather than crashing
-            report = InvestigationReport(
+            # Unparseable answer = no hypothesis. model_construct skips the min_length=1 check
+            # on root_causes so the harness scores it as a miss instead of crashing.
+            report = InvestigationReport.model_construct(
+                remediation_steps=[],
+                grounding_score=0.0,
+                cost_usd=0.0,
+                agent_version="0.1.0",
                 incident_id=state["incident_id"],
                 investigation_start_ts=inv_start,
                 investigation_end_ts=inv_end,
                 root_causes=[],
                 fault_type_classification="unknown",
                 latency_s=latency_s,
+                total_prompt_tokens=prompt_tokens,
+                total_completion_tokens=completion_tokens,
+                llm_model=settings.model,
             )
 
-        return {"final_report": report}
+        return {"final_report": report, "token_usage": usage_totals}
 
     # ── Conditional edge ───────────────────────────────────────────────────
     def should_continue(state: GraphState) -> str:
@@ -260,6 +294,16 @@ def build_graph(ds: DataSource) -> StateGraph:
     graph.add_edge("generate_report", END)
 
     return graph.compile()
+
+
+def _strip_json_fences(content: str) -> str:
+    """Some OpenAI-compatible models wrap JSON mode output in ```json fences or add prose."""
+    text = content.strip()
+    if text.startswith("```"):
+        text = text.split("\n", 1)[1] if "\n" in text else text
+        text = text.rsplit("```", 1)[0]
+    first, last = text.find("{"), text.rfind("}")
+    return text[first:last + 1] if first != -1 and last > first else text
 
 
 def _extract_query_or_id(tool_name: str, args: dict) -> list[str]:  # type: ignore[type-arg]
