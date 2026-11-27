@@ -127,3 +127,19 @@ Change against round2-iteration-0:
 | Iteration 6: protect leading corroborated candidates; second attempt on symptom displacement | Top-3 | +52.4 pp |
 | Iteration 6: protect leading corroborated candidates; second attempt on symptom displacement | Service top-1 | +21.4 pp |
 | Iteration 6: protect leading corroborated candidates; second attempt on symptom displacement | Service top-3 | +14.3 pp |
+
+## Reference audit pilot: ReAct used full tool rounds; HolmesGPT reached incident tools but returned tool markup instead of a diagnosis (round2-reference-audit)
+
+14 Astronomy Shop snapshots (development); 3 runs per method; nvidia/nemotron-3.5-lightning-30b-a3b; x86_64, 8 vCPU, Linux, no GPU.
+
+| Method | Runs | Top-1 | Top-3 | Service top-1 | Service top-3 | Grounding | Citations | Calls/run | Tokens/run | Seconds/run | USD/run |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| SRE-Copilot | 1/42 | 0.0% | 100.0% | 100.0% | 100.0% | 100.0% | 4 | 3.0 | 9,225 | 18.160 | 0.0000 |
+| ReAct without grounding verifier in the agent | 1/42 | 0.0% | 0.0% | 100.0% | 100.0% | 100.0% | 3 | 11.0 | 48,079 | 55.151 | 0.0000 |
+| SRE-Copilot without anomaly prior | 1/42 | 0.0% | 0.0% | 0.0% | 0.0% | 100.0% | 3 | 3.0 | 8,793 | 15.584 | 0.0000 |
+| HolmesGPT 0.48.0 (1 run per snapshot) | 1/14 | 0.0% | 0.0% | 0.0% | 0.0% | n/a | 0 | 10.0 | 284,537 | 62.685 | 0.0000 |
+| RCAEval N-Sigma (metrics) | 1/42 | 100.0% | 100.0% | 100.0% | 100.0% | n/a | 0 | n/a | 0 | 0.007 | 0.0000 |
+| Composite z-score | 1/42 | 0.0% | 0.0% | 100.0% | 100.0% | n/a | 0 | n/a | 0 | 0.004 | 0.0000 |
+| RCAEval BARO (metrics) | 1/42 | 100.0% | 100.0% | 100.0% | 100.0% | n/a | 0 | n/a | 0 | 0.013 | 0.0000 |
+| Error-rate z-score | 1/42 | 0.0% | 0.0% | 0.0% | 100.0% | n/a | 0 | n/a | 0 | 0.001 | 0.0000 |
+| Random | 1/42 | 0.0% | 0.0% | 0.0% | 100.0% | n/a | 0 | n/a | 0 | 0.000 | 0.0000 |
