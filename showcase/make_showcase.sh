@@ -14,7 +14,7 @@ export RANDOM_SEED=42 NUMPY_SEED=42 CHAOS_SEED=42
 
 if [[ ! -x .venv/bin/python ]]; then
   if command -v uv >/dev/null; then uv venv -q -p 3.12 .venv && uv pip install -q -p .venv -e ".[dev]"
-  else python3 -m venv .venv && .venv/bin/pip install -q -e ".[dev]"; fi
+  else "$(command -v python3.12 || command -v python3)" -m venv .venv && .venv/bin/pip install -q -e ".[dev]"; fi
 fi
 PY=.venv/bin/python
 RUN_ID="${RUN_ID:-$(cat results/RUN_ID)}"
