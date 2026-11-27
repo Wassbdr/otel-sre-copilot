@@ -23,13 +23,14 @@ from eval.scenario_runner import (
 from src.agent.llm import llm_settings
 
 log = structlog.get_logger()
-LLM_METHODS = ("agent", "react")
+LLM_METHODS = ("agent", "agent_no_prior", "react")
 METHODS = LLM_METHODS + BASELINE_METHODS
 ACCURACY = ("accuracy_at_1", "accuracy_at_3", "service_at_1", "service_at_3")
 MEANS = ACCURACY + ("latency_s", "total_tokens", "cost_usd", "rate_limit_wait_s")
 LABELS = {
     "agent": "SRE-Copilot",
-    "react": "ReAct without grounding guidance",
+    "agent_no_prior": "SRE-Copilot without anomaly prior",
+    "react": "ReAct without grounding verifier in the agent",
     "baro": "RCAEval BARO (metrics)",
     "nsigma": "RCAEval N-Sigma (metrics)",
     "zscore": "Error-rate z-score",
@@ -48,6 +49,7 @@ def _snapshot_hash(snapshot: Path) -> str:
 
 def _snapshot_set(
     scenario_dirs: Sequence[Path], split: str, run_dir: Path, repeats: int,
+    snapshot_set_from: str | None = None,
 ) -> dict[str, Any]:
     manifest_path = run_dir / "manifest.json"
     settings = llm_settings()
@@ -69,7 +71,21 @@ def _snapshot_set(
                 )
         return manifest
 
-    paths = sorted({path for directory in scenario_dirs for path in discover_snapshots(directory)})
+    if snapshot_set_from:
+        source = Path("artifacts") / snapshot_set_from / "manifest.json"
+        if not source.is_file():
+            raise ValueError(f"Missing reference snapshot manifest: {source}.")
+        reference = json.loads(source.read_text())
+        if any(reference.get(key) != setup[key] for key in ("split", "model", "repeats")):
+            raise ValueError("The reference run must use the same split, model and repeat count.")
+        paths = [Path(snapshot["path"]) for snapshot in reference["snapshots"]]
+        for path, snapshot in zip(paths, reference["snapshots"], strict=True):
+            if _snapshot_hash(path) != snapshot["sha256"]:
+                raise ValueError(f"Reference snapshot {path} changed; rerun on a new snapshot set.")
+    else:
+        paths = sorted({
+            path for directory in scenario_dirs for path in discover_snapshots(directory)
+        })
     snapshots = []
     for path in paths:
         truth = json.loads((path / "ground_truth.json").read_text())
@@ -86,6 +102,7 @@ def _snapshot_set(
         raise ValueError(f"No validated {split} snapshots found. Capture them before benchmarking.")
     manifest = {
         **setup,
+        "agent_variant": "agent_full",
         "snapshots": snapshots,
         "hardware": f"{platform.machine()}, {os.cpu_count()} vCPU, {platform.system()}, no GPU",
     }
@@ -93,8 +110,12 @@ def _snapshot_set(
     return manifest
 
 
-def _measure(run_id: str, snapshot: dict[str, Any], method: str, repeat: int) -> dict[str, Any]:
-    trace = trace_path(run_id, snapshot["scenario_id"], method, repeat)
+def _measure(
+    run_id: str, snapshot: dict[str, Any], method: str, repeat: int,
+    agent_variant: str,
+) -> dict[str, Any]:
+    runner_method = agent_variant if method == "agent" else method
+    trace = trace_path(run_id, snapshot["scenario_id"], runner_method, repeat)
     checkpoint = trace.with_name("metrics.json")
     if checkpoint.exists():
         result: dict[str, Any] = json.loads(checkpoint.read_text())
@@ -106,8 +127,8 @@ def _measure(run_id: str, snapshot: dict[str, Any], method: str, repeat: int) ->
     else:
         mode = "baselines-only" if method in BASELINE_METHODS else "replay"
         result = run_scenario(
-            Path(snapshot["path"]), mode, run_id, repeat, method=method,
-        )[method]
+            Path(snapshot["path"]), mode, run_id, repeat, method=runner_method,
+        )[runner_method]
     write_json_atomic(checkpoint, result)
     return result
 
@@ -204,9 +225,12 @@ def _report(path: Path, iteration: dict[str, Any]) -> None:
             ])
             lines.append("| " + " | ".join(cells) + " |")
         if run.get("delta"):
-            values = [f"{run['delta'][k] * 100:+.1f} pp" for k in ACCURACY]
-            lines.extend(["", f"SRE-Copilot vs {run['compared_to']}: " + ", ".join(values)
-                          + " (top-1, top-3, service top-1, service top-3)."])
+            lines.extend(["", f"Change against {run['compared_to']}:", "",
+                          "| Change | Metric | Delta |", "| --- | --- | ---: |"])
+            for key, label in zip(
+                ACCURACY, ("Top-1", "Top-3", "Service top-1", "Service top-3"), strict=True,
+            ):
+                lines.append(f"| {run['change']} | {label} | {run['delta'][key] * 100:+.1f} pp |")
         lines.append("")
     (path / "results.md").write_text("\n".join(lines))
 
@@ -216,8 +240,10 @@ def run(args: argparse.Namespace) -> bool:
         raise ValueError("--repeats must be at least one.")
     if not args.run_id or Path(args.run_id).name != args.run_id or args.run_id in {".", ".."}:
         raise ValueError("Use a single directory name for BENCH_RUN_ID.")
-    setup = _snapshot_set(args.scenario_dir, args.split, Path("artifacts") / args.run_id,
-                          args.repeats)
+    setup = _snapshot_set(
+        args.scenario_dir, args.split, Path("artifacts") / args.run_id,
+        args.repeats, getattr(args, "snapshot_set_from", None),
+    )
     rows: dict[str, list[dict[str, Any]]] = {m: [] for m in args.methods}
     for method in (*BASELINE_METHODS, *LLM_METHODS):
         if method not in rows:
@@ -225,7 +251,9 @@ def run(args: argparse.Namespace) -> bool:
         for snapshot in setup["snapshots"]:
             for repeat in range(args.repeats):
                 try:
-                    result = _measure(args.run_id, snapshot, method, repeat)
+                    result = _measure(
+                        args.run_id, snapshot, method, repeat, setup.get("agent_variant", "agent"),
+                    )
                 except Exception as error:
                     log.error("benchmark_item_failed", method=method,
                               snapshot=snapshot["path"], repeat=repeat, error=type(error).__name__)
@@ -249,6 +277,7 @@ def main() -> None:
     )
     parser.add_argument("--methods", nargs="+", choices=METHODS, default=METHODS)
     parser.add_argument("--run-id", required=True)
+    parser.add_argument("--snapshot-set-from", help="Pin snapshots to an existing run manifest.")
     parser.add_argument("--repeats", type=int, default=3)
     parser.add_argument("--output-dir", type=Path, default=Path("benchmarks"))
     parser.add_argument("--change", default="Baseline")

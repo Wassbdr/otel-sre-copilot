@@ -74,3 +74,35 @@ def test_benchmark_resumes_only_missing_method_snapshot_repeat(
     result = json.loads((args.output_dir / "results.json").read_text())[0]
     assert result["methods"]["random"]["completed"] == 4
     assert result["methods"]["random"]["grounding_score"] is None
+
+
+def test_improved_run_pins_original_snapshot_set_and_preserves_legacy_variant(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path,
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(scenario_runner, "_ARTIFACTS_DIR", Path("artifacts"))
+    old_snapshot = tmp_path / "old"
+    old_snapshot.mkdir()
+    (old_snapshot / "ground_truth.json").write_text('{"scenario_id":"old"}')
+    monkeypatch.setattr(bench, "discover_snapshots", lambda _: [old_snapshot])
+    original = Path("artifacts/old")
+    manifest = bench._snapshot_set([Path("scenarios")], "development", original, 3)
+    del manifest["agent_variant"]
+    (original / "manifest.json").write_text(json.dumps(manifest))
+    monkeypatch.setattr(bench, "discover_snapshots", lambda _: pytest.fail("must use manifest"))
+    pinned = bench._snapshot_set(
+        [], "development", Path("artifacts/new"), 3, snapshot_set_from="old",
+    )
+    assert pinned["snapshots"] == manifest["snapshots"]
+
+    def run_scenario(
+        path: Path, mode: str, run_id: str, repeat: int, *, method: str,
+    ) -> dict[str, dict[str, str]]:
+        return {method: {"method": method}}
+
+    monkeypatch.setattr(bench, "run_scenario", run_scenario)
+    for run_id, config, expected in (("old", manifest, "agent"), ("new", pinned, "agent_full")):
+        row = bench._measure(
+            run_id, config["snapshots"][0], "agent", 0, config.get("agent_variant", "agent"),
+        )
+        assert row["method"] == expected

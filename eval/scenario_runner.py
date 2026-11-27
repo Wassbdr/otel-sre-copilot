@@ -96,15 +96,18 @@ def run_scenario(
     from src.agent.llm_cache import request_scope
     from src.agent.schemas import initial_state
 
-    graph = build_graph(ds, react=True) if method == "react" else build_graph(ds)
+    graph = build_graph(
+        ds,
+        react=method == "react",
+        improved=method in {"agent_full", "agent_no_prior"},
+        prior=method != "agent_no_prior",
+    )
     state = initial_state(
         incident_id=opaque_incident_id(scenario_id),
         incident_start_ts=start,
         incident_end_ts=end,
         affected_namespace=namespace,
     )
-    from src.agent.llm_cache import request_scope
-
     state["_investigation_start_ts"] = datetime.now(UTC).isoformat()
 
     scope = [run_id, mode, scenario_id, repeat]
