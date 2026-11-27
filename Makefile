@@ -1,4 +1,4 @@
-.PHONY: setup up down health-check fault investigate eval eval-replay eval-baselines compare test lint fmt check-python demo demo-live benchmark help
+.PHONY: setup up down health-check fault investigate eval eval-replay eval-baselines compare test lint fmt check-python demo demo-live bench benchmark help
 
 CLUSTER_NAME      := otel-sre-copilot
 KUBECONFIG_PATH   := $(HOME)/.kube/config
@@ -10,6 +10,8 @@ TRACE             ?= examples/checkout-pod-crash.trace.json
 SNAPSHOT          ?= snapshots/checkout-pod_crash-seed42
 REPEATS           ?= 3
 BENCH_ID          := bench-$(shell date -u +%Y%m%dT%H%M%SZ)
+BENCH_RUN_ID      ?= round2-baseline
+BENCH_SPLIT       ?= development
 SCENARIO_DIR      ?= scenarios/mvp
 RUN_ID            ?=
 PYTHON            ?= $(if $(wildcard .venv/bin/python),.venv/bin/python,python3)
@@ -157,6 +159,11 @@ benchmark:  ## Agent x REPEATS + 3 baselines on every snapshot, then results/
 		--repeats $(REPEATS) --run-id $(BENCH_ID)
 	@$(PYTHON) -m eval.report --run-id $(BENCH_ID)
 	@$(PYTHON) -m eval.compare --run-id $(BENCH_ID)
+
+bench: check-python  ## Compare methods on snapshots and resume with the same BENCH_RUN_ID
+	@$(PYTHON) -m eval.bench --run-id "$(BENCH_RUN_ID)" --repeats "$(REPEATS)" \
+		--split "$(BENCH_SPLIT)" $(if $(BENCH_METHODS),--methods $(BENCH_METHODS)) \
+		$(if $(BENCH_CHANGE),--change "$(BENCH_CHANGE)")
 
 help:
 	@echo ""

@@ -78,7 +78,9 @@ def _add_usage(totals: dict[str, int], response: AIMessage) -> dict[str, int]:
     }
 
 
-def build_graph(ds: DataSource, on_event: EventCallback | None = None) -> Any:  # noqa: ANN401
+def build_graph(
+    ds: DataSource, on_event: EventCallback | None = None, *, react: bool = False,
+) -> Any:  # noqa: ANN401
     """Build and compile the investigation StateGraph for the given DataSource.
 
     ``on_event`` receives every LLM step and tool call as it happens (used by the live demo).
@@ -109,6 +111,7 @@ def build_graph(ds: DataSource, on_event: EventCallback | None = None) -> Any:  
                 end=state["incident_end_ts"],
                 namespace=state["affected_namespace"],
                 max_iterations=MAX_TOOL_ITERATIONS,
+                react=react,
             ))
             human_msg = HumanMessage(
                 content=f"Investigate incident {state['incident_id']} "
@@ -193,14 +196,13 @@ def build_graph(ds: DataSource, on_event: EventCallback | None = None) -> Any:  
         inv_start = state.get("_investigation_start_ts", datetime.now(UTC).isoformat())
 
         # Ask LLM to produce the final structured report
-        finalize_msg = HumanMessage(
-            content=(
-                "Based on all evidence gathered above, produce the final InvestigationReport JSON. "
-                "Output ONLY the JSON object, no other text. "
-                "Remember: every query_or_id in evidence must be an exact tool call you made."
-            )
+        finalize = (
+            "Based on all evidence gathered above, produce the final InvestigationReport JSON. "
+            "Output ONLY the JSON object, no other text. "
         )
-        messages_for_report = messages + [finalize_msg]
+        if not react:
+            finalize += "Remember: every query_or_id in evidence must be an exact tool call you made."
+        messages_for_report = messages + [HumanMessage(content=finalize)]
 
         report_llm = make_chat_model(max_tokens=int(os.getenv("LLM_REPORT_MAX_TOKENS", "8192")),
                                      json_mode=True)
@@ -312,6 +314,8 @@ def build_graph(ds: DataSource, on_event: EventCallback | None = None) -> Any:  
                     return "tool_call_loop"
                 break
 
+        if react:
+            return "generate_report"
         # LLM wants to stop. Force more investigation if it hasn't met the minimum: at least
         # MIN_TOOL_ITERATIONS iterations AND at least one Prometheus metric query.
         metric_calls = sum(

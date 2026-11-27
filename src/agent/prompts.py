@@ -105,7 +105,19 @@ def build_system_prompt(
     end: str,
     namespace: str,
     max_iterations: int = 10,
+    *,
+    react: bool = False,
 ) -> str:
+    if react:
+        return (
+            f"Investigate the incident in {namespace} between {start} and {end}. "
+            f"Use up to {max_iterations} tool steps. Choose each next action from the "
+            "observations so far. When ready, return up to three ranked root causes "
+            "with evidence and remediation. Output JSON matching this schema:\n"
+            f"{INVESTIGATION_REPORT_SCHEMA}\n"
+            "On snapshots, use these metric query templates, substituting <SVC>:\n"
+            f"{_query_catalog()}"
+        )
     return SYSTEM_PROMPT.format(
         services=", ".join(ASTRONOMY_SHOP_SERVICES),
         start=start,

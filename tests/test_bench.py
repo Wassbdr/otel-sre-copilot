@@ -1,0 +1,76 @@
+from __future__ import annotations
+
+import argparse
+import json
+from pathlib import Path
+
+import pytest
+
+from eval import bench, scenario_runner
+from eval.baselines.rcaeval import rank_signal
+from eval.metrics import ScenarioResult, compute_per_scenario
+from src.agent.schemas import InvestigationReport, RootCauseHypothesis
+
+
+def test_rcaeval_standardizes_each_point_before_taking_maximum() -> None:
+    assert rank_signal([1, 3, 5], [10, 2], "baro") == 3.5
+    assert rank_signal([4, 4, 4], [3, 9], "nsigma") == 5.0
+    assert rank_signal([1, 3], [0, 3], "nsigma") == 1.0
+
+
+def test_multifault_metrics_count_each_distinct_cause() -> None:
+    hypothesis = RootCauseHypothesis(
+        rank=1, service="cart", fault_type="http_abort", description="loss", confidence=0.9,
+    )
+    report = InvestigationReport(
+        incident_id="test", investigation_start_ts="", investigation_end_ts="",
+        root_causes=[hypothesis], fault_type_classification=hypothesis.fault_type,
+    )
+    result = compute_per_scenario(ScenarioResult(
+        "test", report, {"faults": [
+            {"fault_service": "cart", "fault_type": "http_abort"},
+            {"fault_service": "currency", "fault_type": "cpu_stress"},
+        ]}, 1.0,
+    ))
+    assert result["accuracy_at_1"] == result["accuracy_at_3"] == 0.5
+    assert result["service_at_3"] == 0.5
+
+
+def test_benchmark_resumes_only_missing_method_snapshot_repeat(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path,
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(scenario_runner, "_ARTIFACTS_DIR", Path("artifacts"))
+    snapshots = [tmp_path / name for name in ("case-a", "case-b")]
+    for path in snapshots:
+        path.mkdir()
+        (path / "ground_truth.json").write_text(json.dumps({"scenario_id": path.name}))
+    monkeypatch.setattr(bench, "discover_snapshots", lambda _: snapshots)
+    calls: list[tuple[str, str, int]] = []
+    fail_at = ("case-b", "random", 1)
+
+    def measure(
+        path: Path, mode: str, run_id: str, repeat: int, *, method: str,
+    ) -> dict[str, object]:
+        item = (path.name, method, repeat)
+        calls.append(item)
+        if item == fail_at and calls.count(item) == 1:
+            raise RuntimeError
+        return {method: {
+            **dict.fromkeys(bench.ACCURACY, 0.5),
+            "evidence_count": 0, "verified_evidence_count": 0,
+        }}
+
+    monkeypatch.setattr(bench, "run_scenario", measure)
+    args = argparse.Namespace(
+        methods=["random", "composite_zscore"], run_id="resume", repeats=2,
+        scenario_dir=[Path("scenarios")], split="development", output_dir=Path("benchmarks"),
+        change="Baseline",
+    )
+    assert not bench.run(args)
+    assert len(calls) == 8
+    assert bench.run(args)
+    assert calls[8:] == [fail_at]
+    result = json.loads((args.output_dir / "results.json").read_text())[0]
+    assert result["methods"]["random"]["completed"] == 4
+    assert result["methods"]["random"]["grounding_score"] is None

@@ -16,8 +16,10 @@ import hashlib
 import json
 import os
 import sys
+import tempfile
 from datetime import UTC, datetime
 from pathlib import Path
+from time import perf_counter
 from typing import Any
 
 import structlog
@@ -30,6 +32,19 @@ log = structlog.get_logger()
 
 _ARTIFACTS_DIR = Path("artifacts")
 _SNAPSHOTS_DIR = Path("snapshots")
+BASELINE_METHODS = ("random", "zscore", "composite_zscore", "baro", "nsigma")
+
+
+def write_json_atomic(path: Path, value: object) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(mode="w", dir=path.parent, delete=False) as f:
+        temporary = Path(f.name)
+        try:
+            json.dump(value, f, indent=2)
+            f.close()
+            temporary.replace(path)
+        finally:
+            temporary.unlink(missing_ok=True)
 
 
 def opaque_incident_id(scenario_id: str) -> str:
@@ -42,7 +57,9 @@ def run_scenario(
     mode: str = "replay",
     run_id: str = "",
     repeat: int = 0,
-) -> dict[str, object]:
+    *,
+    method: str = "agent",
+) -> dict[str, dict[str, Any]]:
     """Run one scenario: agent (or baseline) + grounding verify + per-scenario metrics."""
     from eval.grounding_verifier import verify
     from eval.metrics import ScenarioResult, compute_per_scenario
@@ -54,7 +71,7 @@ def run_scenario(
         raise FileNotFoundError(f"ground_truth.json not found in {snapshot_dir}")
 
     with open(gt_path) as f:
-        ground_truth: dict[str, str] = json.load(f)
+        ground_truth: dict[str, Any] = json.load(f)
 
     scenario_id = ground_truth.get("scenario_id", snapshot_dir.name)
     log.info("running_scenario", scenario_id=scenario_id, mode=mode)
@@ -70,14 +87,16 @@ def run_scenario(
     namespace = meta.get("namespace", "otel-demo")
 
     if mode == "baselines-only":
-        return _run_baselines(ground_truth, ds, start, end, namespace, scenario_id, run_id)
+        methods = (method,) if method in BASELINE_METHODS else BASELINE_METHODS[:3]
+        return _run_baselines(ground_truth, ds, start, end, namespace, scenario_id, methods, repeat)
 
     # Run agent
     from src.agent.graph import build_graph
+    from src.agent.llm import llm_settings
+    from src.agent.llm_cache import request_scope
     from src.agent.schemas import initial_state
 
-    graph = build_graph(ds)
-    from src.agent.llm import llm_settings
+    graph = build_graph(ds, react=True) if method == "react" else build_graph(ds)
     state = initial_state(
         incident_id=opaque_incident_id(scenario_id),
         incident_start_ts=start,
@@ -88,7 +107,10 @@ def run_scenario(
 
     state["_investigation_start_ts"] = datetime.now(UTC).isoformat()
 
-    with request_scope(json.dumps([run_id, mode, scenario_id, repeat])) as stats:
+    scope = [run_id, mode, scenario_id, repeat]
+    if method != "agent":
+        scope.append(method)
+    with request_scope(json.dumps(scope)) as stats:
         result = graph.invoke(state, {"recursion_limit": 100})
     report: InvestigationReport = result["final_report"]
     tool_calls_log: list[dict[str, Any]] = result.get("tool_calls_log", [])
@@ -109,10 +131,12 @@ def run_scenario(
     per_scenario["tool_calls"] = len(tool_calls_log)
     per_scenario["rate_limit_wait_s"] = stats.wait_s
     per_scenario["cached_requests"] = stats.cached_requests
+    per_scenario["evidence_count"] = grounding_result.total_count
+    per_scenario["verified_evidence_count"] = grounding_result.verified_count
 
     # Save run artifacts
     if run_id:
-        artifact_dir = _ARTIFACTS_DIR / run_id / "scenarios" / scenario_id / f"rep{repeat}"
+        artifact_dir = trace_path(run_id, scenario_id, method, repeat).parent
         artifact_dir.mkdir(parents=True, exist_ok=True)
         with open(artifact_dir / "report.json", "w") as f:
             f.write(report.model_dump_json(indent=2))
@@ -128,54 +152,66 @@ def run_scenario(
                 "has_hallucination_warning": grounding_result.has_hallucination_warning,
             }, f, indent=2)
         # Self-contained recorded trace: everything `sre-copilot-demo` needs to replay offline.
-        with open(artifact_dir / "trace.json", "w") as f:
-            json.dump({
-                "scenario_id": scenario_id,
-                "snapshot_dir": str(snapshot_dir),
-                "window": {"start": start, "end": end, "namespace": namespace},
-                "model": llm_settings().model,
-                "ground_truth": ground_truth,
-                "tool_calls": tool_calls_log,
-                "report": report.model_dump(mode="json"),
-                "grounding": {
-                    "score": grounding_result.grounding_score,
-                    "verified": grounding_result.verified_count,
-                    "total": grounding_result.total_count,
-                    "failed_items": grounding_result.failed_items,
-                },
-                "metrics": per_scenario,
-            }, f, indent=2)
+        write_json_atomic(artifact_dir / "trace.json", {
+            "scenario_id": scenario_id,
+            "snapshot_dir": str(snapshot_dir),
+            "window": {"start": start, "end": end, "namespace": namespace},
+            "model": llm_settings().model,
+            "ground_truth": ground_truth,
+            "tool_calls": tool_calls_log,
+            "report": report.model_dump(mode="json"),
+            "grounding": {
+                "score": grounding_result.grounding_score,
+                "verified": grounding_result.verified_count,
+                "total": grounding_result.total_count,
+                "failed_items": grounding_result.failed_items,
+            },
+            "metrics": per_scenario,
+        })
 
     if grounding_result.has_hallucination_warning:
         log.warning("hallucination_warning", scenario_id=scenario_id,
                     grounding_score=grounding_result.grounding_score)
 
-    return {"agent": per_scenario}
+    return {method: per_scenario}
+
+
+def trace_path(run_id: str, scenario_id: str, method: str, repeat: int) -> Path:
+    base = _ARTIFACTS_DIR / run_id / "scenarios" / scenario_id
+    if method != "agent":
+        base /= method
+    return base / f"rep{repeat}" / "trace.json"
 
 
 def _run_baselines(
-    ground_truth: dict[str, str],
+    ground_truth: dict[str, Any],
     ds: object,
     start: str,
     end: str,
     namespace: str,
     scenario_id: str,
-    run_id: str,
-) -> dict[str, object]:
+    methods: tuple[str, ...],
+    repeat: int,
+) -> dict[str, dict[str, Any]]:
     from eval.baselines.composite_zscore import CompositeZScoreBaseline
     from eval.baselines.random_baseline import RandomBaseline
+    from eval.baselines.rcaeval import RCAEvalBaseline
     from eval.baselines.zscore_baseline import ZScoreBaseline
     from eval.metrics import ScenarioResult, compute_per_scenario
 
     baselines: dict[str, Any] = {
-        "random": RandomBaseline(seed=int(os.getenv("RANDOM_SEED", "42"))),
+        "random": RandomBaseline(seed=int(os.getenv("RANDOM_SEED", "42")) + repeat),
         "zscore": ZScoreBaseline(),
         "composite_zscore": CompositeZScoreBaseline(),
+        "baro": RCAEvalBaseline("baro"),
+        "nsigma": RCAEvalBaseline("nsigma"),
     }
 
-    results: dict[str, object] = {}
-    for name, baseline in baselines.items():
-        report = baseline.predict(ds, start, end, namespace, scenario_id)
+    results: dict[str, dict[str, Any]] = {}
+    for name in methods:
+        started = perf_counter()
+        report = baselines[name].predict(ds, start, end, namespace, scenario_id)
+        report.latency_s = perf_counter() - started
         # Baselines have no tool_calls_log — grounding_score is 0 (they don't produce evidence)
         report.grounding_score = 0.0
         sr = ScenarioResult(
@@ -184,7 +220,11 @@ def _run_baselines(
             ground_truth=ground_truth,
             grounding_score=0.0,
         )
-        results[name] = compute_per_scenario(sr)
+        result = compute_per_scenario(sr)
+        result["evidence_count"] = 0
+        result["verified_evidence_count"] = 0
+        result["repeat"] = repeat
+        results[name] = result
 
     return results
 
@@ -204,7 +244,12 @@ def _metrics_from_trace(trace_path: Path) -> dict[str, Any]:
         ground_truth=trace["ground_truth"],
         grounding_score=trace["grounding"]["score"],
     )
-    return {**trace["metrics"], **compute_per_scenario(sr)}
+    return {
+        **trace["metrics"],
+        **compute_per_scenario(sr),
+        "evidence_count": trace["grounding"].get("total"),
+        "verified_evidence_count": trace["grounding"].get("verified"),
+    }
 
 
 EXCLUDED_SNAPSHOTS: list[str] = []
@@ -274,8 +319,7 @@ def run_all(
             if mode in ("replay", "benchmark"):
                 runs: list[object] = []
                 for k in range(repeats):
-                    done = (_ARTIFACTS_DIR / run_id / "scenarios" / str(row["scenario_id"])
-                            / f"rep{k}" / "trace.json")
+                    done = trace_path(run_id, str(row["scenario_id"]), "agent", k)
                     if done.exists():  # resume: a rerun with the same --run-id skips it
                         runs.append(_metrics_from_trace(done))
                         continue
