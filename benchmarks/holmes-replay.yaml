@@ -1,0 +1,13 @@
+toolsets:
+  prometheus/metrics:
+    enabled: true
+    config:
+      prometheus_url: http://127.0.0.1:18080/
+  grafana/loki:
+    enabled: true
+    config:
+      api_url: http://127.0.0.1:18080
+  grafana/tempo:
+    enabled: true
+    config:
+      api_url: http://127.0.0.1:18080
