@@ -160,6 +160,7 @@ def run_scenario(
             "snapshot_dir": str(snapshot_dir),
             "window": {"start": start, "end": end, "namespace": namespace},
             "model": llm_settings().model,
+            **({"model_ranking": result["model_ranking"]} if "model_ranking" in result else {}),
             "ground_truth": ground_truth,
             "tool_calls": tool_calls_log,
             "report": report.model_dump(mode="json"),

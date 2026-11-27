@@ -74,7 +74,7 @@ def verify(
         for ev in hypothesis.evidence:
             total += 1
             citation = ev.query_or_id
-            if citation.startswith(("metric:", "trace:")):
+            if citation.startswith(("metric:", "trace:", "k8s_event:")):
                 matched = citation.startswith(f"{ev.signal_type}:") and citation in evidence_ids
             else:
                 matched = _check_evidence(ev, all_executed_set)

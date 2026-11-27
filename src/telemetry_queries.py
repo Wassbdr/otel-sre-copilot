@@ -51,6 +51,29 @@ METRIC_QUERIES: dict[str, str] = {
     ),
 }
 
+FINGERPRINT_QUERIES: dict[str, str] = {
+    "memory_limit_ratio": (
+        'max((container_memory_working_set_bytes{{namespace="otel-demo",pod=~"{svc}-.*",'
+        'container!="",container!="POD"}}) / on(namespace,pod,container) '
+        '(kube_pod_container_resource_limits{{namespace="otel-demo",pod=~"{svc}-.*",'
+        'resource="memory",unit="byte"}} > 0))'
+    ),
+    "cpu_throttle_ratio": (
+        'sum(rate(container_cpu_cfs_throttled_periods_total{{namespace="otel-demo",'
+        'pod=~"{svc}-.*"}}[2m])) / sum(rate(container_cpu_cfs_periods_total'
+        '{{namespace="otel-demo",pod=~"{svc}-.*"}}[2m]))'
+    ),
+    "pod_not_ready": (
+        'max(1 - kube_pod_status_ready{{namespace="otel-demo",pod=~"{svc}-.*",'
+        'condition="true"}})'
+    ),
+    "network_drop_rate": (
+        'sum(rate(container_network_receive_packets_dropped_total{{namespace="otel-demo",'
+        'pod=~"{svc}-.*"}}[2m])) + sum(rate(container_network_transmit_packets_dropped_total'
+        '{{namespace="otel-demo",pod=~"{svc}-.*"}}[2m]))'
+    ),
+}
+
 # Composite Z-score baseline: dominant signal -> inferred fault type.
 SIGNAL_TO_FAULT: dict[str, str] = {
     "error_rate": "http_abort",

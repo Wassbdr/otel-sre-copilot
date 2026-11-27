@@ -11,6 +11,30 @@ those citations against the tool call log independently of the model and compute
 grounding, latency and cost. A report can have no citations, so read grounding alongside
 evidence count.
 
+## Fault candidate ranking
+
+The full agent seeds the first model call with ranked `(service, fault_type)` pairs and
+the measurements and citation IDs behind them. The fingerprint rules use only telemetry:
+
+- Restarts with an OOM event or memory near its limit suggest memory stress. Restarts or lost
+  readiness without OOM evidence suggest a pod crash. A sustained working-set increase can
+  also suggest memory pressure, but does not establish an OOM kill.
+- CPU throttling or a material increase in CPU consumption suggests CPU stress.
+- A jump in exclusive server time or in client wait outside the paired server span suggests
+  latency on the service that owns that time. If baseline traces are absent, a server p99
+  increase must corroborate the sampled span.
+- Inbound errors, request-rate loss, and packet drops suggest request disruption. Topology
+  discounts a caller's traffic drop when a downstream service also lost traffic. Timeout
+  logs alongside request loss can support a dependency-failure alternative.
+
+Older snapshots may lack limit, readiness, throttling, network, or baseline trace data.
+Missing measurements are not treated as normal values. The model can reorder candidates
+and propose one additional pair with evidence. The full agent drops proposals with missing
+or unverified citations, keeps observed evidence for seeded pairs, and fills any remaining
+top-three slots in prior order. The harness still scores the final report independently.
+The no-prior ablation does not receive candidate pairs and has no fill step. ReAct does not
+run either stage.
+
 ## Evaluation decisions
 
 - Compare methods on the same snapshots and report losses as well as wins. A snapshot without

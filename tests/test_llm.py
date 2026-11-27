@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -152,7 +153,7 @@ def test_graph_runs_end_to_end_with_fake_llm(monkeypatch: pytest.MonkeyPatch) ->
 
 @pytest.mark.parametrize(
     ("react", "prior", "seeded"),
-    [(False, True, ["rank_incident_anomalies", "rank_request_rate_drops"]),
+    [(False, True, ["rank_fault_candidates"]),
      (False, False, ["rank_request_rate_drops"]), (True, False, [])],
 )
 def test_fast_graph_limits_llm_calls_and_seeds_only_available_prior(
@@ -171,8 +172,14 @@ def test_fast_graph_limits_llm_calls_and_seeds_only_available_prior(
         return bind_tools(model, tools)
 
     monkeypatch.setattr(FakeChatModel, "bind_tools", capture_tools)
-    graph = build_graph(ReplayDataSource(FIXTURE), improved=not react, react=react, prior=prior)
-    state = initial_state("fixture", "2024-01-15T14:00:00Z", "2024-01-15T14:10:00Z", "otel-demo")
+    snapshot = FIXTURE
+    start, end = "2024-01-15T14:00:00Z", "2024-01-15T14:10:00Z"
+    if prior and not react:
+        snapshot = Path(__file__).parents[1] / "snapshots/cart-memory_stress-seed42"
+        meta = json.loads((snapshot / "metadata.json").read_text())
+        start, end = meta["window_start"], meta["window_end"]
+    graph = build_graph(ReplayDataSource(snapshot), improved=not react, react=react, prior=prior)
+    state = initial_state("fixture", start, end, "otel-demo")
     result = graph.invoke(state)
     assert result["token_usage"]["llm_calls"] == 3
     assert [call["tool_name"] for call in result["tool_calls_log"]] == [
@@ -180,6 +187,16 @@ def test_fast_graph_limits_llm_calls_and_seeds_only_available_prior(
     ]
     assert "query_prometheus_range" in bound_tools
     assert set(seeded).isdisjoint(bound_tools)
+    report = result["final_report"]
+    if prior and not react:
+        candidate_call = result["tool_calls_log"][0]
+        assert candidate_call["candidates"]
+        assert result["prior_candidates"]
+        assert report.root_causes[0].fault_type != "unknown"
+        assert report.root_causes[0].evidence
+    else:
+        assert not result["prior_candidates"]
+        assert report.root_causes[0].fault_type == "unknown"
 
 
 def test_nim_429_slows_subsequent_requests_until_recovery(

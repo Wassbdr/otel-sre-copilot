@@ -20,6 +20,7 @@ from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, Tool
 from langgraph.graph import END, START, StateGraph
 from pydantic import ValidationError
 
+from src.agent.candidates import combine_rankings, rank_candidates
 from src.agent.context_manager import ContextBudget
 from src.agent.llm import (
     invoke_with_backoff,
@@ -29,7 +30,7 @@ from src.agent.llm import (
 )
 from src.agent.llm_cache import request_stats
 from src.agent.prompts import build_system_prompt
-from src.agent.schemas import InvestigationReport
+from src.agent.schemas import InvestigationReport, RootCauseHypothesis
 from src.agent.tools import make_tools
 from src.datasources.live import ASTRONOMY_SHOP_SERVICES
 from src.utils.cost import estimate_cost
@@ -51,6 +52,8 @@ class GraphState(TypedDict, total=False):
     traces_context: str
     logs_context: str
     hypotheses: list[dict[str, Any]]
+    prior_candidates: list[RootCauseHypothesis]
+    model_ranking: list[dict[str, Any]]
     iteration_count: int
     token_usage: dict[str, int]
     final_report: InvestigationReport | None
@@ -98,18 +101,16 @@ def build_graph(
         MAX_TOOL_ITERATIONS
     )
     tools = make_tools(
-        ds, budget, improved=improved, prior=improved and prior,
+        ds, budget, improved=improved,
         services=services, namespace=namespace,
     )
-    seeded_tools = []
-    if improved and not react:
-        if prior:
-            seeded_tools.append("rank_incident_anomalies")
-        seeded_tools.append("rank_request_rate_drops")
+    rerank = improved and prior and not react
+    seed_request_rate = improved and not react and not rerank
+    hidden_tools = {"rank_request_rate_drops"} if rerank or seed_request_rate else set()
 
     settings = llm_settings()
     llm = make_chat_model(max_tokens=4096, concise=improved)
-    llm_with_tools = llm.bind_tools([t for t in tools if t.name not in seeded_tools])
+    llm_with_tools = llm.bind_tools([t for t in tools if t.name not in hidden_tools])
     tool_map = {t.name: t for t in tools}
 
     def run_tool(
@@ -137,7 +138,10 @@ def build_graph(
             "elapsed_s": round(time.perf_counter() - started, 3),
         }
         if improved:
-            entry["evidence_ids"] = _evidence_ids(name, result)
+            evidence_ids = _evidence_ids(name, result)
+            entry["evidence_ids"] = evidence_ids
+            if rerank:
+                entry["verified_refs"] = _verified_refs(name, args, result, evidence_ids)
         calls.append(entry)
         emit({"type": "tool_call", **entry})
         return result
@@ -147,6 +151,7 @@ def build_graph(
         iteration = state.get("iteration_count", 0)
         tool_calls_log: list[dict[str, Any]] = list(state.get("tool_calls_log", []))
         messages: list[Any] = list(state.get("messages", []))
+        candidates = state.get("prior_candidates", [])
 
         # First iteration: inject system + human messages
         if iteration == 0:
@@ -165,10 +170,33 @@ def build_graph(
                 f"Window: {state['incident_start_ts']} → {state['incident_end_ts']}. "
                 "Identify the root cause and produce an InvestigationReport JSON."
             )
-            if seeded_tools:
+            if seed_request_rate:
                 window = {"start": state["incident_start_ts"], "end": state["incident_end_ts"]}
-                initial = [run_tool(name, window, 0, tool_calls_log) for name in seeded_tools]
-                human_content += "\nRecorded tool observations:\n" + "\n\n".join(initial)
+                initial = run_tool("rank_request_rate_drops", window, 0, tool_calls_log)
+                human_content += "\nRecorded tool observations:\n" + initial
+            if rerank:
+                start, end = state["incident_start_ts"], state["incident_end_ts"]
+                started = time.perf_counter()
+                candidates = rank_candidates(ds, start, end, namespace, services)
+                observations = "\n".join(h.model_dump_json() for h in candidates)
+                items = [item for candidate in candidates for item in candidate.evidence]
+                entry = {
+                    "iteration": 0, "tool_name": "rank_fault_candidates",
+                    "args": {"start": start, "end": end}, "result_preview": observations[:200],
+                    "result_excerpt": observations[:1200],
+                    "query_or_id": list(dict.fromkeys(
+                        item.query_or_id for item in items if item.signal_type == "log"
+                    )),
+                    "evidence_ids": list(dict.fromkeys(item.query_or_id for item in items)),
+                    "verified_refs": list(dict.fromkeys(
+                        f"{item.signal_type}|{item.query_or_id}" for item in items
+                    )),
+                    "elapsed_s": round(time.perf_counter() - started, 3),
+                    "candidates": [h.model_dump(mode="json") for h in candidates],
+                }
+                tool_calls_log.append(entry)
+                emit({"type": "tool_call", **entry})
+                human_content += "\nRanked fault candidates:\n" + (observations or "None")
             messages = [system_msg, HumanMessage(content=human_content)]
 
         # If the LLM tried to stop early (last msg is an AIMessage with no tool calls) but we
@@ -215,6 +243,7 @@ def build_graph(
             "tool_calls_log": tool_calls_log,
             "iteration_count": iteration + 1,
             "token_usage": token_usage,
+            "prior_candidates": candidates,
         }
 
     # ── Node: generate_report ──────────────────────────────────────────────
@@ -238,6 +267,11 @@ def build_graph(
                 " Return at most three ranked causes, at most two citations per cause and "
                 "at most two remediation steps. Keep each description to one sentence. "
                 "Return only root_causes and remediation_steps; metadata is added separately."
+            )
+        if rerank:
+            finalize += (
+                " Reorder the seeded service/fault pairs. Cite exact observed references for "
+                "every hypothesis. Add at most one pair outside the seed list, with evidence."
             )
         messages_for_report = messages + [HumanMessage(content=finalize)]
 
@@ -336,6 +370,15 @@ def build_graph(
                 **totals,
             )
 
+        if rerank:
+            observed = {
+                ref for entry in state.get("tool_calls_log", [])
+                for ref in entry.get("verified_refs", [])
+            }
+            model_ranking = [hyp.model_dump(mode="json") for hyp in report.root_causes]
+            report = combine_rankings(report, state.get("prior_candidates", []), observed)
+            return {"final_report": report, "token_usage": usage_totals,
+                    "model_ranking": model_ranking}
         return {"final_report": report, "token_usage": usage_totals}
 
     # ── Conditional edge ───────────────────────────────────────────────────
@@ -361,7 +404,7 @@ def build_graph(
         metric_calls = sum(
             1 for e in state.get("tool_calls_log", [])
             if str(e.get("tool_name", "")).startswith((
-                "query_prometheus", "rank_services", "rank_incident", "rank_request",
+                "query_prometheus", "rank_services", "rank_request", "rank_fault",
             ))
         )
         if iteration < (1 if improved else MIN_TOOL_ITERATIONS) or metric_calls < 1:
@@ -385,9 +428,24 @@ def build_graph(
     return graph.compile()
 
 
+def _verified_refs(
+    name: str, args: dict[str, Any], result: str, ids: list[str],
+) -> list[str]:
+    refs = [f"{citation.split(':', 1)[0]}|{citation}" for citation in ids]
+    if not result or result.startswith("["):
+        return refs
+    if (name == "query_prometheus_range" and "\n  {" in result
+            or name == "query_prometheus_instant" and result.startswith("{")):
+        refs.append(f"metric|{args['query']}")
+    elif name == "query_loki" and result.splitlines()[0].removeprefix("Log counts: ").strip():
+        refs.append(f"log|{args['logql']}")
+    elif name == "get_pod_events" and result.startswith("K8s events:\n"):
+        refs.extend(f"k8s_event|{line.strip()}" for line in result.splitlines()[1:])
+    return refs
+
+
 def _evidence_ids(tool_name: str, result: str) -> list[str]:
     prefix = {
-        "rank_incident_anomalies": "metric:",
         "rank_request_rate_drops": "metric:",
         "get_trace": "trace:",
         "summarize_trace_latency": "trace:",

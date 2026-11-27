@@ -121,12 +121,14 @@ def build_system_prompt(
             f"{_query_catalog()}"
         )
     if improved:
-        sweep = ("Use the supplied composite and N-Sigma results rather than repeating the sweep."
+        sweep = ("Reorder the seeded service/fault candidates. Add at most one new pair, and "
+                 "only if the cited tool evidence supports it."
                  if prior else "Sweep metrics with parallel rank_services_by_signal calls.")
+        request_context = "" if prior else " Use the supplied request-rate comparison."
         return (
             f"Investigate {namespace} from {start} to {end}. Return up to three ranked "
             "service and fault-type pairs.\n"
-            f"{sweep} Use the supplied request-rate comparison. Combine independent calls "
+            f"{sweep}{request_context} Combine independent calls "
             "in the same round. "
             "A large drop in requests without an error spike can indicate requests rejected "
             "before reaching instrumentation. Related routes may fall together, so use "

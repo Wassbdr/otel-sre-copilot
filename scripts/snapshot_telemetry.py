@@ -29,13 +29,13 @@ load_dotenv()
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.datasources.live import ASTRONOMY_SHOP_SERVICES, LiveDataSource  # noqa: E402
-from src.telemetry_queries import LOKI_QUERIES, METRIC_QUERIES  # noqa: E402
+from src.telemetry_queries import FINGERPRINT_QUERIES, LOKI_QUERIES, METRIC_QUERIES  # noqa: E402
 
 log = structlog.get_logger()
 
 # Snapshot exactly the canonical templates so baselines/agent replay them (see
 # src/telemetry_queries.py). Order is stable for reproducible snapshots.
-_METRIC_QUERIES = list(METRIC_QUERIES.values())
+_METRIC_QUERIES = [*METRIC_QUERIES.values(), *FINGERPRINT_QUERIES.values()]
 _LOKI_QUERIES = list(LOKI_QUERIES.values())
 
 

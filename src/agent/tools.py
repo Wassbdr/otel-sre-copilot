@@ -7,7 +7,6 @@ They never import HTTP libraries directly — all I/O goes through a DataSource.
 from __future__ import annotations
 
 import json
-from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 import structlog
@@ -20,7 +19,6 @@ from src.agent.context_manager import (
     compress_traces,
 )
 from src.anomaly import MetricWindow, metric_windows
-from src.telemetry_queries import SIGNAL_TO_FAULT
 from src.trace_timing import Timing, exclusive_timings
 
 if TYPE_CHECKING:
@@ -29,7 +27,7 @@ if TYPE_CHECKING:
 log = structlog.get_logger()
 
 def make_tools(
-    ds: DataSource, budget: ContextBudget, *, improved: bool = False, prior: bool = False,
+    ds: DataSource, budget: ContextBudget, *, improved: bool = False,
     services: list[str] | None = None, namespace: str = "otel-demo",
 ) -> list[BaseTool]:
     """Return LangChain tool functions bound to a specific DataSource and budget."""
@@ -246,32 +244,6 @@ def make_tools(
             return f"[ERROR: {e}]"
 
     @tool
-    def rank_incident_anomalies(start: str, end: str) -> str:
-        """Compare composite z-score and N-Sigma rankings against pre-incident metrics."""
-        windows = metric_windows(
-            ds, list(SIGNAL_TO_FAULT), start, end, services=services, namespace=namespace,
-        )
-        composite = _rank_windows(windows, lambda w: w.composite)
-        nsigma = _rank_windows(windows, lambda w: w.nsigma)
-        sections = [
-            heading + ":\n" + "\n".join(_metric_line(w, score) for w, score in ranking)
-            for heading, ranking in (("composite", composite), ("n-sigma", nsigma))
-        ]
-        candidates = list(dict.fromkeys(w.service for w, _ in composite[:2] + nsigma[:2]))[:3]
-        sections.append("Candidate signals (baseline mean -> incident mean, incident peak):\n"
-                        + "\n".join(
-            f"metric:{w.signal}:{w.service} {w.baseline_mean:.3g} -> {w.incident_mean:.3g}"
-            f", peak={max(w.incident):.3g}"
-            for service in candidates for w in windows if w.service == service
-        ))
-        latency = [w for w in windows if w.signal == "p99_latency_ms" and w.ratio is not None]
-        latency.sort(key=lambda w: -(w.ratio or 0))
-        sections.append("p99 ratio, caller spans include downstream time:\n" + "\n".join(
-            _metric_line(w, w.ratio or 0) for w in latency[:4]
-        ))
-        return budget.consume("\n".join(sections))
-
-    @tool
     def rank_request_rate_drops(start: str, end: str) -> str:
         """Compare incoming request rates against baseline and rank decreases, not error spikes."""
         windows = metric_windows(
@@ -321,8 +293,6 @@ def make_tools(
     ]
     if improved:
         tools.extend([rank_request_rate_drops, summarize_trace_latency])
-    if prior:
-        tools.append(rank_incident_anomalies)
     return tools
 
 
@@ -331,20 +301,6 @@ def _metric_line(window: MetricWindow, score: float) -> str:
         f"metric:{window.signal}:{window.service} score={score:.3g} "
         f"before={window.baseline_mean:.3g} during={window.incident_mean:.3g}"
     )
-
-
-def _rank_windows(
-    windows: list[MetricWindow], score: Callable[[MetricWindow], float],
-) -> list[tuple[MetricWindow, float]]:
-    top: list[tuple[MetricWindow, float]] = []
-    seen: set[str] = set()
-    for window, value in sorted(((w, score(w)) for w in windows), key=lambda row: -row[1]):
-        if window.service not in seen:
-            top.append((window, value))
-            seen.add(window.service)
-        if len(top) == 5:
-            break
-    return top
 
 
 def _timing_lines(timings: list[tuple[str, Timing]]) -> str:

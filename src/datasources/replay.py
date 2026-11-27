@@ -104,6 +104,10 @@ class ReplayDataSource:
         log.warning("prom_range_cache_miss", query=query[:80])
         return []
 
+    def has_prometheus_range(self, query: str) -> bool:
+        return any(e.get("type") == "range" and e.get("query") == query
+                   for e in self._prom_queries)
+
     def search_traces(
         self,
         service_name: str,
@@ -134,6 +138,9 @@ class ReplayDataSource:
             return {}
         with open(path) as f:
             return dict(json.load(f))
+
+    def has_trace(self, trace_id: str) -> bool:
+        return (self._dir / "tempo" / "traces" / f"{trace_id}.json").is_file()
 
     def query_loki(
         self,

@@ -15,7 +15,7 @@ import numpy as np
 
 from src.datasources.live import ASTRONOMY_SHOP_SERVICES
 from src.datasources.protocol import DataSource
-from src.telemetry_queries import METRIC_QUERIES
+from src.telemetry_queries import FINGERPRINT_QUERIES, METRIC_QUERIES
 
 # Live mode reads 30 minutes before the window. Recorded snapshots hold a shorter baseline
 # (8 min by default); ReplayDataSource serves it because it matches on the window end.
@@ -129,6 +129,7 @@ def metric_windows(
 
 
 def signal_query(signal: str, service: str, namespace: str) -> str:
-    return METRIC_QUERIES[signal].format(svc=service).replace(
+    template = METRIC_QUERIES.get(signal) or FINGERPRINT_QUERIES[signal]
+    return template.format(svc=service).replace(
         'namespace="otel-demo"', f'namespace="{namespace}"',
     )
