@@ -196,7 +196,10 @@ def _metrics_from_trace(trace_path: Path) -> dict[str, Any]:
     trace = json.loads(trace_path.read_text())
     sr = ScenarioResult(
         scenario_id=trace["scenario_id"],
-        report=InvestigationReport.model_validate(trace["report"]),
+        report=(InvestigationReport.model_validate(trace["report"])
+                if trace["report"].get("root_causes")
+                # a miss (no parseable hypothesis) is recorded with root_causes=[]
+                else InvestigationReport.model_construct(**trace["report"])),
         ground_truth=trace["ground_truth"],
         grounding_score=trace["grounding"]["score"],
     )

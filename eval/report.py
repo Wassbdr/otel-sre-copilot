@@ -237,15 +237,19 @@ def write_report(run_id: str, results_dir: Path = _RESULTS_DIR) -> dict[str, Any
         "",
         headline_table(summary),
         "",
-        "Top-1 / top-3: the faulty service is ranked first / in the first three. "
+        "Top-1 / top-3: the exact ground truth (service and fault type) is the first hypothesis / "
+        "in the first three; service top-1 / top-3 count the service only. "
         "Agent figures are the mean over all runs; `± x` is the standard deviation of the "
         "benchmark-level score across the repeated passes. Grounding: share of the agent's "
         "cited evidence that the external verifier matched to a tool call it really made "
         f"(< 0.8 = hallucination warning; {agent.get('hallucination_warnings', 0)} of "
         f"{agent.get('n', 0)} agent runs flagged). Latency is wall-clock per investigation, "
-        "LLM calls included. Tokens = prompt + completion over every LLM call.",
+        "LLM calls included, minus time spent waiting out provider rate limits (HTTP 429). "
+        "Tokens = prompt + completion over every LLM call.",
         "",
         "## Per scenario",
+        "",
+        "Strict top-1 / top-3 (service and fault type), pooled over seeds and runs.",
         "",
         scenario_table(summary),
         "",

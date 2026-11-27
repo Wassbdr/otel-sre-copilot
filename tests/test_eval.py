@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from src.agent.schemas import EvidenceItem, InvestigationReport, RootCauseHypothesis
 from src.datasources.replay import ReplayDataSource
 
@@ -260,3 +262,20 @@ def test_incident_id_given_to_agent_does_not_leak_the_answer() -> None:
     assert iid.startswith("INC-")
     assert "checkout" not in iid and "crash" not in iid
     assert iid == opaque_incident_id("checkout-pod_crash-seed42")
+
+
+def test_recorded_miss_is_rescored_as_a_miss(tmp_path: Path) -> None:
+    import json
+
+    from eval.scenario_runner import _metrics_from_trace
+
+    trace = {
+        "scenario_id": "s", "ground_truth": {"service": "cart", "fault_type": "memory_stress"},
+        "grounding": {"score": 0.0}, "metrics": {"rate_limit_wait_s": 3.0},
+        "report": {"root_causes": [], "remediation_steps": [], "latency_s": 1.0,
+                   "cost_usd": 0.0, "total_prompt_tokens": 10, "total_completion_tokens": 2},
+    }
+    (tmp_path / "trace.json").write_text(json.dumps(trace))
+    m = _metrics_from_trace(tmp_path / "trace.json")
+    assert (m["accuracy_at_1"], m["accuracy_at_3"], m["total_tokens"]) == (0, 0, 12)
+    assert m["rate_limit_wait_s"] == 3.0
