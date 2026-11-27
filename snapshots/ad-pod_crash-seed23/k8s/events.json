@@ -1,0 +1,47 @@
+[
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: ad",
+    "count": 3,
+    "first_time": "2026-11-27 14:58:01+00:00",
+    "last_time": "2026-11-27 17:14:16+00:00",
+    "involved_object_name": "ad-56f65f5659-zwtdr"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container ad",
+    "count": 3,
+    "first_time": "2026-11-27 14:58:01+00:00",
+    "last_time": "2026-11-27 17:14:16+00:00",
+    "involved_object_name": "ad-56f65f5659-zwtdr"
+  },
+  {
+    "type": "Normal",
+    "reason": "Killing",
+    "message": "Container ad definition changed, will be restarted",
+    "count": 2,
+    "first_time": "2026-11-27 17:09:16+00:00",
+    "last_time": "2026-11-27 17:14:16+00:00",
+    "involved_object_name": "ad-56f65f5659-zwtdr"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Container image \"gcr.io/google-containers/pause:latest\" already present on machine",
+    "count": 1,
+    "first_time": "2026-11-27 17:09:17+00:00",
+    "last_time": "2026-11-27 17:09:17+00:00",
+    "involved_object_name": "ad-56f65f5659-zwtdr"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Container image \"ghcr.io/open-telemetry/demo:3.1.0-ad\" already present on machine",
+    "count": 1,
+    "first_time": "2026-11-27 17:14:16+00:00",
+    "last_time": "2026-11-27 17:14:16+00:00",
+    "involved_object_name": "ad-56f65f5659-zwtdr"
+  }
+]
