@@ -86,3 +86,19 @@ Top-k is the fraction of true causes covered within the first k predictions. Str
 | RCAEval BARO (metrics) | 4/42 | 25.0% | 25.0% | 50.0% | 50.0% | n/a | 0 | n/a | 0 | 0.009 | 0.0000 |
 | Error-rate z-score | 4/42 | 0.0% | 0.0% | 0.0% | 75.0% | n/a | 0 | n/a | 0 | 0.001 | 0.0000 |
 | Random | 4/42 | 0.0% | 0.0% | 0.0% | 50.0% | n/a | 0 | n/a | 0 | 0.000 | 0.0000 |
+
+## Iteration 5: protect the top direct-evidence pair; pilot failed when a corroborated memory candidate was omitted (round2-iteration-5)
+
+14 Astronomy Shop snapshots (development); 3 runs per method; nvidia/nemotron-3.5-lightning-30b-a3b; x86_64, 8 vCPU, Linux, no GPU.
+
+| Method | Runs | Top-1 | Top-3 | Service top-1 | Service top-3 | Grounding | Citations | Calls/run | Tokens/run | Seconds/run | USD/run |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| SRE-Copilot | 4/42 | 50.0% | 75.0% | 100.0% | 100.0% | 100.0% | 13 | 3.0 | 9,487 | 8.714 | 0.0000 |
+| ReAct without grounding verifier in the agent | 4/42 | 0.0% | 0.0% | 0.0% | 0.0% | 100.0% | 4 | 3.0 | 12,768 | 28.015 | 0.0000 |
+| SRE-Copilot without anomaly prior | 4/42 | 0.0% | 0.0% | 0.0% | 50.0% | 95.2% | 21 | 3.0 | 8,898 | 12.416 | 0.0000 |
+| HolmesGPT 0.48.0 (1 run per snapshot) | 4/14 | 0.0% | 0.0% | 0.0% | 0.0% | n/a | 0 | 1.0 | 15,809 | 10.346 | 0.0000 |
+| RCAEval N-Sigma (metrics) | 4/42 | 50.0% | 50.0% | 50.0% | 50.0% | n/a | 0 | n/a | 0 | 0.006 | 0.0000 |
+| Composite z-score | 4/42 | 50.0% | 50.0% | 75.0% | 100.0% | n/a | 0 | n/a | 0 | 0.004 | 0.0000 |
+| RCAEval BARO (metrics) | 4/42 | 25.0% | 25.0% | 50.0% | 50.0% | n/a | 0 | n/a | 0 | 0.009 | 0.0000 |
+| Error-rate z-score | 4/42 | 0.0% | 0.0% | 0.0% | 75.0% | n/a | 0 | n/a | 0 | 0.001 | 0.0000 |
+| Random | 4/42 | 0.0% | 0.0% | 0.0% | 50.0% | n/a | 0 | n/a | 0 | 0.000 | 0.0000 |
