@@ -54,6 +54,16 @@ def test_missing_key_is_an_explicit_error() -> None:
         make_chat_model(max_tokens=10)
 
 
+def test_fast_nemotron_requests_disable_thinking(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("NIM_API_KEY", "example")
+    expected = {"chat_template_kwargs": {"enable_thinking": False}}
+    assert make_chat_model(4096, concise=True).extra_body == expected
+    assert make_chat_model(8192, json_mode=True, concise=True).extra_body == expected
+    assert make_chat_model(4096).extra_body is None
+    monkeypatch.setenv("LLM_MODEL", "different-model")
+    assert make_chat_model(4096, concise=True).extra_body is None
+
+
 def test_fake_provider_needs_no_key(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("LLM_PROVIDER", "fake")
     assert llm_settings().is_fake

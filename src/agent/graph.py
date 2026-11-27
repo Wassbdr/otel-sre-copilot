@@ -103,7 +103,7 @@ def build_graph(
     )
 
     settings = llm_settings()
-    llm = make_chat_model(max_tokens=4096)
+    llm = make_chat_model(max_tokens=4096, concise=improved)
     llm_with_tools = llm.bind_tools(tools)
     tool_map = {t.name: t for t in tools}
 
@@ -231,10 +231,18 @@ def build_graph(
                 if improved else
                 "Remember: every query_or_id in evidence must be an exact tool call you made."
             )
+        if improved:
+            finalize += (
+                " Return at most three ranked causes, at most two citations per cause and "
+                "at most two remediation steps. Keep each description to one sentence. "
+                "Return only root_causes and remediation_steps; metadata is added separately."
+            )
         messages_for_report = messages + [HumanMessage(content=finalize)]
 
-        report_llm = make_chat_model(max_tokens=int(os.getenv("LLM_REPORT_MAX_TOKENS", "8192")),
-                                     json_mode=True)
+        report_llm = make_chat_model(
+            max_tokens=int(os.getenv("LLM_REPORT_MAX_TOKENS", "8192")),
+            json_mode=True, concise=improved,
+        )
 
         # One repair round: a report that fails the schema (or runs out of tokens) gets the
         # validation error back once. The grounding check and metrics stay external.

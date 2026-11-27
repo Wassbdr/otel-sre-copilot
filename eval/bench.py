@@ -262,6 +262,9 @@ def _report(path: Path, iteration: dict[str, Any]) -> None:
 def run(args: argparse.Namespace) -> bool:
     if args.repeats < 1:
         raise ValueError("--repeats must be at least one.")
+    max_snapshots = getattr(args, "max_snapshots", None)
+    if max_snapshots is not None and max_snapshots < 1:
+        raise ValueError("--max-snapshots must be at least one.")
     if not args.run_id or Path(args.run_id).name != args.run_id or args.run_id in {".", ".."}:
         raise ValueError("Use a single directory name for BENCH_RUN_ID.")
     recorded_from = getattr(args, "recorded_from", None)
@@ -288,7 +291,7 @@ def run(args: argparse.Namespace) -> bool:
         })
         return summary
 
-    for snapshot in setup["snapshots"]:
+    for snapshot in setup["snapshots"][:max_snapshots]:
         for repeat in range(args.repeats):
             for method in methods_order:
                 try:
@@ -301,7 +304,7 @@ def run(args: argparse.Namespace) -> bool:
                               snapshot=snapshot["path"], repeat=repeat, error=type(error).__name__)
                     result = {"error": type(error).__name__}
                 rows[method].append({**result, **snapshot, "repeat": repeat})
-        methods = report_progress()
+            methods = report_progress()
     log.info("benchmark_report", path=str(args.output_dir / "results.md"), run_id=args.run_id)
     return all(v["completed"] == v["expected"] for v in methods.values())
 
@@ -317,6 +320,7 @@ def main() -> None:
     parser.add_argument("--snapshot-set-from", help="Pin snapshots to an existing run manifest.")
     parser.add_argument("--recorded-from", help="Re-score recorded agent traces without LLM calls.")
     parser.add_argument("--repeats", type=int, default=3)
+    parser.add_argument("--max-snapshots", type=int, help="Pause after this many snapshots.")
     parser.add_argument("--output-dir", type=Path, default=Path("benchmarks"))
     parser.add_argument("--change", default="Baseline")
     args = parser.parse_args()
@@ -325,7 +329,7 @@ def main() -> None:
         complete = run(args)
     except ValueError as error:
         parser.error(str(error))
-    if not complete:
+    if not complete and args.max_snapshots is None:
         parser.exit(1, "Incomplete benchmark. Repeat with the same BENCH_RUN_ID.\n")
 
 

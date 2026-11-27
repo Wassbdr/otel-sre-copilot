@@ -60,7 +60,9 @@ def llm_settings() -> LLMSettings:
     )
 
 
-def make_chat_model(max_tokens: int, json_mode: bool = False) -> Any:  # noqa: ANN401
+def make_chat_model(
+    max_tokens: int, json_mode: bool = False, *, concise: bool = False,
+) -> Any:  # noqa: ANN401
     """Build the chat model for the current settings (temperature 0 for reproducibility)."""
     settings = llm_settings()
     if settings.is_fake:
@@ -76,6 +78,9 @@ def make_chat_model(max_tokens: int, json_mode: bool = False) -> Any:  # noqa: A
             "offline scripted run."
         )
     kwargs: dict[str, Any] = {}
+    is_nim = urlsplit(settings.base_url).hostname == "integrate.api.nvidia.com"
+    if concise and is_nim and settings.model == DEFAULT_MODEL:
+        kwargs["extra_body"] = {"chat_template_kwargs": {"enable_thinking": False}}
     if json_mode:
         kwargs["model_kwargs"] = {"response_format": {"type": "json_object"}}
     timeout = float(os.getenv("LLM_TIMEOUT_S", "90"))
@@ -88,7 +93,7 @@ def make_chat_model(max_tokens: int, json_mode: bool = False) -> Any:  # noqa: A
         timeout=timeout,
         http_client=CachedChatClient(timeout=timeout),
         max_retries=(
-            0 if urlsplit(settings.base_url).hostname == "integrate.api.nvidia.com"
+            0 if is_nim
             else int(os.getenv("LLM_MAX_RETRIES", "2"))
         ),
         **kwargs,
