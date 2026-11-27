@@ -242,6 +242,11 @@ def run_all(
             if mode in ("replay", "benchmark"):
                 runs: list[object] = []
                 for k in range(repeats):
+                    done = (_ARTIFACTS_DIR / run_id / "scenarios" / str(row["scenario_id"])
+                            / f"rep{k}" / "trace.json")
+                    if done.exists():  # resume: a rerun with the same --run-id skips it
+                        runs.append(json.loads(done.read_text())["metrics"])
+                        continue
                     try:
                         runs.append(run_scenario(snap_dir, mode="replay", run_id=run_id,
                                                  repeat=k)["agent"])
