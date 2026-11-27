@@ -105,3 +105,11 @@ def test_combine_drops_unknown_refs_allows_one_addition_and_fills() -> None:
         report.model_copy(update={"root_causes": [crash]}), [memory, crash, cpu], observed,
     )
     assert [h.service for h in reranked.root_causes] == ["worker", "heap", "task"]
+
+    anchored = candidates.combine_rankings(
+        report.model_copy(update={"root_causes": [
+            h.model_copy(update={"rank": i}) for i, h in enumerate((added, cpu, memory), 1)
+        ]}),
+        [crash, memory, cpu], observed,
+    )
+    assert [h.service for h in anchored.root_causes] == ["worker", "edge", "task"]

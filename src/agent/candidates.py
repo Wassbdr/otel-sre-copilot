@@ -271,6 +271,18 @@ def combine_rankings(
         if key not in seen and verified(hypothesis):
             selected.append(hypothesis)
             seen.add(key)
+
+    anchor = next((hypothesis for hypothesis in prior if verified(hypothesis)), None)
+    if anchor and _direct_fault_signal(anchor):
+        key = (anchor.service, anchor.fault_type)
+        position = next((i for i, h in enumerate(selected)
+                         if (h.service, h.fault_type) == key), len(selected))
+        if position < len(selected):
+            selected.pop(position)
+        while position and not _direct_fault_signal(selected[position - 1]):
+            position -= 1
+        selected.insert(min(position, 2), anchor)
+
     ranked = [h.model_copy(update={"rank": i}) for i, h in enumerate(selected[:3], 1)]
     unchanged = bool(ranked and report.root_causes
                      and ranked[0].service == report.root_causes[0].service
@@ -280,3 +292,20 @@ def combine_rankings(
         "fault_type_classification": ranked[0].fault_type if ranked else "unknown",
         "remediation_steps": report.remediation_steps if unchanged else [],
     })
+
+
+def _direct_fault_signal(hypothesis: RootCauseHypothesis) -> bool:
+    citations = [item.query_or_id for item in hypothesis.evidence]
+    if hypothesis.fault_type == "memory_stress" and all(
+        any(citation.startswith(prefix) for citation in citations)
+        for prefix in ("metric:pod_restarts:", "metric:memory_usage:")
+    ):
+        return True
+    prefixes = {
+        "pod_crash": ("metric:pod_restarts:", "metric:pod_not_ready:"),
+        "memory_stress": ("k8s_event:", "metric:memory_limit_ratio:"),
+        "cpu_stress": ("metric:cpu_throttle_ratio:",),
+        "high_latency": ("trace:",),
+        "http_abort": ("metric:network_drop_rate:",),
+    }.get(hypothesis.fault_type, ())
+    return any(citation.startswith(prefixes) for citation in citations)
