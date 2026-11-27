@@ -10,9 +10,9 @@ from dotenv import load_dotenv
 
 load_dotenv()  # must run before reading env vars
 
-PROMETHEUS_URL = os.getenv("PROMETHEUS_URL", "http://localhost:19090")
-TEMPO_URL = os.getenv("TEMPO_URL", "http://localhost:13200")
-LOKI_URL = os.getenv("LOKI_URL", "http://localhost:13100")
+PROMETHEUS_URL = os.getenv("PROMETHEUS_URL", "http://localhost:9090")
+TEMPO_URL = os.getenv("TEMPO_URL", "http://localhost:3200")
+LOKI_URL = os.getenv("LOKI_URL", "http://localhost:3100")
 
 CHECKS_PASSED = 0
 CHECKS_FAILED = 0

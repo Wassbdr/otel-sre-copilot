@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Start kubectl port-forwards for Prometheus, Tempo, Loki.
-# Run once after `make up`. Forwards survive until the shell/session ends.
+# Only needed when the kind NodePort mappings (9090/3200/3100) are unavailable, e.g. a remote
+# cluster. Then export PROMETHEUS_URL=http://localhost:19090 TEMPO_URL=... LOKI_URL=...
 set -euo pipefail
 
 CONTEXT="${KUBE_CONTEXT:-kind-otel-sre-copilot}"

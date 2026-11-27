@@ -43,7 +43,7 @@ up:
 	helm repo add chaos-mesh https://charts.chaos-mesh.org 2>/dev/null || true
 	helm repo update
 	@echo "==> Installing Prometheus"
-	helm upgrade --install prometheus prometheus-community/kube-prometheus-stack \
+	helm upgrade --install prometheus prometheus-community/prometheus \
 		--namespace monitoring --create-namespace \
 		--values infra/helm/prometheus-values.yaml \
 		--wait --timeout 5m
@@ -57,6 +57,11 @@ up:
 		--namespace monitoring \
 		--values infra/helm/loki-values.yaml \
 		--wait --timeout 3m
+	@echo "==> Pinning NodePorts to the kind host mappings (9090/3200/3100)"
+	kubectl -n monitoring patch svc tempo \
+		-p '{"spec":{"type":"NodePort","ports":[{"port":3200,"nodePort":30200}]}}'
+	kubectl -n monitoring patch svc loki \
+		-p '{"spec":{"type":"NodePort","ports":[{"port":3100,"nodePort":30100}]}}'
 	@echo "==> Deploying OTel Collector"
 	kubectl apply -f infra/collector/otelcol-config.yaml
 	kubectl apply -f infra/collector/otelcol-daemonset.yaml
