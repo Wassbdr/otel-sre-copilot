@@ -59,7 +59,7 @@
         "sum(rate(calls_total{service_name=\"flagd\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)"
       ],
       "result_excerpt": "error_rate: window mean vs pre-incident baseline, most anomalous first\n  frontend         z=   >1000  window=0.1011  baseline=0\u00b10  promql: sum(rate(calls_total{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)\n  flagd            z=   +2.99  window=0.008708  baseline=0.0006717\u00b10.0027  promql: sum(rate(calls_total{service_name=\"flagd\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)\n  cart             z=   +0.00  window=0  baseline=0\u00b10  promql: sum(rate(calls_total{service_name=\"cart\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)\n  checkout         z=   +0.00  window=0  baseline=0\u00b10  promql: sum(rate(calls_total{service_name=\"checkout\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)\n  currency         z=   +0.00  window=0  baseline=0\u00b10  promql: sum(rate(calls_total{service_name=\"currency\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)\n  email            z=   +0.00  window=0  baseline=0\u00b10  promql: sum(rate(calls_total{service_name=\"email\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}",
-      "elapsed_s": 0.003
+      "elapsed_s": 0.002
     },
     {
       "iteration": 2,
@@ -117,7 +117,7 @@
         "sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"flagd-.*\"}[2m]))"
       ],
       "result_excerpt": "cpu_usage: window mean vs pre-incident baseline, most anomalous first\n  product-catalog  z=   +0.11  window=0.04725  baseline=0.04685\u00b10.0037  promql: sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"product-catalog-.*\"}[2m]))\n  recommendation   z=   +0.05  window=0.02246  baseline=0.02237\u00b10.0017  promql: sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"recommendation-.*\"}[2m]))\n  frontend         z=   -0.38  window=0.1005  baseline=0.1028\u00b10.0062  promql: sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"frontend-.*\"}[2m]))\n  load-generator   z=   -0.41  window=0.7259  baseline=0.7506\u00b10.061  promql: sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"load-generator-.*\"}[2m]))\n  email            z=   -0.41  window=0.002032  baseline=0.002278\u00b10.0006  promql: sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"email-.*\"}[2m]))\n  flagd            z=   -0.60  window=0.008845  baseline=0.009367\u00b10.00087  promql: sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"flagd-.*\"}[2m]))\n  quote            z=   -0.68  window=0.001337  baseline=0.001475\u00b10.0002  promql: sum(rate(",
-      "elapsed_s": 0.002
+      "elapsed_s": 0.001
     },
     {
       "iteration": 4,
@@ -175,10 +175,25 @@
         "max(increase(kube_pod_container_status_restarts_total{namespace=\"otel-demo\",pod=~\"flagd-.*\"}[5m])) or vector(0)"
       ],
       "result_excerpt": "pod_restarts: window mean vs pre-incident baseline, most anomalous first\n  checkout         z=   >1000  window=0.8841  baseline=0\u00b10  promql: max(increase(kube_pod_container_status_restarts_total{namespace=\"otel-demo\",pod=~\"checkout-.*\"}[5m])) or vector(0)\n  frontend         z=   +0.00  window=0  baseline=0\u00b10  promql: max(increase(kube_pod_container_status_restarts_total{namespace=\"otel-demo\",pod=~\"frontend-.*\"}[5m])) or vector(0)\n  cart             z=   +0.00  window=0  baseline=0\u00b10  promql: max(increase(kube_pod_container_status_restarts_total{namespace=\"otel-demo\",pod=~\"cart-.*\"}[5m])) or vector(0)\n  currency         z=   +0.00  window=0  baseline=0\u00b10  promql: max(increase(kube_pod_container_status_restarts_total{namespace=\"otel-demo\",pod=~\"currency-.*\"}[5m])) or vector(0)\n  email            z=   +0.00  window=0  baseline=0\u00b10  promql: max(increase(kube_pod_container_status_restarts_total{namespace=\"otel-demo\",pod=~\"email-.*\"}[5m])) or vector(0)\n  payment          z=   +0.00  window=0  baseline=0\u00b10  promql: max(increase(kube_pod_container_status_restarts_total{namespace=\"otel-demo\",pod=~\"payment-.*\"}[5m])) or vector(0)\n  product-catalog  z=   +0.00  window=0  baseline=0\u00b10  promql:",
-      "elapsed_s": 0.006
+      "elapsed_s": 0.001
     },
     {
       "iteration": 6,
+      "tool_name": "get_pod_events",
+      "args": {
+        "namespace": "otel-demo",
+        "pod_name_prefix": "checkout",
+        "since_seconds": 300
+      },
+      "result_preview": "K8s events:\n  Created: Created container checkout (count=3)\n  Started: Started container checkout (count=3)\n  Killing: Container checkout definition changed, will be restarted (count=2)\n  Pulling: Pul",
+      "query_or_id": [
+        "k8s_events:otel-demo/checkout"
+      ],
+      "result_excerpt": "K8s events:\n  Created: Created container checkout (count=3)\n  Started: Started container checkout (count=3)\n  Killing: Container checkout definition changed, will be restarted (count=2)\n  Pulling: Pulling image \"gcr.io/google-containers/pause:latest\" (count=1)\n  Pulled: Successfully pulled image \"gcr.io/google-containers/pause:latest\" in 944ms (944ms including waiting). Image size: 72335  (count=1)\n  Pulled: Container image \"ghcr.io/open-telemetry/demo:3.1.0-checkout\" already present on machine (count=1)",
+      "elapsed_s": 0.001
+    },
+    {
+      "iteration": 7,
       "tool_name": "search_traces",
       "args": {
         "service_name": "frontend",
@@ -192,21 +207,6 @@
       ],
       "result_excerpt": "[no traces found]",
       "elapsed_s": 0.001
-    },
-    {
-      "iteration": 7,
-      "tool_name": "search_traces",
-      "args": {
-        "service_name": "frontend",
-        "start": "2026-11-27T05:58:26.552542+00:00",
-        "end": "2026-11-27T06:05:26.751135+00:00"
-      },
-      "result_preview": "[no traces found]",
-      "query_or_id": [
-        "search_traces:frontend"
-      ],
-      "result_excerpt": "[no traces found]",
-      "elapsed_s": 0.0
     },
     {
       "iteration": 8,
@@ -222,20 +222,20 @@
         "search_traces:checkout"
       ],
       "result_excerpt": "[no traces found]",
-      "elapsed_s": 0.001
+      "elapsed_s": 0.0
     },
     {
       "iteration": 9,
       "tool_name": "query_loki",
       "args": {
-        "logql": "{namespace=\"otel-demo\"} |= \"error\" | service_name=\"frontend\"",
+        "logql": "{service_name=\"checkoutservice\"} |= \"error\"",
         "start": "2026-11-27T05:58:26.552542+00:00",
         "end": "2026-11-27T06:05:26.751135+00:00",
         "limit": 100
       },
       "result_preview": "[no logs found]",
       "query_or_id": [
-        "{namespace=\"otel-demo\"} |= \"error\" | service_name=\"frontend\""
+        "{service_name=\"checkoutservice\"} |= \"error\""
       ],
       "result_excerpt": "[no logs found]",
       "elapsed_s": 0.001
@@ -243,48 +243,78 @@
   ],
   "report": {
     "incident_id": "INC-48509879",
-    "investigation_start_ts": "2026-11-27T06:50:27.357077+00:00",
-    "investigation_end_ts": "2026-11-27T06:53:08.778874+00:00",
+    "investigation_start_ts": "2026-11-27T08:16:06.589478+00:00",
+    "investigation_end_ts": "2026-11-27T08:19:29.100312+00:00",
     "root_causes": [
       {
         "rank": 1,
         "service": "checkout",
         "fault_type": "pod_crash",
-        "description": "Checkout service experiencing massive pod restarts (z>1000) causing downstream frontend errors and cascading failures across dependent services. The pod crashes are the root cause, with frontend error_rate anomaly (z>1000) being a propagated symptom per the service topology where frontend depends on checkout.",
-        "confidence": 0.96,
+        "description": "Extreme pod restarts (z=>1000) in checkout service caused frontend error_rate spike (z=>1000) and downstream impacts across the microservices chain",
+        "confidence": 0.95,
         "evidence": [
           {
             "signal_type": "metric",
             "query_or_id": "max(increase(kube_pod_container_status_restarts_total{namespace=\"otel-demo\",pod=~\"checkout-.*\"}[5m])) or vector(0)",
-            "observed_value": "pod_restarts z>1000 at 2026-11-27T05:58:26+00:00",
-            "expected_baseline": "pod_restarts < 0.01 (p99 last 24h)"
+            "observed_value": "pod_restarts z=>1000 at 05:58-06:05",
+            "expected_baseline": "pod_restarts < 0.01 (pre-incident baseline)"
           },
           {
             "signal_type": "metric",
             "query_or_id": "sum(rate(calls_total{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
-            "observed_value": "frontend error_rate z>1000 at 2026-11-27T05:58:26+00:00",
+            "observed_value": "frontend error_rate z=>1000 at 05:58-06:05",
             "expected_baseline": "error_rate < 0.01 (p99 last 24h)"
+          }
+        ]
+      },
+      {
+        "rank": 2,
+        "service": "product-catalog",
+        "fault_type": "high_latency",
+        "description": "P99 latency spike (z=+6.48) in product-catalog service observed during incident window, potentially independent or compounding the checkout failure",
+        "confidence": 0.75,
+        "evidence": [
+          {
+            "signal_type": "metric",
+            "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"product-catalog\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+            "observed_value": "p99_latency_ms z=+6.48 at 05:58-06:05",
+            "expected_baseline": "p99_latency_ms < 25.59 (pre-incident baseline)"
+          }
+        ]
+      },
+      {
+        "rank": 3,
+        "service": "payment",
+        "fault_type": "memory_stress",
+        "description": "Very high memory usage (z=+5.97) in payment service observed during incident window, may contribute to instability",
+        "confidence": 0.65,
+        "evidence": [
+          {
+            "signal_type": "metric",
+            "query_or_id": "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"payment-.*\"})",
+            "observed_value": "payment memory_usage z=+5.97 at 05:58-06:05",
+            "expected_baseline": "memory < 1.212e+08 (pre-incident baseline)"
           }
         ]
       }
     ],
     "remediation_steps": [
-      "Restart checkout pods immediately to restore service availability",
-      "Investigate root cause of pod restarts (OOM, crashloop, or resource pressure) and apply permanent fix"
+      "Restart checkout pods immediately to stabilize the service and stop the restart storm",
+      "Investigate the container definition change that triggered the 2 checkout container restarts; roll back any recent deployment changes"
     ],
     "fault_type_classification": "pod_crash",
     "grounding_score": 1.0,
-    "latency_s": 146.421797,
+    "latency_s": 29.45341424699774,
     "cost_usd": 0.0,
-    "total_prompt_tokens": 75509,
-    "total_completion_tokens": 5824,
+    "total_prompt_tokens": 76177,
+    "total_completion_tokens": 4186,
     "llm_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
-    "agent_version": "0.1.0"
+    "agent_version": "0.2.0"
   },
   "grounding": {
     "score": 1.0,
-    "verified": 2,
-    "total": 2,
+    "verified": 4,
+    "total": 4,
     "failed_items": []
   },
   "metrics": {
@@ -296,19 +326,21 @@
     "accuracy_at_1": 1,
     "accuracy_at_3": 1,
     "mrr": 1.0,
+    "service_at_1": 1,
+    "service_at_3": 1,
     "fault_type_correct": 1,
     "grounding_score": 1.0,
-    "latency_s": 146.421797,
+    "latency_s": 29.45341424699774,
     "cost_usd": 0.0,
-    "prompt_tokens": 75509,
-    "completion_tokens": 5824,
-    "total_tokens": 81333,
+    "prompt_tokens": 76177,
+    "completion_tokens": 4186,
+    "total_tokens": 80363,
     "hallucination_warning": false,
     "repeat": 0,
     "llm_calls": 11,
     "tool_calls": 10,
-    "rate_limit_wait_s": 15.0
+    "rate_limit_wait_s": 173.05741975300225
   },
-  "recorded_in_run": "bench-20261127",
+  "recorded_in_run": "bench-20261127b",
   "repeat": 0
 }

@@ -15,6 +15,14 @@ make demo                 # replays a recorded investigation: no API key, no clu
 ## Key results
 
 <!-- benchmark:start (written by python -m eval.report) -->
+| Method | Top-1 | Top-3 | Service top-1 / top-3 | Grounding | Latency / incident | Tokens / incident |
+|---|---|---|---|---|---|---|
+| **SRE-Copilot agent (LLM)** | 36% ± 12 | 48% ± 7 | 62% / 86% | 0.97 | 54.8 s | 85,770 |
+| Composite z-score (5 signals) | 29% | 50% | 43% / 93% | n/a | 0 ms | 0 |
+| Z-score on error_rate | 0% | 14% | 14% / 50% | n/a | 0 ms | 0 |
+| Random | 0% | 0% | 0% / 29% | n/a | 0 ms | 0 |
+
+<sub>14 replayed Chaos Mesh snapshots (7 scenarios × seeds 42, 7) of the OpenTelemetry Astronomy Shop; agent = `nvidia/nemotron-3.5-lightning-30b-a3b` via NVIDIA NIM, temperature 0, 3 runs per snapshot; baseline RANDOM_SEED=42; x86_64 8 vCPU, Linux, no GPU. Run `bench-20261127b`, full tables in [results/benchmark.md](results/benchmark.md).</sub>
 <!-- benchmark:end -->
 
 Agent rows are means over 3 runs per snapshot (± = standard deviation across runs). Baselines are deterministic. Regenerate with `make benchmark` (needs a key) or re-report the committed run with `bash showcase/make_showcase.sh`.

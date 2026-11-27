@@ -26,8 +26,8 @@ def main(summary_path: Path, out: Path) -> None:
     fig.text(0.04, 0.93,
              "otel-sre-copilot — LLM agent vs. anomaly baselines on Kubernetes incidents",
              fontsize=19, weight="bold")
-    fig.text(0.04, 0.885, "Which service caused the incident? Root-cause accuracy per Chaos Mesh "
-             "scenario (solid = top-1, light = top-3)", fontsize=12.5, color="#374151")
+    fig.text(0.04, 0.885, "Exact root cause (service + fault type) per Chaos Mesh scenario, "
+             "solid = top-1, light = top-3", fontsize=12.5, color="#374151")
 
     ax = fig.add_axes((0.06, 0.25, 0.66, 0.58))
     n_m = len(METHODS)
@@ -42,7 +42,7 @@ def main(summary_path: Path, out: Path) -> None:
             ax.bar(x, d["accuracy_at_1"] or 0, width * 0.92, color=color)
     labels = [f"{d['ground_truth']['service']}\n{d['ground_truth']['fault_type']}"
               for _n, d in scen]
-    ax.set_xticks(range(len(scen)), labels, fontsize=10)
+    ax.set_xticks(range(len(scen)), labels, fontsize=9)
     ax.set_ylim(0, 1.05)
     ax.set_yticks([0, 0.25, 0.5, 0.75, 1.0], ["0%", "25%", "50%", "75%", "100%"])
     ax.spines[["top", "right"]].set_visible(False)

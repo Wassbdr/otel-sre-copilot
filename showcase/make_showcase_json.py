@@ -24,10 +24,16 @@ def main(summary_path: Path) -> None:
     if agent:
         std1 = agent.get("accuracy_at_1_std_across_repeats")
         results += [
-            {"label": "Agent top-1 root-cause accuracy",
+            {"label": "Agent top-1 root-cause accuracy (service + fault type)",
              "value": pct(agent["accuracy_at_1"]) + (f" ± {std1 * 100:.0f} pts" if std1 else ""),
              "command": bench, "setup": setup},
-            {"label": "Agent top-3 root-cause accuracy", "value": pct(agent["accuracy_at_3"]),
+            {"label": "Agent top-3 root-cause accuracy (service + fault type)",
+             "value": pct(agent["accuracy_at_3"]), "command": bench, "setup": setup},
+            {"label": "Agent faulty-service top-1 / top-3 (composite z-score: "
+                      f"{pct(m['composite_zscore']['service_at_1'])} / "
+                      f"{pct(m['composite_zscore']['service_at_3'])})"
+                      if "composite_zscore" in m else "Agent faulty-service top-1 / top-3",
+             "value": f"{pct(agent['service_at_1'])} / {pct(agent['service_at_3'])}",
              "command": bench, "setup": setup},
             {"label": "Agent grounding score (cited evidence matched to real tool calls)",
              "value": f"{agent['grounding_score']:.2f}", "command": bench, "setup": setup},

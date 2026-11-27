@@ -1,0 +1,95 @@
+{
+  "slug": "otel-sre-copilot",
+  "title": "OTel SRE-Copilot",
+  "tagline": "An LLM agent that investigates Kubernetes incidents from OpenTelemetry metrics, traces and logs, and proves every piece of evidence it cites.",
+  "problem": "During an incident an on-call engineer has to correlate dashboards, traces, logs and Kubernetes events across a dozen services before finding the one that broke. LLM agents promise to automate this, but they are rarely measured against simple anomaly-detection baselines and they can invent evidence.",
+  "approach": "A LangGraph tool-calling agent queries Prometheus, Tempo, Loki and Kubernetes events through one DataSource interface, under a token budget, and returns ranked root causes with cited evidence. An external verifier checks each citation against the tool calls really made. Faults are injected with Chaos Mesh on the OpenTelemetry Astronomy Shop, recorded as replayable snapshots, and scored against random and z-score baselines.",
+  "stack": [
+    "Python",
+    "LangGraph",
+    "LangChain",
+    "NVIDIA NIM (OpenAI-compatible)",
+    "OpenTelemetry",
+    "Prometheus",
+    "Grafana Tempo",
+    "Grafana Loki",
+    "Kubernetes",
+    "kind",
+    "Helm",
+    "Chaos Mesh",
+    "Pydantic",
+    "Rich"
+  ],
+  "demo": {
+    "gif": "showcase/demo.gif",
+    "mp4": "showcase/demo.mp4",
+    "poster": "showcase/poster.png",
+    "kind": "replay",
+    "caption": "Replay of a recorded agent run on the checkout pod-crash incident: each Prometheus/Tempo/Loki/Kubernetes tool call, the ranked root causes, the cited evidence with the grounding verifier's verdict, and the Chaos Mesh ground truth."
+  },
+  "reproduce": [
+    "git clone https://github.com/Wassbdr/otel-sre-copilot",
+    "cd otel-sre-copilot",
+    "pip install -e .",
+    "make demo",
+    "NIM_API_KEY=... make benchmark"
+  ],
+  "results": [
+    {
+      "label": "Agent top-1 root-cause accuracy (service + fault type)",
+      "value": "36% \u00b1 12 pts",
+      "command": "python -m eval.report --run-id bench-20261127b  (re-measure: make benchmark)",
+      "setup": "14 replayed Chaos Mesh snapshots (7 scenarios \u00d7 seeds 42, 7) of the OpenTelemetry Astronomy Shop; agent = `nvidia/nemotron-3.5-lightning-30b-a3b` via NVIDIA NIM, temperature 0, 3 runs per snapshot; baseline RANDOM_SEED=42; x86_64 8 vCPU, Linux, no GPU."
+    },
+    {
+      "label": "Agent top-3 root-cause accuracy (service + fault type)",
+      "value": "48%",
+      "command": "python -m eval.report --run-id bench-20261127b  (re-measure: make benchmark)",
+      "setup": "14 replayed Chaos Mesh snapshots (7 scenarios \u00d7 seeds 42, 7) of the OpenTelemetry Astronomy Shop; agent = `nvidia/nemotron-3.5-lightning-30b-a3b` via NVIDIA NIM, temperature 0, 3 runs per snapshot; baseline RANDOM_SEED=42; x86_64 8 vCPU, Linux, no GPU."
+    },
+    {
+      "label": "Agent faulty-service top-1 / top-3 (composite z-score: 43% / 93%)",
+      "value": "62% / 86%",
+      "command": "python -m eval.report --run-id bench-20261127b  (re-measure: make benchmark)",
+      "setup": "14 replayed Chaos Mesh snapshots (7 scenarios \u00d7 seeds 42, 7) of the OpenTelemetry Astronomy Shop; agent = `nvidia/nemotron-3.5-lightning-30b-a3b` via NVIDIA NIM, temperature 0, 3 runs per snapshot; baseline RANDOM_SEED=42; x86_64 8 vCPU, Linux, no GPU."
+    },
+    {
+      "label": "Agent grounding score (cited evidence matched to real tool calls)",
+      "value": "0.97",
+      "command": "python -m eval.report --run-id bench-20261127b  (re-measure: make benchmark)",
+      "setup": "14 replayed Chaos Mesh snapshots (7 scenarios \u00d7 seeds 42, 7) of the OpenTelemetry Astronomy Shop; agent = `nvidia/nemotron-3.5-lightning-30b-a3b` via NVIDIA NIM, temperature 0, 3 runs per snapshot; baseline RANDOM_SEED=42; x86_64 8 vCPU, Linux, no GPU."
+    },
+    {
+      "label": "Agent latency / tokens per investigation",
+      "value": "54.8 s / 85,770 tokens",
+      "command": "python -m eval.report --run-id bench-20261127b  (re-measure: make benchmark)",
+      "setup": "14 replayed Chaos Mesh snapshots (7 scenarios \u00d7 seeds 42, 7) of the OpenTelemetry Astronomy Shop; agent = `nvidia/nemotron-3.5-lightning-30b-a3b` via NVIDIA NIM, temperature 0, 3 runs per snapshot; baseline RANDOM_SEED=42; x86_64 8 vCPU, Linux, no GPU."
+    },
+    {
+      "label": "Composite z-score baseline top-1 / top-3",
+      "value": "29% / 50%",
+      "command": "python -m eval.scenario_runner --mode baselines-only",
+      "setup": "14 replayed Chaos Mesh snapshots (7 scenarios \u00d7 seeds 42, 7) of the OpenTelemetry Astronomy Shop; agent = `nvidia/nemotron-3.5-lightning-30b-a3b` via NVIDIA NIM, temperature 0, 3 runs per snapshot; baseline RANDOM_SEED=42; x86_64 8 vCPU, Linux, no GPU."
+    },
+    {
+      "label": "Error-rate z-score baseline top-1 / top-3",
+      "value": "0% / 14%",
+      "command": "python -m eval.scenario_runner --mode baselines-only",
+      "setup": "14 replayed Chaos Mesh snapshots (7 scenarios \u00d7 seeds 42, 7) of the OpenTelemetry Astronomy Shop; agent = `nvidia/nemotron-3.5-lightning-30b-a3b` via NVIDIA NIM, temperature 0, 3 runs per snapshot; baseline RANDOM_SEED=42; x86_64 8 vCPU, Linux, no GPU."
+    },
+    {
+      "label": "Random baseline top-1 / top-3",
+      "value": "0% / 0%",
+      "command": "python -m eval.scenario_runner --mode baselines-only",
+      "setup": "14 replayed Chaos Mesh snapshots (7 scenarios \u00d7 seeds 42, 7) of the OpenTelemetry Astronomy Shop; agent = `nvidia/nemotron-3.5-lightning-30b-a3b` via NVIDIA NIM, temperature 0, 3 runs per snapshot; baseline RANDOM_SEED=42; x86_64 8 vCPU, Linux, no GPU."
+    }
+  ],
+  "limits": [
+    "14 snapshots of 7 single-fault scenarios on one demo app: too small to generalise, and seeds only change the capture time.",
+    "Snapshots are replayed, so the agent cannot run queries outside the captured set (unknown PromQL falls back to the closest recorded series).",
+    "LLM runs are not bit-reproducible even at temperature 0; variance is reported over 3 runs per snapshot.",
+    "Single model measured (NIM free tier); no multi-fault or cascading incidents."
+  ],
+  "role": "TODO",
+  "repo": "https://github.com/Wassbdr/otel-sre-copilot"
+}

@@ -14,5 +14,5 @@ Hide
 Type "source .venv/bin/activate 2>/dev/null; export PS1='$ '; clear" Enter
 Show
 Type "make demo" Sleep 300ms Enter
-Sleep 28s
-Sleep 4s
+Sleep 16s
+Sleep 5s
