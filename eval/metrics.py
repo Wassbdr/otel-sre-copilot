@@ -6,6 +6,7 @@ Metrics are never self-reported by the agent — this module is the single sourc
 Metrics:
   accuracy_at_k(k)   — fraction where correct (service, fault_type) is in top-k
   mrr                — mean reciprocal rank of correct hypothesis
+  service_at_k(k)    — fraction where the faulty service is in top-k, fault type ignored
   fault_type_accuracy — fraction where top-1 fault_type matches ground truth
   mean_latency_s     — mean wall-clock investigation latency
   total_cost_usd     — total cost across all scenarios
@@ -120,6 +121,7 @@ def compute_per_scenario(sr: ScenarioResult) -> dict[str, object]:
             rank = i + 1
             break
 
+    services = [h.service for h in rc[:3]]
     return {
         "scenario_id": sr.scenario_id,
         "ground_truth_service": gt_service,
@@ -129,6 +131,8 @@ def compute_per_scenario(sr: ScenarioResult) -> dict[str, object]:
         "accuracy_at_1": 1 if rank == 1 else 0,
         "accuracy_at_3": 1 if rank is not None else 0,
         "mrr": 1.0 / rank if rank else 0.0,
+        "service_at_1": 1 if services[:1] == [gt_service] else 0,
+        "service_at_3": 1 if gt_service in services else 0,
         "fault_type_correct": 1 if rc and rc[0].fault_type == gt_fault else 0,
         "grounding_score": sr.grounding_score,
         "latency_s": sr.report.latency_s,

@@ -76,6 +76,8 @@ def _agg(runs: list[dict[str, Any]]) -> dict[str, Any]:
         "accuracy_at_1": _mean(col("accuracy_at_1")),
         "accuracy_at_3": _mean(col("accuracy_at_3")),
         "mrr": _mean(col("mrr")),
+        "service_at_1": _mean(col("service_at_1")),
+        "service_at_3": _mean(col("service_at_3")),
         "fault_type_accuracy": _mean(col("fault_type_correct")),
         "grounding_score": _mean(col("grounding_score")),
         "latency_s": _mean(col("latency_s")),
@@ -127,7 +129,7 @@ def summarize(raw: list[dict[str, Any]]) -> dict[str, Any]:
             runs = _runs(row, m)
             if runs:
                 entry[m] = {
-                    "top1": [r.get("predicted_service_top1") for r in runs],
+                    "top1": [r.get("predicted_service") for r in runs],
                     "accuracy_at_1": _mean([float(r["accuracy_at_1"]) for r in runs]),
                     "accuracy_at_3": _mean([float(r["accuracy_at_3"]) for r in runs]),
                 }
@@ -157,8 +159,9 @@ def _pm(mean: float | None, std: float | None) -> str:
 
 def headline_table(summary: dict[str, Any]) -> str:
     lines = [
-        "| Method | Top-1 | Top-3 | Grounding | Latency / incident | Tokens / incident |",
-        "|---|---|---|---|---|---|",
+        "| Method | Top-1 | Top-3 | Service top-1 / top-3 | Grounding | Latency / incident "
+        "| Tokens / incident |",
+        "|---|---|---|---|---|---|---|",
     ]
     for m in METHODS:
         a = summary["methods"].get(m)
@@ -172,7 +175,8 @@ def headline_table(summary: dict[str, Any]) -> str:
             f"{(a['latency_s'] or 0) * 1000:.0f} ms")
         tokens = f"{a['tokens_per_investigation']:,.0f}" if is_agent else "0"
         name = f"**{LABELS[m]}**" if is_agent else LABELS[m]
-        lines.append(f"| {name} | {top1} | {top3} | {grounding} | {latency} | {tokens} |")
+        svc = f"{_fmt(a.get('service_at_1'), True)} / {_fmt(a.get('service_at_3'), True)}"
+        lines.append(f"| {name} | {top1} | {top3} | {svc} | {grounding} | {latency} | {tokens} |")
     return "\n".join(lines)
 
 

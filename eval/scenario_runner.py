@@ -188,6 +188,21 @@ def _run_baselines(
     return results
 
 
+def _metrics_from_trace(trace_path: Path) -> dict[str, Any]:
+    """Re-score a recorded run with the current metric code (keeps run-time fields)."""
+    from eval.metrics import ScenarioResult, compute_per_scenario
+    from src.agent.schemas import InvestigationReport
+
+    trace = json.loads(trace_path.read_text())
+    sr = ScenarioResult(
+        scenario_id=trace["scenario_id"],
+        report=InvestigationReport.model_validate(trace["report"]),
+        ground_truth=trace["ground_truth"],
+        grounding_score=trace["grounding"]["score"],
+    )
+    return {**trace["metrics"], **compute_per_scenario(sr)}
+
+
 def discover_snapshots(scenario_dir: Path) -> list[Path]:
     """All snapshots (every seed) of the scenarios defined in scenario_dir, sorted."""
     snapshot_dirs: list[Path] = []
@@ -249,7 +264,7 @@ def run_all(
                     done = (_ARTIFACTS_DIR / run_id / "scenarios" / str(row["scenario_id"])
                             / f"rep{k}" / "trace.json")
                     if done.exists():  # resume: a rerun with the same --run-id skips it
-                        runs.append(json.loads(done.read_text())["metrics"])
+                        runs.append(_metrics_from_trace(done))
                         continue
                     try:
                         runs.append(run_scenario(snap_dir, mode="replay", run_id=run_id,
