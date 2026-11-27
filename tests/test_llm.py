@@ -85,3 +85,38 @@ def test_graph_runs_end_to_end_with_fake_llm(monkeypatch: pytest.MonkeyPatch) ->
     assert any(e["type"] == "tool_call" for e in events)
     # The fake cites exactly the PromQL it ran, so the external verifier must accept it.
     assert verify(report, result["tool_calls_log"]).grounding_score == 1.0
+
+
+class RateLimitError(Exception):
+    pass
+
+
+class _Flaky:
+    def __init__(self, failures: int, exc: type[Exception] = RateLimitError) -> None:
+        self.failures, self.exc, self.calls = failures, exc, 0
+
+    def invoke(self, messages: object) -> str:
+        self.calls += 1
+        if self.calls <= self.failures:
+            raise self.exc("429")
+        return "ok"
+
+
+def test_backoff_waits_out_rate_limits(monkeypatch: pytest.MonkeyPatch) -> None:
+    from src.agent import llm
+
+    monkeypatch.setattr("time.sleep", lambda s: None)
+    llm.rate_limit_wait_s(reset=True)
+    model = _Flaky(failures=2)
+    assert llm.invoke_with_backoff(model, []) == "ok"
+    assert model.calls == 3
+
+
+def test_backoff_does_not_retry_real_errors(monkeypatch: pytest.MonkeyPatch) -> None:
+    from src.agent import llm
+
+    monkeypatch.setattr("time.sleep", lambda s: None)
+    model = _Flaky(failures=1, exc=ValueError)
+    with pytest.raises(ValueError):
+        llm.invoke_with_backoff(model, [])
+    assert model.calls == 1
