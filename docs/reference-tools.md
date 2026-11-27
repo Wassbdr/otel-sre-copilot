@@ -21,13 +21,19 @@ stream, and its Tempo client fetched a five-batch trace. LiteLLM resolved the
 model string `nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b` to provider
 `nvidia_nim` and the same benchmark model.
 
-The connection checks did not invoke an LLM. To configure the reference, point
-`holmes ask --config benchmarks/holmes-replay.yaml` at the sample window in
-`metadata.json` and use `--model nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b`.
-LiteLLM uses `NVIDIA_NIM_API_KEY`. No live HolmesGPT investigation was attempted:
-the current NIM budget is reserved for the three local variants, and the
-standalone HolmesGPT CLI does not go through this project's limiter or cache.
-No HolmesGPT accuracy score is available.
+To score HolmesGPT with the other methods, point `HOLMES_PYTHON` at the
+interpreter in the HolmesGPT environment, set `NIM_API_KEY` and run:
+
+```bash
+make bench BENCH_RUN_ID=round2-holmes BENCH_METHODS='agent react agent_no_prior holmes'
+```
+
+HolmesGPT uses the same NIM model and runs once per snapshot, in the first
+repeat. Its Prometheus, Loki and Tempo tools use a fresh loopback replay
+server. LiteLLM sends model requests through that server to the same cache
+and adaptive limiter as the other benchmark methods. The standalone HolmesGPT
+CLI does not use that limiter. The scorer checks citations against successful
+replay queries and trace IDs, not against the model's account of its calls.
 
 ## k8sgpt v0.4.41
 

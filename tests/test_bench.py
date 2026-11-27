@@ -134,11 +134,12 @@ def test_live_methods_interleave_for_each_snapshot_and_repeat(
 
     monkeypatch.setattr(bench, "_measure", measure)
     args = argparse.Namespace(
-        methods=["agent_no_prior", "react", "agent"], run_id="live", repeats=2,
+        methods=["agent_no_prior", "react", "agent", "holmes"], run_id="live", repeats=2,
         scenario_dir=[], split="development", output_dir=tmp_path, change="Test",
     )
     assert bench.run(args)
     assert observed == [
         (str(snapshot["path"]), method, repeat) for snapshot in snapshots for repeat in range(2)
-        for method in ("agent", "react", "agent_no_prior")
+        for method in ("agent", "react", "agent_no_prior", "holmes")
+        if method != "holmes" or repeat == 0
     ]

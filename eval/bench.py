@@ -25,12 +25,14 @@ from src.agent.llm import llm_settings
 log = structlog.get_logger()
 LLM_METHODS = ("agent", "react", "agent_no_prior")
 METHODS = LLM_METHODS + BASELINE_METHODS
+METHOD_ORDER = (*BASELINE_METHODS, *LLM_METHODS, "holmes")
 ACCURACY = ("accuracy_at_1", "accuracy_at_3", "service_at_1", "service_at_3")
 MEANS = ACCURACY + ("latency_s", "llm_calls", "total_tokens", "cost_usd", "rate_limit_wait_s")
 LABELS = {
     "agent": "SRE-Copilot",
     "agent_no_prior": "SRE-Copilot without anomaly prior",
     "react": "ReAct without grounding verifier in the agent",
+    "holmes": "HolmesGPT 0.48.0 (1 run per snapshot)",
     "baro": "RCAEval BARO (metrics)",
     "nsigma": "RCAEval N-Sigma (metrics)",
     "zscore": "Error-rate z-score",
@@ -144,6 +146,13 @@ def _measure(
         if json.loads(trace.read_text())["model"] != llm_settings().model:
             raise ValueError("Recorded trace uses a different model; choose a new BENCH_RUN_ID.")
         result = _metrics_from_trace(trace)
+    elif method == "holmes":
+        from eval.holmes import run_holmes
+
+        result = (
+            _metrics_from_trace(trace) if trace.exists()
+            else run_holmes(Path(snapshot["path"]), trace, json.dumps([run_id, method, snapshot]))
+        )
     else:
         mode = "baselines-only" if method in BASELINE_METHODS else "replay"
         result = run_scenario(
@@ -230,7 +239,9 @@ def _report(path: Path, iteration: dict[str, Any]) -> None:
             "Grounding | Citations | Calls/run | Tokens/run | Seconds/run | USD/run |",
             "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
         ])
-        for method in (*LLM_METHODS, "nsigma", "composite_zscore", "baro", "zscore", "random"):
+        for method in (
+            *LLM_METHODS, "holmes", "nsigma", "composite_zscore", "baro", "zscore", "random",
+        ):
             if method not in run["methods"]:
                 continue
             m = run["methods"][method]
@@ -270,7 +281,7 @@ def run(args: argparse.Namespace) -> bool:
     recorded_from = getattr(args, "recorded_from", None)
     if recorded_from and (
         Path(recorded_from).name != recorded_from or recorded_from in {".", "..", args.run_id}
-        or any(method in {"react", "agent_no_prior"} for method in args.methods)
+        or any(method in {"react", "agent_no_prior", "holmes"} for method in args.methods)
         or getattr(args, "snapshot_set_from", None)
     ):
         raise ValueError("Use a different recorded run ID with agent and/or statistical methods.")
@@ -279,11 +290,12 @@ def run(args: argparse.Namespace) -> bool:
         args.repeats, getattr(args, "snapshot_set_from", None), recorded_from,
     )
     rows: dict[str, list[dict[str, Any]]] = {m: [] for m in args.methods}
-    methods_order = [method for method in (*BASELINE_METHODS, *LLM_METHODS) if method in rows]
+    methods_order = [method for method in METHOD_ORDER if method in rows]
 
     def report_progress() -> dict[str, Any]:
         summary = {
-            m: summarize_rows(r, args.repeats, len(setup["snapshots"])) for m, r in rows.items()
+            m: summarize_rows(r, 1 if m == "holmes" else args.repeats, len(setup["snapshots"]))
+            for m, r in rows.items()
         }
         _report(args.output_dir, {
             "run_id": args.run_id, "change": args.change, "setup": setup, "methods": summary,
@@ -294,6 +306,8 @@ def run(args: argparse.Namespace) -> bool:
     for snapshot in setup["snapshots"][:max_snapshots]:
         for repeat in range(args.repeats):
             for method in methods_order:
+                if method == "holmes" and repeat:
+                    continue
                 try:
                     result = _measure(
                         args.run_id, snapshot, method, repeat, setup.get("agent_variant", "agent"),
@@ -315,7 +329,7 @@ def main() -> None:
     parser.add_argument(
         "--split", choices=["development", "held-out", "all"], default="development",
     )
-    parser.add_argument("--methods", nargs="+", choices=METHODS, default=METHODS)
+    parser.add_argument("--methods", nargs="+", choices=(*METHODS, "holmes"), default=METHODS)
     parser.add_argument("--run-id", required=True)
     parser.add_argument("--snapshot-set-from", help="Pin snapshots to an existing run manifest.")
     parser.add_argument("--recorded-from", help="Re-score recorded agent traces without LLM calls.")

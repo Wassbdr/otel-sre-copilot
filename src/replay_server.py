@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+from collections.abc import Callable
 from contextlib import suppress
 from datetime import datetime
 from http import HTTPStatus
@@ -82,6 +83,8 @@ class SnapshotHTTP:
         if path == "/loki/api/v1/query_range":
             if not query:
                 raise ValueError("Specify a captured LogQL query.")
+            if query == '{job="test_endpoint"}':
+                return _result("streams", [])
             entries = [entry for entry in self.loki if entry["logql"] == query]
             if not entries:
                 return _unsupported("LogQL expression was not recorded.")
@@ -105,7 +108,7 @@ class SnapshotHTTP:
             service = param("service.name")
             if expression and expression.strip() != "{}":
                 match = re.fullmatch(
-                    r'\{\s*resource\.service\.name\s*=\s*"([^"]+)"\s*\}', expression,
+                    r'\{\s*(?:resource)?\.service\.name\s*=\s*"([^"]+)"\s*\}', expression,
                 )
                 if not match:
                     return _unsupported("Only a resource.service.name TraceQL filter is supported.")
@@ -143,7 +146,11 @@ def _unsupported(message: str) -> tuple[HTTPStatus, dict[str, Any]]:
     }
 
 
-def make_server(snapshot: Path, host: str, port: int) -> ThreadingHTTPServer:
+def make_server(
+    snapshot: Path, host: str, port: int, *,
+    observe: Callable[[str, dict[str, list[str]], dict[str, Any]], None] | None = None,
+    complete: Callable[[bytes, str], tuple[int, bytes]] | None = None,
+) -> ThreadingHTTPServer:
     replay = SnapshotHTTP(snapshot)
 
     class Handler(BaseHTTPRequestHandler):
@@ -152,6 +159,15 @@ def make_server(snapshot: Path, host: str, port: int) -> ThreadingHTTPServer:
 
         def do_POST(self) -> None:  # noqa: N802
             length = self.headers.get("Content-Length", "0")
+            if complete is not None and self.path == "/v1/chat/completions":
+                if not length.isdecimal() or not 0 < int(length) <= 2**20:
+                    self.send_error(HTTPStatus.BAD_REQUEST)
+                    return
+                status, body = complete(
+                    self.rfile.read(int(length)), self.headers.get("Authorization", ""),
+                )
+                self._write_json(status, body)
+                return
             if not length.isdecimal() or int(length) > 65536:
                 self.send_error(HTTPStatus.BAD_REQUEST)
                 return
@@ -159,11 +175,16 @@ def make_server(snapshot: Path, host: str, port: int) -> ThreadingHTTPServer:
 
         def _respond(self, form: dict[str, list[str]]) -> None:
             url = urlsplit(self.path)
+            params = {**parse_qs(url.query), **form}
             try:
-                status, payload = replay.get(url.path, {**parse_qs(url.query), **form})
+                status, payload = replay.get(url.path, params)
             except (ValueError, OverflowError) as error:
                 status, payload = HTTPStatus.BAD_REQUEST, {"status": "error", "error": str(error)}
-            body = json.dumps(payload).encode()
+            if observe is not None and status == HTTPStatus.OK:
+                observe(url.path, params, payload)
+            self._write_json(status, json.dumps(payload).encode())
+
+        def _write_json(self, status: int, body: bytes) -> None:
             self.send_response(status)
             self.send_header("Content-Type", "application/json")
             self.send_header("Content-Length", str(len(body)))

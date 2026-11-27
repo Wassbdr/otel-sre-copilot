@@ -33,9 +33,18 @@ def test_replay_http_uses_recorded_queries_and_limits_windows() -> None:
                 assert response.is_success
                 assert all(len(stream["values"]) <= 1
                            for stream in response.json()["data"]["result"])
+                probe = client.get("/loki/api/v1/query_range", params={
+                    "query": '{job="test_endpoint"}',
+                })
+                assert probe.json()["data"]["result"] == []
+                assert client.post("/v1/chat/completions", json={}).status_code == 404
 
                 traces = client.get("/api/search", params={"q": "{}", "limit": 1}).json()["traces"]
                 assert len(traces) == 1
+                probe = client.get("/api/search", params={
+                    "q": '{ .service.name = "test-endpoint" }',
+                })
+                assert probe.json()["traces"] == []
                 trace = client.get(f"/api/v2/traces/{traces[0]['traceID']}").json()
                 assert trace["trace"]["batches"]
                 assert client.get("/api/traces/../../metadata").status_code == 404
