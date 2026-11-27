@@ -272,16 +272,24 @@ def combine_rankings(
             selected.append(hypothesis)
             seen.add(key)
 
-    anchor = next((hypothesis for hypothesis in prior if verified(hypothesis)), None)
-    if anchor and _direct_fault_signal(anchor):
-        key = (anchor.service, anchor.fault_type)
-        position = next((i for i, h in enumerate(selected)
-                         if (h.service, h.fault_type) == key), len(selected))
-        if position < len(selected):
-            selected.pop(position)
-        while position and not _direct_fault_signal(selected[position - 1]):
-            position -= 1
-        selected.insert(min(position, 2), anchor)
+    protected = []
+    for hypothesis in prior[:3]:
+        if not verified(hypothesis):
+            continue
+        if not _direct_fault_signal(hypothesis):
+            break
+        protected.append(hypothesis)
+    if protected:
+        direct = [hypothesis for hypothesis in selected if _direct_fault_signal(hypothesis)]
+        indirect = [hypothesis for hypothesis in selected if not _direct_fault_signal(hypothesis)]
+        missing = [hypothesis for hypothesis in protected if hypothesis not in direct]
+        if missing:
+            for i in reversed(range(len(direct))):
+                if len(direct) + len(missing) <= 3:
+                    break
+                if direct[i] not in protected:
+                    direct.pop(i)
+        selected = direct + missing + indirect
 
     ranked = [h.model_copy(update={"rank": i}) for i, h in enumerate(selected[:3], 1)]
     unchanged = bool(ranked and report.root_causes

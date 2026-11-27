@@ -32,8 +32,9 @@ Missing measurements are not treated as normal values. The model can reorder can
 and propose one additional pair with evidence. The full agent drops proposals with missing
 or unverified citations, keeps observed evidence for seeded pairs, and fills any remaining
 top-three slots in prior order. The harness still scores the final report independently.
-When the leading prior candidate has direct fault evidence, it cannot be displaced by
-predictions supported only by indirect signals such as caller errors or reduced traffic.
+Leading prior candidates with direct fault evidence keep their slots within the top three.
+The model can rank these against other directly observed causes; indirect signals such as
+caller errors or reduced traffic cannot displace them.
 The no-prior ablation does not receive candidate pairs and has no fill step. ReAct does not
 run either stage.
 

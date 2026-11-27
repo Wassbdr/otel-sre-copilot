@@ -113,3 +113,15 @@ def test_combine_drops_unknown_refs_allows_one_addition_and_fills() -> None:
         [crash, memory, cpu], observed,
     )
     assert [h.service for h in anchored.root_causes] == ["worker", "edge", "task"]
+
+    corroborated = memory.model_copy(update={"evidence": [
+        *memory.evidence,
+        EvidenceItem(signal_type="metric", query_or_id="metric:pod_restarts:heap",
+                     observed_value="3"),
+    ]})
+    observed.add("metric|metric:pod_restarts:heap")
+    protected = candidates.combine_rankings(
+        report.model_copy(update={"root_causes": [crash, added, cpu]}),
+        [crash, corroborated, cpu], observed,
+    )
+    assert [h.service for h in protected.root_causes] == ["worker", "heap", "edge"]
