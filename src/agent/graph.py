@@ -200,10 +200,23 @@ def build_graph(ds: DataSource, on_event: EventCallback | None = None) -> Any:  
         )
         messages_for_report = messages + [finalize_msg]
 
-        report_llm = make_chat_model(max_tokens=int(os.getenv("LLM_REPORT_MAX_TOKENS", "4096")),
+        report_llm = make_chat_model(max_tokens=int(os.getenv("LLM_REPORT_MAX_TOKENS", "8192")),
                                      json_mode=True)
 
-        response: AIMessage = invoke_with_backoff(report_llm, messages_for_report)
+        try:
+            response: AIMessage = invoke_with_backoff(report_llm, messages_for_report)
+        except Exception as e:
+            # A reasoning model that exhausts max_tokens is a failed investigation, scored as
+            # a miss with the run's real cost, not a crashed benchmark.
+            if "LengthFinishReason" not in type(e).__name__:
+                raise
+            log.error("report_truncated", error=str(e)[:200])
+            usage = getattr(getattr(e, "completion", None), "usage", None)
+            response = AIMessage(content="", usage_metadata={
+                "input_tokens": getattr(usage, "prompt_tokens", 0),
+                "output_tokens": getattr(usage, "completion_tokens", 0),
+                "total_tokens": getattr(usage, "total_tokens", 0),
+            })
         inv_end = datetime.now(UTC).isoformat()
 
         # Parse and validate

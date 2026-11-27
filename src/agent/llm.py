@@ -79,36 +79,41 @@ def make_chat_model(max_tokens: int, json_mode: bool = False) -> Any:  # noqa: A
         base_url=settings.base_url,
         temperature=0,
         max_tokens=max_tokens,  # type: ignore[call-arg]
-        timeout=float(os.getenv("LLM_TIMEOUT_S", "180")),
-        max_retries=int(os.getenv("LLM_MAX_RETRIES", "8")),
+        timeout=float(os.getenv("LLM_TIMEOUT_S", "90")),
+        max_retries=int(os.getenv("LLM_MAX_RETRIES", "2")),
         **kwargs,
     )
 
 
+_TRANSIENT = ("RateLimit", "Timeout", "APIConnectionError", "InternalServerError")
+
+
 def invoke_with_backoff(model: Any, messages: Any) -> Any:
-    """`model.invoke` that waits out provider rate limits (HTTP 429).
+    """`model.invoke` that waits out provider rate limits (429), timeouts and 5xx.
 
     The OpenAI client's own retries back off for seconds; free tiers such as NIM need minutes.
+    Time lost to failed attempts and waits is excluded from the reported latency.
     """
     import time
 
     attempts = int(os.getenv("LLM_RATE_LIMIT_RETRIES", "6"))
     for i in range(attempts + 1):
+        t0 = time.monotonic()
         try:
             return model.invoke(messages)
         except Exception as e:
-            if "RateLimit" not in type(e).__name__ or i == attempts:
+            if not any(k in type(e).__name__ for k in _TRANSIENT) or i == attempts:
                 raise
             wait_s = min(15 * 2**i, 120)
-            log.warning("llm_rate_limited", attempt=i + 1, wait_s=wait_s)
+            log.warning("llm_transient_error", error=type(e).__name__, attempt=i + 1,
+                        wait_s=wait_s)
             time.sleep(wait_s)
-            _waited_s[0] += wait_s
+            _waited_s[0] += time.monotonic() - t0
     raise AssertionError("unreachable")
 
 
-
 def rate_limit_wait_s(reset: bool = False) -> float:
-    """Seconds spent waiting on 429s since the last reset (excluded from reported latency)."""
+    """Seconds lost to provider errors since the last reset (excluded from reported latency)."""
     waited = _waited_s[0]
     if reset:
         _waited_s[0] = 0.0
