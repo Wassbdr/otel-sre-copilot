@@ -1,4 +1,4 @@
-"""Baseline 3: Composite Z-score over 4 signals.
+"""Baseline 3: Composite Z-score over 5 signals.
 
 For each service: Z-scores of error_rate, p99_latency, cpu_usage, memory_usage.
 composite_score = max(z_err, z_lat, z_cpu, z_mem).
@@ -27,7 +27,7 @@ _SIGNAL_TO_FAULT: dict[str, Any] = SIGNAL_TO_FAULT
 
 
 class CompositeZScoreBaseline:
-    """Ranks services by max Z-score across 4 signals. Infers fault type from dominant signal."""
+    """Ranks services by max Z-score across 5 signals. Infers fault type from dominant signal."""
 
     def predict(
         self,

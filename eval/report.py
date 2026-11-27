@@ -26,7 +26,7 @@ _RESULTS_DIR = Path("results")
 METHODS = ["agent", "composite_zscore", "zscore", "random"]
 LABELS = {
     "agent": "SRE-Copilot agent (LLM)",
-    "composite_zscore": "Composite z-score (4 signals)",
+    "composite_zscore": "Composite z-score (5 signals)",
     "zscore": "Z-score on error_rate",
     "random": "Random",
 }
