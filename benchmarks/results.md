@@ -168,3 +168,19 @@ Change against round2-iteration-6:
 | Reference replay comparison: full ReAct tool access, recorded query compatibility and structured HolmesGPT diagnosis | Top-3 | +0.0 pp |
 | Reference replay comparison: full ReAct tool access, recorded query compatibility and structured HolmesGPT diagnosis | Service top-1 | +0.0 pp |
 | Reference replay comparison: full ReAct tool access, recorded query compatibility and structured HolmesGPT diagnosis | Service top-3 | +0.0 pp |
+
+## Newly validated development snapshots: expanded services and third seeds; same methods (round2-new-development)
+
+12 Astronomy Shop snapshots (development); 3 runs per method; nvidia/nemotron-3.5-lightning-30b-a3b; x86_64, 8 vCPU, Linux, no GPU.
+
+| Method | Runs | Top-1 | Top-3 | Service top-1 | Service top-3 | Grounding | Citations | Calls/run | Tokens/run | Seconds/run | USD/run |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| SRE-Copilot | 36/36 | 61.1% | 80.6% | 69.4% | 80.6% | 100.0% | 104 | 3.0 | 9,772 | 5.991 | 0.0000 |
+| ReAct without grounding verifier in the agent | 36/36 | 11.1% | 22.2% | 11.1% | 33.3% | 52.3% | 88 | 11.0 | 47,285 | 41.830 | 0.0000 |
+| SRE-Copilot without anomaly prior | 36/36 | 16.7% | 22.2% | 19.4% | 44.4% | 84.8% | 184 | 3.0 | 8,981 | 9.874 | 0.0000 |
+| HolmesGPT 0.48.0 (1 run per snapshot) | 12/12 | 8.3% | 16.7% | 8.3% | 25.0% | 72.5% | 51 | 9.5 | 418,084 | 103.953 | 0.0000 |
+| RCAEval N-Sigma (metrics) | 36/36 | 33.3% | 50.0% | 50.0% | 66.7% | n/a | 0 | n/a | 0 | 0.007 | 0.0000 |
+| Composite z-score | 36/36 | 16.7% | 50.0% | 33.3% | 75.0% | n/a | 0 | n/a | 0 | 0.005 | 0.0000 |
+| RCAEval BARO (metrics) | 36/36 | 16.7% | 58.3% | 16.7% | 83.3% | n/a | 0 | n/a | 0 | 0.009 | 0.0000 |
+| Error-rate z-score | 36/36 | 0.0% | 8.3% | 8.3% | 33.3% | n/a | 0 | n/a | 0 | 0.001 | 0.0000 |
+| Random | 36/36 | 2.8% | 2.8% | 13.9% | 30.6% | n/a | 0 | n/a | 0 | 0.000 | 0.0000 |

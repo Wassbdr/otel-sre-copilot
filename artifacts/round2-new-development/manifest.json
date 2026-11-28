@@ -1,0 +1,71 @@
+{
+  "model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "base_url": "https://integrate.api.nvidia.com/v1",
+  "repeats": 3,
+  "split": "development",
+  "random_seed": 42,
+  "agent_variant": "agent_full",
+  "snapshots": [
+    {
+      "path": "snapshots/cart-memory_stress-seed23",
+      "scenario_id": "cart-memory_stress-seed23",
+      "sha256": "1e1f842ba679b0b38f2eca1a4bc32f88f91b7c9d3277c97ef234c42cfb9de8f6"
+    },
+    {
+      "path": "snapshots/checkout-pod_crash-seed23",
+      "scenario_id": "checkout-pod_crash-seed23",
+      "sha256": "487f653574cec7c3a764fdc5a42f0264975090521e02b5d684c77a2d969c7427"
+    },
+    {
+      "path": "snapshots/frontend-pod_crash-seed23",
+      "scenario_id": "frontend-pod_crash-seed23",
+      "sha256": "a8c61278e5a31b138d862606d586bb6fd60b0476b71d5b2824cc4ac5231f288a"
+    },
+    {
+      "path": "snapshots/product-catalog-cpu_stress-seed23",
+      "scenario_id": "product-catalog-cpu_stress-seed23",
+      "sha256": "ac5050b24da84d65583fb84b91377e4511f17e67ce2b11c29b2e5c45ca73c53b"
+    },
+    {
+      "path": "snapshots/product-catalog-cpu_stress-seed42",
+      "scenario_id": "product-catalog-cpu_stress-seed42",
+      "sha256": "d489d14a5302d88b1ff3b55c8e56d06ece842bd0353eb958c37001b999373dad"
+    },
+    {
+      "path": "snapshots/product-catalog-cpu_stress-seed7",
+      "scenario_id": "product-catalog-cpu_stress-seed7",
+      "sha256": "9a309878959c838fd8fba0538230a0b734a09b2613d4078952318d0237fa8cfa"
+    },
+    {
+      "path": "snapshots/product-catalog-high_latency-seed23",
+      "scenario_id": "product-catalog-high_latency-seed23",
+      "sha256": "19c9ce4cc7f26e991cb3527de53883172c983d917d82a7a339c59a831d7b78f0"
+    },
+    {
+      "path": "snapshots/quote-http_abort-seed23",
+      "scenario_id": "quote-http_abort-seed23",
+      "sha256": "b2304d837b3a0fadf2ef5f9900cee1ee815e46a9410c8507e4da38740bba73be"
+    },
+    {
+      "path": "snapshots/quote-http_abort-seed42",
+      "scenario_id": "quote-http_abort-seed42",
+      "sha256": "712b095c42c1ff4e0a48a6554d8fd9de7f6b1bb597d705aeda7c04fb8dd90861"
+    },
+    {
+      "path": "snapshots/quote-http_abort-seed7",
+      "scenario_id": "quote-http_abort-seed7",
+      "sha256": "e17426e81daab5c7e96272e84c5de7e73204bac399a3cbe8193545c462e506fd"
+    },
+    {
+      "path": "snapshots/recommendation-cpu_stress-seed23",
+      "scenario_id": "recommendation-cpu_stress-seed23",
+      "sha256": "882a830ceec8e1c777fc8185bbfb32951916bab3a76411c400c2dca740a76595"
+    },
+    {
+      "path": "snapshots/shipping-high_latency-seed23",
+      "scenario_id": "shipping-high_latency-seed23",
+      "sha256": "c3d116194c09a791bb6e1c5d2e88685d116c7426f7bf085cc8752ba3b4848333"
+    }
+  ],
+  "hardware": "x86_64, 8 vCPU, Linux, no GPU"
+}
