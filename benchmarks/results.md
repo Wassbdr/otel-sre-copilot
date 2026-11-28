@@ -184,3 +184,19 @@ Change against round2-iteration-6:
 | RCAEval BARO (metrics) | 36/36 | 16.7% | 58.3% | 16.7% | 83.3% | n/a | 0 | n/a | 0 | 0.009 | 0.0000 |
 | Error-rate z-score | 36/36 | 0.0% | 8.3% | 8.3% | 33.3% | n/a | 0 | n/a | 0 | 0.001 | 0.0000 |
 | Random | 36/36 | 2.8% | 2.8% | 13.9% | 30.6% | n/a | 0 | n/a | 0 | 0.000 | 0.0000 |
+
+## Held-out snapshots: unseen ad pod crashes and currency plus cart two-fault incidents (round2-held-out)
+
+6 Astronomy Shop snapshots (held-out); 3 runs per method; nvidia/nemotron-3.5-lightning-30b-a3b; x86_64, 8 vCPU, Linux, no GPU.
+
+| Method | Runs | Top-1 | Top-3 | Service top-1 | Service top-3 | Grounding | Citations | Calls/run | Tokens/run | Seconds/run | USD/run |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| SRE-Copilot | 18/18 | 63.9% | 86.1% | 63.9% | 86.1% | 100.0% | 55 | 3.0 | 9,932 | 10.366 | 0.0000 |
+| ReAct without grounding verifier in the agent | 18/18 | 5.6% | 8.3% | 8.3% | 16.7% | 66.7% | 48 | 11.1 | 47,231 | 43.696 | 0.0000 |
+| SRE-Copilot without anomaly prior | 18/18 | 0.0% | 8.3% | 0.0% | 8.3% | 86.3% | 95 | 3.0 | 8,903 | 10.640 | 0.0000 |
+| HolmesGPT 0.48.0 (1 run per snapshot) | 6/6 | 0.0% | 50.0% | 0.0% | 75.0% | 100.0% | 26 | 10.0 | 512,568 | 128.708 | 0.0000 |
+| RCAEval N-Sigma (metrics) | 18/18 | 8.3% | 25.0% | 33.3% | 75.0% | n/a | 0 | n/a | 0 | 0.007 | 0.0000 |
+| Composite z-score | 18/18 | 50.0% | 58.3% | 58.3% | 66.7% | n/a | 0 | n/a | 0 | 0.005 | 0.0000 |
+| RCAEval BARO (metrics) | 18/18 | 0.0% | 25.0% | 8.3% | 75.0% | n/a | 0 | n/a | 0 | 0.009 | 0.0000 |
+| Error-rate z-score | 18/18 | 0.0% | 0.0% | 0.0% | 16.7% | n/a | 0 | n/a | 0 | 0.001 | 0.0000 |
+| Random | 18/18 | 0.0% | 0.0% | 0.0% | 8.3% | n/a | 0 | n/a | 0 | 0.000 | 0.0000 |
