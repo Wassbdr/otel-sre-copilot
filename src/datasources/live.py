@@ -1,4 +1,4 @@
-"""LiveDataSource — makes HTTP calls to a running cluster's NodePort backends."""
+"""LiveDataSource makes HTTP calls to a running cluster's NodePort backends."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ log = structlog.get_logger()
 
 # OTel Astronomy Shop 2.x service names. These match `service.name` (set from the pod label
 # app.kubernetes.io/component) and the pod-name prefix `<svc>-<hash>`. The 1.x names
-# (checkoutservice, cartservice, …) are GONE — the demo renamed every service in 2.0.
+# (checkoutservice, cartservice, …) were replaced when the demo renamed every service in 2.0.
 ASTRONOMY_SHOP_SERVICES = [
     "frontend", "cart", "checkout", "currency",
     "email", "payment", "product-catalog",

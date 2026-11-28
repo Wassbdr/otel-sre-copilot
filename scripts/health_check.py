@@ -27,11 +27,11 @@ def check(name: str, url: str, expected_status: int = 200) -> bool:
             CHECKS_PASSED += 1
             return True
         else:
-            print(f"  [FAIL] {name} — HTTP {r.status_code} (expected {expected_status})")
+            print(f"  [FAIL] {name}: HTTP {r.status_code} (expected {expected_status})")
             CHECKS_FAILED += 1
             return False
     except Exception as e:
-        print(f"  [FAIL] {name} — {e}")
+        print(f"  [FAIL] {name}: {e}")
         CHECKS_FAILED += 1
         return False
 
@@ -52,7 +52,7 @@ def check_prometheus_targets() -> bool:
             CHECKS_FAILED += 1
             return False
     except Exception as e:
-        print(f"  [FAIL] Prometheus targets — {e}")
+        print(f"  [FAIL] Prometheus targets: {e}")
         CHECKS_FAILED += 1
         return False
 
@@ -70,17 +70,17 @@ def check_tempo_traces() -> bool:
             return True
         else:
             print("  [WARN] Tempo has no traces yet (loadgenerator may need more time)")
-            # Not a hard failure — loadgenerator might still be warming up
+            # Not a hard failure: loadgenerator might still be warming up
             CHECKS_PASSED += 1
             return True
     except Exception as e:
-        print(f"  [FAIL] Tempo traces — {e}")
+        print(f"  [FAIL] Tempo traces: {e}")
         CHECKS_FAILED += 1
         return False
 
 
 def main() -> None:
-    print("\nOTel SRE-Copilot — Health Check")
+    print("\nOTel SRE-Copilot Health Check")
     print("=" * 40)
 
     print("\nPrometheus:")

@@ -89,7 +89,7 @@ def verify(
                     "reason": "no matching tool call found",
                 })
 
-    # No evidence items — neither verified nor hallucinated
+    # No evidence items: neither verified nor hallucinated
     score = 1.0 if total == 0 else verified / total
 
     return GroundingResult(

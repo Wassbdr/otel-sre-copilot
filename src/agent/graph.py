@@ -40,7 +40,7 @@ if TYPE_CHECKING:
 
 
 class GraphState(TypedDict, total=False):
-    """LangGraph state — TypedDict so all keys are preserved across nodes."""
+    """LangGraph state. A TypedDict preserves all keys across nodes."""
     incident_id: str
     incident_start_ts: str
     incident_end_ts: str
@@ -390,7 +390,7 @@ def build_graph(
             log.info("iteration_limit_reached", iteration=iteration)
             return "generate_report"
 
-        # Find last AIMessage — if it had tool_calls, they were just executed → keep looping.
+        # Continue if the last AIMessage requested the tools that just ran.
         for msg in reversed(messages):
             if isinstance(msg, AIMessage):
                 if getattr(msg, "tool_calls", None):

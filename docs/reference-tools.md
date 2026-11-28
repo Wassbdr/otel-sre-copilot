@@ -38,8 +38,8 @@ replay queries and trace IDs, not against the model's account of its calls.
 
 HolmesGPT has ten model steps. Its first model request with tools requires a
 tool call; later steps can choose to stop. If it reaches the final step without
-a diagnosis, that request has no tools and uses JSON output mode. The prompt supplies the snapshot
-timestamps, recorded service names, and query templates. Tool discovery and
+a diagnosis, that request has no tools and uses JSON output mode. The prompt
+supplies snapshot timestamps, recorded service names, and query templates. Tool discovery and
 readiness checks do not count as incident evidence. Successful replay calls
 record their time parameters in the trace.
 

@@ -1,15 +1,15 @@
 """Evaluation metrics for root-cause analysis quality.
 
 All metrics operate on lists of (InvestigationReport, ground_truth_dict) pairs.
-Metrics are never self-reported by the agent — this module is the single source of truth.
+Metrics are never self-reported by the agent. This module is the single source of truth.
 
 Metrics:
-  accuracy_at_k(k)   — fraction where correct (service, fault_type) is in top-k
-  mrr                — mean reciprocal rank of correct hypothesis
-  service_at_k(k)    — fraction where the faulty service is in top-k, fault type ignored
-  fault_type_accuracy — fraction where top-1 fault_type matches ground truth
-  mean_latency_s     — mean wall-clock investigation latency
-  total_cost_usd     — total cost across all scenarios
+  accuracy_at_k(k)  : fraction where correct (service, fault_type) is in top-k
+  mrr               : mean reciprocal rank of correct hypothesis
+  service_at_k(k)   : fraction where the faulty service is in top-k, fault type ignored
+  fault_type_accuracy: fraction where top-1 fault_type matches ground truth
+  mean_latency_s    : mean wall-clock investigation latency
+  total_cost_usd    : total cost across all scenarios
 """
 
 from __future__ import annotations

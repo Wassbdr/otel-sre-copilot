@@ -6,6 +6,8 @@
 - Replay captured Prometheus, Loki and Tempo responses over HTTP.
 - Rank request loss alongside error rates, latency and resource signals.
 - Measure span self time separately from downstream waits.
+- Rank service and fault pairs before the model runs, and fill unsupported report slots from the grounded prior.
+- Compare the full agent, ReAct, no-prior, HolmesGPT and statistical baselines on matched snapshots.
 - Resume matched benchmark runs by snapshot, repeat and method.
 - Run the local telemetry backends and sample traffic through Docker Compose.
 

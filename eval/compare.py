@@ -89,7 +89,7 @@ def render_table(aggregated: dict[str, dict[str, float]]) -> str:
     for method in _METHODS:
         agg = aggregated.get(method, {})
         if not agg:
-            lines.append(row([method_labels.get(method, method)] + ["—"] * len(_METRIC_HEADERS)))
+            lines.append(row([method_labels.get(method, method)] + ["n/a"] * len(_METRIC_HEADERS)))
             continue
 
         cells = [method_labels.get(method, method)]
@@ -133,7 +133,7 @@ def main() -> None:
     # Write to results/
     _RESULTS_DIR.mkdir(exist_ok=True)
     with open(_RESULTS_DIR / "baseline_comparison.md", "w") as f:
-        f.write(f"# Baseline Comparison — run: {run_id}\n\n")
+        f.write(f"# Baseline Comparison: run: {run_id}\n\n")
         f.write(table)
         f.write("\n\n## Notes\n")
         config_path = _ARTIFACTS_DIR / run_id / "config.json"

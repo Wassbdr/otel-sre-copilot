@@ -1,4 +1,4 @@
-"""Context compression pipeline — keeps telemetry within the LLM context budget.
+"""Context compression pipeline: keeps telemetry within the LLM context budget.
 
 Three layers:
   Layer 1: Query-time limits (enforced at tool call level, not here)

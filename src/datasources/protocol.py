@@ -1,4 +1,4 @@
-"""DataSource Protocol — the central abstraction seam.
+"""DataSource protocol for live and replay telemetry.
 
 Every component (agent tools, eval harness, scripts) receives a DataSource.
 LiveDataSource makes HTTP calls to a running cluster.

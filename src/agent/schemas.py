@@ -1,7 +1,7 @@
 """Central data models for the SRE-Copilot agent.
 
 All other agent modules and the eval harness import from here.
-Changing a field here is a breaking change — update tests and eval harness accordingly.
+Changing a field here is a breaking change. Update tests and eval harness accordingly.
 """
 
 from __future__ import annotations

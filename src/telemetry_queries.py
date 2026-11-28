@@ -1,4 +1,4 @@
-"""Canonical telemetry query templates — single source of truth.
+"""Canonical telemetry query templates.
 
 The snapshot script captures *exactly* these queries; the baselines and (via the system
 prompt) the agent replay them. ReplayDataSource matches on the query string, so every

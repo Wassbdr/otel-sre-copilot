@@ -216,7 +216,7 @@ def _run_baselines(
         started = perf_counter()
         report = baselines[name].predict(ds, start, end, namespace, scenario_id)
         report.latency_s = perf_counter() - started
-        # Baselines have no tool_calls_log — grounding_score is 0 (they don't produce evidence)
+        # Baselines have no tool_calls_log, so grounding_score is 0 (they don't produce evidence)
         report.grounding_score = 0.0
         sr = ScenarioResult(
             scenario_id=scenario_id,
@@ -415,7 +415,7 @@ def _print_table(results: list[dict[str, Any]], label: str, run_id: str) -> None
     cost = sum(r.get("cost_usd", 0.0) for r in results)
 
     print(f"\n{'─'*70}")
-    print(f"  {label} — {n} scenarios  [run_id: {run_id}]")
+    print(f"  {label}: {n} scenarios  [run_id: {run_id}]")
     print(f"{'─'*70}")
     print(f"  Acc@1:           {acc1:.3f}")
     print(f"  Acc@3:           {acc3:.3f}")

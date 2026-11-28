@@ -1,4 +1,4 @@
-"""Baseline 1: Random — random service and fault type selection.
+"""Baseline 1: Random: random service and fault type selection.
 
 Establishes the performance floor. Expected Accuracy@1 ≈ 1/(7×5) = 2.9%.
 """

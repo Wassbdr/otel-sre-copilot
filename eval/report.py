@@ -149,7 +149,7 @@ def summarize(raw: list[dict[str, Any]]) -> dict[str, Any]:
 
 def _fmt(v: float | None, pct: bool = False, digits: int = 2) -> str:
     if v is None:
-        return "—"
+        return "n/a"
     return f"{v * 100:.0f}%" if pct else f"{v:.{digits}f}"
 
 
@@ -187,7 +187,7 @@ def scenario_table(summary: dict[str, Any]) -> str:
     lines = [head, "|---|---|" + "---|" * len(present)]
     for name, s in summary["per_scenario"].items():
         cells = [f"{_fmt(s[m]['accuracy_at_1'], True)} / {_fmt(s[m]['accuracy_at_3'], True)}"
-                 if m in s else "—" for m in present]
+                 if m in s else "n/a" for m in present]
         gt = s["ground_truth"]
         lines.append(f"| `{name}` ({gt['service']}, {gt['fault_type']}) | "
                      f"{','.join(map(str, s['seeds']))} | " + " | ".join(cells) + " |")
@@ -199,7 +199,7 @@ def snapshot_table(summary: dict[str, Any]) -> str:
     lines = ["| Snapshot | truth | " + " | ".join(f"{m} top-1" for m in present) + " |",
              "|---|---|" + "---|" * len(present)]
     for s in summary["per_snapshot"]:
-        cells = [", ".join(str(x) for x in s[m]["top1"]) if m in s else "—" for m in present]
+        cells = [", ".join(str(x) for x in s[m]["top1"]) if m in s else "n/a" for m in present]
         lines.append(f"| `{s['scenario_id']}` | {s['ground_truth_service']} | "
                      + " | ".join(cells) + " |")
     return "\n".join(lines)
@@ -231,7 +231,7 @@ def write_report(run_id: str, results_dir: Path = _RESULTS_DIR) -> dict[str, Any
 
     agent = summary["methods"].get("agent", {})
     md = [
-        f"# Benchmark — run `{run_id}`",
+        f"# Benchmark run `{run_id}`",
         "",
         summary["setup"],
         "",

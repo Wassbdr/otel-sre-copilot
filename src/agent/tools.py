@@ -1,7 +1,7 @@
-"""Agent tool functions — thin wrappers around DataSource with Layer 1+2 compression.
+"""Agent tool functions: thin wrappers around DataSource with Layer 1+2 compression.
 
 These functions are bound to the LLM via LangChain's bind_tools().
-They never import HTTP libraries directly — all I/O goes through a DataSource.
+They never import HTTP libraries directly; all I/O goes through a DataSource.
 """
 
 from __future__ import annotations

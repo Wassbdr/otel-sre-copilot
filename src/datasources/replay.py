@@ -1,4 +1,4 @@
-"""ReplayDataSource — reads from a snapshot directory, no live cluster needed.
+"""Read recorded telemetry without a live cluster.
 
 The snapshot format is:
   <snapshot_dir>/

@@ -37,7 +37,7 @@ load_dotenv()
 log = structlog.get_logger()
 
 # fault_type -> candidate signals whose value should make the faulted service an outlier
-# (high OR low: a pod_crash makes request_rate drop, cpu_stress makes cpu spike — both are
+# (high OR low: a pod_crash makes request_rate drop, cpu_stress makes cpu spike; both are
 # |z|-outliers vs the other services in the fault window).
 _FAULT_SIGNALS: dict[str, list[str]] = {
     "pod_crash": ["pod_restarts", "request_rate", "error_rate"],
@@ -122,7 +122,7 @@ def extract_ground_truth(
 
 
 # The kind node runs the whole otel-demo + LGTM stack on a constrained host; under load the
-# apiserver intermittently drops connections. These are transient — retry instead of aborting
+# apiserver intermittently drops connections. These are transient; retry instead of aborting
 # a multi-minute capture on a single dropped packet.
 _KUBECTL_RETRY_MARKERS = (
     "connection reset by peer",
@@ -352,7 +352,7 @@ def validate_snapshot(output_dir: Path, gt: dict[str, object]) -> bool:
             return True
 
     log.warning("snapshot_validation_FAIL", service=fault_service, fault_type=fault_type,
-                best=best, hint="faulted service is not a clear outlier — fault may not have fired")
+                best=best, hint="faulted service is not a clear outlier; fault may not have fired")
     return False
 
 
@@ -448,7 +448,7 @@ def _validate_abort(
             "baseline_value": round(base_rate, 4) if base_rate else None,
             "fault_over_baseline": round(ratio, 3) if ratio is not None else None}
     # Require a real baseline (the service was actually serving traffic before the fault) and a
-    # >=50% collapse — otherwise we cannot tell an abort from a naturally-idle service.
+    # >=50% collapse. Otherwise we cannot tell an abort from a naturally-idle service.
     if base_rate and base_rate > 0.005 and ratio is not None and ratio <= 0.5:
         log.info("snapshot_validation_pass", service=fault_service,
                  fault_type="http_abort", **cand)
@@ -482,7 +482,7 @@ def _validate_self_relative(
             fault_means[svc] = m
     if fault_service not in fault_means:
         log.warning("snapshot_validation_FAIL", service=fault_service, fault_type=fault_type,
-                    best=None, hint=f"no {signal} for faulted service — fault may not have fired")
+                    best=None, hint=f"no {signal} for faulted service; fault may not have fired")
         return False
 
     rank = sorted(fault_means, key=lambda s: -fault_means[s]).index(fault_service) + 1

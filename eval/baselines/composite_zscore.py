@@ -18,7 +18,7 @@ from src.datasources.live import ASTRONOMY_SHOP_SERVICES
 from src.datasources.protocol import DataSource
 from src.telemetry_queries import METRIC_QUERIES, SIGNAL_TO_FAULT
 
-# Five anomaly signals (request_rate is excluded — it is not an anomaly direction on its own).
+# Five anomaly signals (request_rate is excluded because it is not an anomaly direction on its own).
 _SIGNALS = ["error_rate", "p99_latency_ms", "cpu_usage", "memory_usage", "pod_restarts"]
 _QUERIES = {k: METRIC_QUERIES[k] for k in _SIGNALS}
 
