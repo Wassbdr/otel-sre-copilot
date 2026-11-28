@@ -1,0 +1,70 @@
+{
+  "incident_id": "INC-48509879",
+  "investigation_start_ts": "2026-11-27T08:23:21.319448+00:00",
+  "investigation_end_ts": "2026-11-27T08:25:46.213085+00:00",
+  "root_causes": [
+    {
+      "rank": 1,
+      "service": "checkout",
+      "fault_type": "pod_crash",
+      "description": "checkout pods experiencing massive restart spike (z>1000) directly causes frontend error_rate spike (z>1000) via topology dependency frontend→checkout",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "max(increase(kube_pod_container_status_restarts_total{namespace=\"otel-demo\",pod=~\"checkout-.*\"}[5m])) or vector(0)",
+          "observed_value": "pod_restarts z=>1000 at 05:58-06:05",
+          "expected_baseline": "pod_restarts < 0.01 (pre-incident baseline 0±0)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(rate(calls_total{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+          "observed_value": "error_rate z=>1000 at 05:58-06:05",
+          "expected_baseline": "error_rate < 0.01 (p99 last 24h)"
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "service": "product-catalog",
+      "fault_type": "high_latency",
+      "description": "product-catalog p99 latency spike (z=+6.48) causes frontend errors as frontend depends on product-catalog per topology",
+      "confidence": 0.75,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"product-catalog\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "p99_latency_ms z=+6.48 at 05:58-06:05",
+          "expected_baseline": "p99_latency_ms < 30ms (baseline 22.44±0.57)"
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "service": "payment",
+      "fault_type": "memory_stress",
+      "description": "payment memory_usage spike (z=+5.97) causes checkout dependency failures per topology checkout→payment, propagating errors to frontend",
+      "confidence": 0.65,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"payment-.*\"})",
+          "observed_value": "memory_usage z=+5.97 at 05:58-06:05",
+          "expected_baseline": "memory_usage < 1.25e+08 (baseline 1.212e+08±6.3e+05)"
+        }
+      ]
+    }
+  ],
+  "remediation_steps": [
+    "Restart checkout pods immediately to stop restart storm and restore frontend error rates",
+    "Investigate root cause of checkout pod restarts (OOM, crashloop, or resource pressure) and apply permanent fix"
+  ],
+  "fault_type_classification": "pod_crash",
+  "grounding_score": 1.0,
+  "latency_s": 35.26636248300099,
+  "cost_usd": 0.0,
+  "total_prompt_tokens": 76120,
+  "total_completion_tokens": 4722,
+  "llm_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "agent_version": "0.2.0"
+}

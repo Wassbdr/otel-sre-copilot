@@ -3,11 +3,11 @@
   "fault_service": "shipping",
   "fault_type": "high_latency",
   "chaos_kind": "NetworkChaos",
-  "injection_ts": "2026-06-19T01:27:56.865703+00:00",
-  "recovery_ts": "2026-06-19T01:33:34.810598+00:00",
+  "injection_ts": "2026-11-27T07:00:42.191800+00:00",
+  "recovery_ts": "2026-11-27T07:05:42.399222+00:00",
   "seed": 42,
   "chaos_manifest_hash": "78187946839d86b3",
-  "window_start": "2026-06-19T01:26:56.865703+00:00",
-  "window_end": "2026-06-19T01:34:34.810598+00:00",
+  "window_start": "2026-11-27T06:59:42.191800+00:00",
+  "window_end": "2026-11-27T07:06:42.399222+00:00",
   "validation_passed": true
 }

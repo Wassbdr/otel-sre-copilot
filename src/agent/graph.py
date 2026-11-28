@@ -10,19 +10,29 @@ from __future__ import annotations
 
 import json
 import os
+import time
+from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any, TypedDict
 
 import structlog
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
-from langchain_openai import ChatOpenAI
 from langgraph.graph import END, START, StateGraph
 from pydantic import ValidationError
 
+from src.agent.candidates import combine_rankings, rank_candidates
 from src.agent.context_manager import ContextBudget
+from src.agent.llm import (
+    invoke_with_backoff,
+    llm_settings,
+    make_chat_model,
+    rate_limit_wait_s,
+)
+from src.agent.llm_cache import request_stats
 from src.agent.prompts import build_system_prompt
-from src.agent.schemas import InvestigationReport
+from src.agent.schemas import InvestigationReport, RootCauseHypothesis
 from src.agent.tools import make_tools
+from src.datasources.live import ASTRONOMY_SHOP_SERVICES
 from src.utils.cost import estimate_cost
 
 if TYPE_CHECKING:
@@ -30,7 +40,7 @@ if TYPE_CHECKING:
 
 
 class GraphState(TypedDict, total=False):
-    """LangGraph state — TypedDict so all keys are preserved across nodes."""
+    """LangGraph state. A TypedDict preserves all keys across nodes."""
     incident_id: str
     incident_start_ts: str
     incident_end_ts: str
@@ -42,40 +52,106 @@ class GraphState(TypedDict, total=False):
     traces_context: str
     logs_context: str
     hypotheses: list[dict[str, Any]]
+    prior_candidates: list[RootCauseHypothesis]
+    model_ranking: list[dict[str, Any]]
     iteration_count: int
+    token_usage: dict[str, int]
     final_report: InvestigationReport | None
 
 log = structlog.get_logger()
 
-MAX_TOOL_ITERATIONS = int(os.getenv("MAX_TOOL_ITERATIONS", "8"))
+AGENT_VERSION = "0.2.0"
+MAX_TOOL_ITERATIONS = int(os.getenv("MAX_TOOL_ITERATIONS", "10"))
+FAST_TOOL_ROUNDS = 2
 # Force at least this many tool iterations, and at least one Prometheus metric sweep, before
 # the agent is allowed to write a report. Without this the LLM tends to call get_service_topology
 # once and then fabricate evidence (grounding_score=0.0).
 MIN_TOOL_ITERATIONS = int(os.getenv("MIN_TOOL_ITERATIONS", "3"))
 
 
-def build_graph(ds: DataSource) -> StateGraph:
-    """Build and compile the investigation StateGraph for the given DataSource."""
+EventCallback = Callable[[dict[str, Any]], None]
+
+
+def _add_usage(totals: dict[str, int], response: AIMessage) -> dict[str, int]:
+    usage = getattr(response, "usage_metadata", None) or {}
+    return {
+        "prompt_tokens": totals.get("prompt_tokens", 0) + int(usage.get("input_tokens", 0)),
+        "completion_tokens": totals.get("completion_tokens", 0)
+        + int(usage.get("output_tokens", 0)),
+        "llm_calls": totals.get("llm_calls", 0) + 1,
+    }
+
+
+def build_graph(
+    ds: DataSource, on_event: EventCallback | None = None, *, react: bool = False,
+    improved: bool = False, prior: bool = True,
+    services: list[str] | None = None, namespace: str = "otel-demo",
+) -> Any:  # noqa: ANN401
+    """Build and compile the investigation StateGraph for the given DataSource.
+
+    ``on_event`` receives every LLM step and tool call as it happens (used by the live demo).
+    """
+
+    def emit(event: dict[str, Any]) -> None:
+        if on_event is not None:
+            on_event(event)
 
     budget = ContextBudget()
-    tools = make_tools(ds, budget)
-
-    # LLM: NVIDIA NIM API (OpenAI-compatible)
-    llm = ChatOpenAI(
-        model=os.getenv("NIM_MODEL", "meta/llama-3.1-70b-instruct"),
-        openai_api_key=os.getenv("NIM_API_KEY", ""),
-        openai_api_base=os.getenv("NIM_BASE_URL", "https://integrate.api.nvidia.com/v1"),
-        temperature=0,
-        max_tokens=4096,
+    max_rounds = min(MAX_TOOL_ITERATIONS, FAST_TOOL_ROUNDS) if improved and not react else (
+        MAX_TOOL_ITERATIONS
     )
-    llm_with_tools = llm.bind_tools(tools)
+    tools = make_tools(
+        ds, budget, improved=improved or react,
+        services=services, namespace=namespace,
+    )
+    rerank = improved and prior and not react
+    seed_request_rate = improved and not react and not rerank
+    hidden_tools = {"rank_request_rate_drops"} if rerank or seed_request_rate else set()
+
+    settings = llm_settings()
+    llm = make_chat_model(max_tokens=4096, concise=improved)
+    llm_with_tools = llm.bind_tools([t for t in tools if t.name not in hidden_tools])
     tool_map = {t.name: t for t in tools}
+
+    def run_tool(
+        name: str, args: dict[str, Any], iteration: int, calls: list[dict[str, Any]],
+    ) -> str:
+        log.info("tool_call", name=name, iteration=iteration)
+        started = time.perf_counter()
+        repeated = improved and any(c["tool_name"] == name and c["args"] == args for c in calls)
+        if repeated:
+            result = "Identical call already answered. Use the earlier result."
+        elif name in tool_map:
+            try:
+                result = str(tool_map[name].invoke(args))
+            except Exception as error:
+                result = f"[TOOL ERROR: {error}]"
+        else:
+            result = f"[UNKNOWN TOOL: {name}]"
+        entry = {
+            "iteration": iteration, "tool_name": name, "args": args,
+            "result_preview": result[:200], "result_excerpt": result[:1200],
+            "query_or_id": [] if repeated or (
+                name == "rank_services_by_signal" and (services or namespace != "otel-demo")
+            )
+            else _extract_query_or_id(name, args),
+            "elapsed_s": round(time.perf_counter() - started, 3),
+        }
+        if improved:
+            evidence_ids = _evidence_ids(name, result)
+            entry["evidence_ids"] = evidence_ids
+            if rerank:
+                entry["verified_refs"] = _verified_refs(name, args, result, evidence_ids)
+        calls.append(entry)
+        emit({"type": "tool_call", **entry})
+        return result
 
     # ── Node: tool_call_loop ───────────────────────────────────────────────
     def tool_call_loop(state: GraphState) -> GraphState:
         iteration = state.get("iteration_count", 0)
-        tool_calls_log: list[dict] = list(state.get("tool_calls_log", []))
-        messages: list = list(state.get("messages", []))
+        tool_calls_log: list[dict[str, Any]] = list(state.get("tool_calls_log", []))
+        messages: list[Any] = list(state.get("messages", []))
+        candidates = state.get("prior_candidates", [])
 
         # First iteration: inject system + human messages
         if iteration == 0:
@@ -83,30 +159,68 @@ def build_graph(ds: DataSource) -> StateGraph:
                 start=state["incident_start_ts"],
                 end=state["incident_end_ts"],
                 namespace=state["affected_namespace"],
-                max_iterations=MAX_TOOL_ITERATIONS,
+                max_iterations=max_rounds,
+                react=react,
+                improved=improved,
+                prior=prior,
             ))
-            human_msg = HumanMessage(
-                content=f"Investigate incident {state['incident_id']} "
-                        f"in namespace {state['affected_namespace']}. "
-                        f"Window: {state['incident_start_ts']} → {state['incident_end_ts']}. "
-                        "Identify the root cause and produce an InvestigationReport JSON."
+            human_content = (
+                f"Investigate incident {state['incident_id']} "
+                f"in namespace {state['affected_namespace']}. "
+                f"Window: {state['incident_start_ts']} → {state['incident_end_ts']}. "
+                "Identify the root cause and produce an InvestigationReport JSON."
             )
-            messages = [system_msg, human_msg]
+            if seed_request_rate:
+                window = {"start": state["incident_start_ts"], "end": state["incident_end_ts"]}
+                initial = run_tool("rank_request_rate_drops", window, 0, tool_calls_log)
+                human_content += "\nRecorded tool observations:\n" + initial
+            if rerank:
+                start, end = state["incident_start_ts"], state["incident_end_ts"]
+                started = time.perf_counter()
+                candidates = rank_candidates(ds, start, end, namespace, services)
+                observations = "\n".join(h.model_dump_json() for h in candidates)
+                items = [item for candidate in candidates for item in candidate.evidence]
+                entry = {
+                    "iteration": 0, "tool_name": "rank_fault_candidates",
+                    "args": {"start": start, "end": end}, "result_preview": observations[:200],
+                    "result_excerpt": observations[:1200],
+                    "query_or_id": list(dict.fromkeys(
+                        item.query_or_id for item in items if item.signal_type == "log"
+                    )),
+                    "evidence_ids": list(dict.fromkeys(item.query_or_id for item in items)),
+                    "verified_refs": list(dict.fromkeys(
+                        f"{item.signal_type}|{item.query_or_id}" for item in items
+                    )),
+                    "elapsed_s": round(time.perf_counter() - started, 3),
+                    "candidates": [h.model_dump(mode="json") for h in candidates],
+                }
+                tool_calls_log.append(entry)
+                emit({"type": "tool_call", **entry})
+                human_content += "\nRanked fault candidates:\n" + (observations or "None")
+            messages = [system_msg, HumanMessage(content=human_content)]
 
         # If the LLM tried to stop early (last msg is an AIMessage with no tool calls) but we
         # are forcing more investigation, nudge it to actually sweep metrics before concluding.
         elif messages and isinstance(messages[-1], AIMessage) and not getattr(
             messages[-1], "tool_calls", None
         ):
-            messages = messages + [HumanMessage(content=(
+            nudge = (
+                "Gather evidence with one metric tool before concluding." if improved else
                 "You have not gathered enough grounded evidence yet. Before concluding, call "
                 "query_prometheus_range to sweep error_rate, cpu_usage, memory_usage and "
                 "pod_restarts across the main services, then inspect the top anomalies with "
                 "search_traces / query_loki / get_pod_events. Do not fabricate evidence."
-            ))]
+            )
+            messages = messages + [HumanMessage(content=nudge)]
 
         # Call LLM
-        response: AIMessage = llm_with_tools.invoke(messages)  # type: ignore[assignment]
+        t0 = time.perf_counter()
+        response: AIMessage = invoke_with_backoff(llm_with_tools, messages)
+        token_usage = _add_usage(state.get("token_usage", {}), response)
+        emit({"type": "llm", "iteration": iteration,
+              "elapsed_s": round(time.perf_counter() - t0, 2),
+              "content": str(response.content)[:500],
+              "n_tool_calls": len(getattr(response, "tool_calls", None) or [])})
         messages = messages + [response]
 
         # Execute any tool calls
@@ -117,28 +231,9 @@ def build_graph(ds: DataSource) -> StateGraph:
                 tool_args = tc.get("args", {})
                 tool_id = tc.get("id", f"call_{iteration}_{tool_name}")
 
-                log.info("tool_call", name=tool_name, iteration=iteration)
-
-                if tool_name in tool_map:
-                    try:
-                        result_str = tool_map[tool_name].invoke(tool_args)
-                    except Exception as e:
-                        result_str = f"[TOOL ERROR: {e}]"
-                else:
-                    result_str = f"[UNKNOWN TOOL: {tool_name}]"
-
-                # Record tool call for grounding verification
-                tool_calls_log.append({
-                    "iteration": iteration,
-                    "tool_name": tool_name,
-                    "args": tool_args,
-                    "result_preview": str(result_str)[:200],
-                    # Store exact query/id strings for grounding check
-                    "query_or_id": _extract_query_or_id(tool_name, tool_args),
-                })
-
+                result_str = run_tool(tool_name, tool_args, iteration, tool_calls_log)
                 new_tool_messages.append(ToolMessage(
-                    content=str(result_str),
+                    content=result_str,
                     tool_call_id=tool_id,
                     name=tool_name,
                 ))
@@ -147,101 +242,172 @@ def build_graph(ds: DataSource) -> StateGraph:
             "messages": messages + new_tool_messages,
             "tool_calls_log": tool_calls_log,
             "iteration_count": iteration + 1,
+            "token_usage": token_usage,
+            "prior_candidates": candidates,
         }
 
     # ── Node: generate_report ──────────────────────────────────────────────
     def generate_report(state: GraphState) -> GraphState:
-        messages: list = list(state.get("messages", []))
+        messages: list[Any] = list(state.get("messages", []))
         inv_start = state.get("_investigation_start_ts", datetime.now(UTC).isoformat())
 
         # Ask LLM to produce the final structured report
-        finalize_msg = HumanMessage(
-            content=(
-                "Based on all evidence gathered above, produce the final InvestigationReport JSON. "
-                "Output ONLY the JSON object, no other text. "
+        finalize = (
+            "Based on all evidence gathered above, produce the final InvestigationReport JSON. "
+            "Output ONLY the JSON object, no other text. "
+        )
+        if not react:
+            finalize += (
+                "Copy citation IDs exactly. Use metric, trace, log or k8s_event as signal_type."
+                if improved else
                 "Remember: every query_or_id in evidence must be an exact tool call you made."
             )
-        )
-        messages_for_report = messages + [finalize_msg]
+        if improved:
+            finalize += (
+                " Return at most three ranked causes, at most two citations per cause and "
+                "at most two remediation steps. Keep each description to one sentence. "
+                "Return only root_causes and remediation_steps; metadata is added separately."
+            )
+        if rerank:
+            finalize += (
+                " Reorder the seeded service/fault pairs. Cite exact observed references for "
+                "every hypothesis. Add at most one pair outside the seed list, with evidence."
+            )
+        messages_for_report = messages + [HumanMessage(content=finalize)]
 
-        report_llm = ChatOpenAI(
-            model=os.getenv("NIM_MODEL", "meta/llama-3.1-70b-instruct"),
-            openai_api_key=os.getenv("NIM_API_KEY", ""),
-            openai_api_base=os.getenv("NIM_BASE_URL", "https://integrate.api.nvidia.com/v1"),
-            temperature=0,
-            max_tokens=2048,
-            model_kwargs={"response_format": {"type": "json_object"}},
+        report_llm = make_chat_model(
+            max_tokens=int(os.getenv("LLM_REPORT_MAX_TOKENS", "8192")),
+            json_mode=True, concise=improved,
         )
 
-        response: AIMessage = report_llm.invoke(messages_for_report)  # type: ignore[assignment]
+        # One repair round: a report that fails the schema (or runs out of tokens) gets the
+        # validation error back once. The grounding check and metrics stay external.
+        usage_totals = dict(state.get("token_usage", {}))
+        report: InvestigationReport | None = None
+        content = ""
+        repairs = int(os.getenv("LLM_REPORT_REPAIRS", "1"))
+        for attempt in range(1 + (min(repairs, 1) if improved or react else repairs)):
+            try:
+                response: AIMessage = invoke_with_backoff(report_llm, messages_for_report)
+            except Exception as e:
+                if "LengthFinishReason" not in type(e).__name__:
+                    raise
+                usage = getattr(getattr(e, "completion", None), "usage", None)
+                response = AIMessage(content="", usage_metadata={
+                    "input_tokens": getattr(usage, "prompt_tokens", 0),
+                    "output_tokens": getattr(usage, "completion_tokens", 0),
+                    "total_tokens": getattr(usage, "total_tokens", 0),
+                })
+            usage_totals = _add_usage(usage_totals, response)
+            content = response.content if isinstance(response.content, str) else str(
+                response.content)
+            try:
+                raw = json.loads(_strip_json_fences(content))
+                raw.update({
+                    "incident_id": state["incident_id"],
+                    "investigation_start_ts": inv_start,
+                    "investigation_end_ts": inv_start,
+                    "llm_model": settings.model,
+                    "agent_version": AGENT_VERSION,
+                    "fault_type_classification": (
+                        raw.get("root_causes", [{}])[0].get("fault_type", "unknown")
+                        if raw.get("root_causes") else "unknown"
+                    ),
+                })
+                report = InvestigationReport.model_validate(raw)
+                break
+            except (json.JSONDecodeError, ValidationError, IndexError, AttributeError) as e:
+                error = (
+                    "the answer hit the token limit before the JSON was complete"
+                    if not content else str(e)[:1500]
+                )
+                log.error("report_parse_failed", attempt=attempt, error=error[:300],
+                          content_preview=content[:200])
+                emit({"type": "report_repair", "attempt": attempt, "error": error[:300]})
+                messages_for_report = messages_for_report + [
+                    AIMessage(content=content[:4000]),
+                    HumanMessage(content=(
+                        f"That report is invalid: {error}\n"
+                        "Output the corrected InvestigationReport JSON only: at most 3 "
+                        "root_causes, at most 4 evidence items each, signal_type one of "
+                        "metric | trace | log | k8s_event, fault_type one of the allowed "
+                        "values, every field of the schema present."
+                    )),
+                ]
+
         inv_end = datetime.now(UTC).isoformat()
-
-        # Parse and validate
-        content = response.content if isinstance(response.content, str) else str(response.content)
-
-        # Inject timing and token metadata
-        usage = getattr(response, "usage_metadata", None)
-        prompt_tokens = usage.get("input_tokens", 0) if usage else 0
-        completion_tokens = usage.get("output_tokens", 0) if usage else 0
+        prompt_tokens = usage_totals["prompt_tokens"]
+        completion_tokens = usage_totals["completion_tokens"]
+        emit({"type": "report_llm", "prompt_tokens": prompt_tokens,
+              "completion_tokens": completion_tokens, "llm_calls": usage_totals["llm_calls"]})
         latency_s = (
             datetime.fromisoformat(inv_end) - datetime.fromisoformat(inv_start)
-        ).total_seconds()
-
-        try:
-            raw = json.loads(content)
-            raw.update({
-                "incident_id": state["incident_id"],
-                "investigation_start_ts": inv_start,
-                "investigation_end_ts": inv_end,
-                "latency_s": latency_s,
-                "total_prompt_tokens": prompt_tokens,
-                "total_completion_tokens": completion_tokens,
-                "cost_usd": estimate_cost(prompt_tokens, completion_tokens),
-                "llm_model": os.getenv("NIM_MODEL", "meta/llama-3.1-70b-instruct"),
-                "agent_version": "0.1.0",
-                "fault_type_classification": (
-                    raw.get("root_causes", [{}])[0].get("fault_type", "unknown")
-                    if raw.get("root_causes") else "unknown"
-                ),
-            })
-            report = InvestigationReport.model_validate(raw)
-        except (json.JSONDecodeError, ValidationError, IndexError) as e:
-            log.error("report_parse_failed", error=str(e), content_preview=content[:300])
-            # Return a minimal valid report rather than crashing
-            report = InvestigationReport(
+        ).total_seconds() - rate_limit_wait_s()
+        stats = request_stats()
+        if stats is not None:
+            latency_s += stats.replay_adjustment_s
+        totals: dict[str, Any] = {
+            "investigation_end_ts": inv_end,
+            "latency_s": latency_s,
+            "total_prompt_tokens": prompt_tokens,
+            "total_completion_tokens": completion_tokens,
+            "cost_usd": estimate_cost(prompt_tokens, completion_tokens),
+        }
+        if report is not None:
+            report = report.model_copy(update=totals)
+        else:
+            # Unparseable answer = no hypothesis. model_construct skips the min_length=1 check
+            # on root_causes so the harness scores it as a miss instead of crashing.
+            report = InvestigationReport.model_construct(
+                remediation_steps=[],
+                grounding_score=0.0,
+                agent_version=AGENT_VERSION,
                 incident_id=state["incident_id"],
                 investigation_start_ts=inv_start,
-                investigation_end_ts=inv_end,
                 root_causes=[],
                 fault_type_classification="unknown",
-                latency_s=latency_s,
+                llm_model=settings.model,
+                **totals,
             )
 
-        return {"final_report": report}
+        if rerank:
+            observed = {
+                ref for entry in state.get("tool_calls_log", [])
+                for ref in entry.get("verified_refs", [])
+            }
+            model_ranking = [hyp.model_dump(mode="json") for hyp in report.root_causes]
+            report = combine_rankings(report, state.get("prior_candidates", []), observed)
+            return {"final_report": report, "token_usage": usage_totals,
+                    "model_ranking": model_ranking}
+        return {"final_report": report, "token_usage": usage_totals}
 
     # ── Conditional edge ───────────────────────────────────────────────────
     def should_continue(state: GraphState) -> str:
-        messages: list = state.get("messages", [])
+        messages: list[Any] = state.get("messages", [])
         iteration = state.get("iteration_count", 0)
 
-        if iteration >= MAX_TOOL_ITERATIONS:
+        if iteration >= max_rounds:
             log.info("iteration_limit_reached", iteration=iteration)
             return "generate_report"
 
-        # Find last AIMessage — if it had tool_calls, they were just executed → keep looping.
+        # Continue if the last AIMessage requested the tools that just ran.
         for msg in reversed(messages):
             if isinstance(msg, AIMessage):
                 if getattr(msg, "tool_calls", None):
                     return "tool_call_loop"
                 break
 
+        if react:
+            return "generate_report"
         # LLM wants to stop. Force more investigation if it hasn't met the minimum: at least
         # MIN_TOOL_ITERATIONS iterations AND at least one Prometheus metric query.
         metric_calls = sum(
             1 for e in state.get("tool_calls_log", [])
-            if str(e.get("tool_name", "")).startswith("query_prometheus")
+            if str(e.get("tool_name", "")).startswith((
+                "query_prometheus", "rank_services", "rank_request", "rank_fault",
+            ))
         )
-        if iteration < MIN_TOOL_ITERATIONS or metric_calls < 1:
+        if iteration < (1 if improved else MIN_TOOL_ITERATIONS) or metric_calls < 1:
             log.info("forcing_more_investigation", iteration=iteration, metric_calls=metric_calls)
             return "tool_call_loop"
         return "generate_report"
@@ -262,10 +428,56 @@ def build_graph(ds: DataSource) -> StateGraph:
     return graph.compile()
 
 
+def _verified_refs(
+    name: str, args: dict[str, Any], result: str, ids: list[str],
+) -> list[str]:
+    refs = [f"{citation.split(':', 1)[0]}|{citation}" for citation in ids]
+    if not result or result.startswith("["):
+        return refs
+    if (name == "query_prometheus_range" and "\n  {" in result
+            or name == "query_prometheus_instant" and result.startswith("{")):
+        refs.append(f"metric|{args['query']}")
+    elif name == "query_loki" and result.splitlines()[0].removeprefix("Log counts: ").strip():
+        refs.append(f"log|{args['logql']}")
+    elif name == "get_pod_events" and result.startswith("K8s events:\n"):
+        refs.extend(f"k8s_event|{line.strip()}" for line in result.splitlines()[1:])
+    return refs
+
+
+def _evidence_ids(tool_name: str, result: str) -> list[str]:
+    prefix = {
+        "rank_request_rate_drops": "metric:",
+        "get_trace": "trace:",
+        "summarize_trace_latency": "trace:",
+    }.get(tool_name)
+    ids = []
+    for line in result.splitlines():
+        if tool_name == "rank_services_by_signal" and "citation: " in line:
+            ids.append(line.rsplit("citation: ", 1)[-1])
+        elif prefix and line.startswith(prefix):
+            ids.append(line.split(maxsplit=1)[0])
+    return list(dict.fromkeys(ids))
+
+
+def _strip_json_fences(content: str) -> str:
+    """Some OpenAI-compatible models wrap JSON mode output in ```json fences or add prose."""
+    text = content.strip()
+    if text.startswith("```"):
+        text = text.split("\n", 1)[1] if "\n" in text else text
+        text = text.rsplit("```", 1)[0]
+    first, last = text.find("{"), text.rfind("}")
+    return text[first:last + 1] if first != -1 and last > first else text
+
+
 def _extract_query_or_id(tool_name: str, args: dict) -> list[str]:  # type: ignore[type-arg]
     """Extract the query strings or IDs from tool args for grounding verification."""
     if tool_name in ("query_prometheus_range", "query_prometheus_instant"):
         return [args.get("query", "")]
+    if tool_name == "rank_services_by_signal":
+        from src.telemetry_queries import METRIC_QUERIES
+
+        tpl = METRIC_QUERIES.get(str(args.get("signal", "")))
+        return [tpl.format(svc=svc) for svc in ASTRONOMY_SHOP_SERVICES] if tpl else []
     if tool_name in ("search_traces",):
         return [f"search_traces:{args.get('service_name','')}" ]
     if tool_name == "get_trace":

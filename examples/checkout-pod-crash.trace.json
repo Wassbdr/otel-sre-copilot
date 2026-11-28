@@ -1,0 +1,357 @@
+{
+  "scenario_id": "checkout-pod_crash-seed42",
+  "snapshot_dir": "snapshots/checkout-pod_crash-seed42",
+  "window": {
+    "start": "2026-11-27T05:58:26.552542+00:00",
+    "end": "2026-11-27T06:05:26.751135+00:00",
+    "namespace": "otel-demo"
+  },
+  "model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "model_ranking": [
+    {
+      "rank": 1,
+      "service": "frontend",
+      "fault_type": "http_abort",
+      "description": "Server error rate spiked to 0.101, far above baseline of 0, indicating requests failing before instrumentation.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "metric:error_rate:frontend",
+          "observed_value": "mean=0.101, peak=0.259",
+          "expected_baseline": "mean=0, peak=0"
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "service": "email",
+      "fault_type": "http_abort",
+      "description": "Request rate dropped to 0.0403, well below baseline 0.0934, suggesting requests rejected before reaching instrumentation.",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "metric:request_rate:email",
+          "observed_value": "mean=0.0403, peak=0.14",
+          "expected_baseline": "mean=0.0934, peak=0.157"
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "service": "payment",
+      "fault_type": "http_abort",
+      "description": "Request rate dropped to 0.0403, well below baseline 0.0923, suggesting requests rejected before reaching instrumentation.",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "metric:request_rate:payment",
+          "observed_value": "mean=0.0403, peak=0.14",
+          "expected_baseline": "mean=0.0923, peak=0.16"
+        }
+      ]
+    }
+  ],
+  "ground_truth": {
+    "scenario_id": "checkout-pod_crash-seed42",
+    "fault_service": "checkout",
+    "fault_type": "pod_crash",
+    "chaos_kind": "PodChaos",
+    "injection_ts": "2026-11-27T05:59:26.552542+00:00",
+    "recovery_ts": "2026-11-27T06:04:26.751135+00:00",
+    "seed": 42,
+    "chaos_manifest_hash": "6bd9557af8fb5e98",
+    "window_start": "2026-11-27T05:58:26.552542+00:00",
+    "window_end": "2026-11-27T06:05:26.751135+00:00",
+    "validation_passed": true
+  },
+  "tool_calls": [
+    {
+      "iteration": 0,
+      "tool_name": "rank_fault_candidates",
+      "args": {
+        "start": "2026-11-27T05:58:26.552542+00:00",
+        "end": "2026-11-27T06:05:26.751135+00:00"
+      },
+      "result_preview": "{\"rank\":1,\"service\":\"checkout\",\"fault_type\":\"pod_crash\",\"description\":\"Restart increased without recorded OOM evidence.\",\"confidence\":0.5,\"evidence\":[{\"signal_type\":\"metric\",\"query_or_id\":\"metric:pod_",
+      "result_excerpt": "{\"rank\":1,\"service\":\"checkout\",\"fault_type\":\"pod_crash\",\"description\":\"Restart increased without recorded OOM evidence.\",\"confidence\":0.5,\"evidence\":[{\"signal_type\":\"metric\",\"query_or_id\":\"metric:pod_restarts:checkout\",\"observed_value\":\"mean=0.884, peak=1.25\",\"expected_baseline\":\"mean=0, peak=0\"}]}\n{\"rank\":2,\"service\":\"email\",\"fault_type\":\"http_abort\",\"description\":\"Inbound request rate declined; correlated drops can reflect propagation.\",\"confidence\":0.5,\"evidence\":[{\"signal_type\":\"metric\",\"query_or_id\":\"metric:request_rate:email\",\"observed_value\":\"mean=0.0403, peak=0.14\",\"expected_baseline\":\"mean=0.0934, peak=0.157\"}]}\n{\"rank\":3,\"service\":\"payment\",\"fault_type\":\"http_abort\",\"description\":\"Inbound request rate declined; correlated drops can reflect propagation.\",\"confidence\":0.5,\"evidence\":[{\"signal_type\":\"metric\",\"query_or_id\":\"metric:request_rate:payment\",\"observed_value\":\"mean=0.0403, peak=0.14\",\"expected_baseline\":\"mean=0.0923, peak=0.16\"}]}\n{\"rank\":4,\"service\":\"frontend\",\"fault_type\":\"http_abort\",\"description\":\"Inbound server errors increased.\",\"confidence\":0.5,\"evidence\":[{\"signal_type\":\"metric\",\"query_or_id\":\"metric:error_rate:frontend\",\"observed_value\":\"mean=0.101, peak=0.",
+      "query_or_id": [],
+      "evidence_ids": [
+        "metric:pod_restarts:checkout",
+        "metric:request_rate:email",
+        "metric:request_rate:payment",
+        "metric:error_rate:frontend",
+        "metric:request_rate:checkout"
+      ],
+      "verified_refs": [
+        "metric|metric:pod_restarts:checkout",
+        "metric|metric:request_rate:email",
+        "metric|metric:request_rate:payment",
+        "metric|metric:error_rate:frontend",
+        "metric|metric:request_rate:checkout"
+      ],
+      "elapsed_s": 0.014,
+      "candidates": [
+        {
+          "rank": 1,
+          "service": "checkout",
+          "fault_type": "pod_crash",
+          "description": "Restart increased without recorded OOM evidence.",
+          "confidence": 0.5,
+          "evidence": [
+            {
+              "signal_type": "metric",
+              "query_or_id": "metric:pod_restarts:checkout",
+              "observed_value": "mean=0.884, peak=1.25",
+              "expected_baseline": "mean=0, peak=0"
+            }
+          ]
+        },
+        {
+          "rank": 2,
+          "service": "email",
+          "fault_type": "http_abort",
+          "description": "Inbound request rate declined; correlated drops can reflect propagation.",
+          "confidence": 0.5,
+          "evidence": [
+            {
+              "signal_type": "metric",
+              "query_or_id": "metric:request_rate:email",
+              "observed_value": "mean=0.0403, peak=0.14",
+              "expected_baseline": "mean=0.0934, peak=0.157"
+            }
+          ]
+        },
+        {
+          "rank": 3,
+          "service": "payment",
+          "fault_type": "http_abort",
+          "description": "Inbound request rate declined; correlated drops can reflect propagation.",
+          "confidence": 0.5,
+          "evidence": [
+            {
+              "signal_type": "metric",
+              "query_or_id": "metric:request_rate:payment",
+              "observed_value": "mean=0.0403, peak=0.14",
+              "expected_baseline": "mean=0.0923, peak=0.16"
+            }
+          ]
+        },
+        {
+          "rank": 4,
+          "service": "frontend",
+          "fault_type": "http_abort",
+          "description": "Inbound server errors increased.",
+          "confidence": 0.5,
+          "evidence": [
+            {
+              "signal_type": "metric",
+              "query_or_id": "metric:error_rate:frontend",
+              "observed_value": "mean=0.101, peak=0.259",
+              "expected_baseline": "mean=0, peak=0"
+            }
+          ]
+        },
+        {
+          "rank": 5,
+          "service": "checkout",
+          "fault_type": "http_abort",
+          "description": "Inbound request rate declined; correlated drops can reflect propagation.",
+          "confidence": 0.5,
+          "evidence": [
+            {
+              "signal_type": "metric",
+              "query_or_id": "metric:request_rate:checkout",
+              "observed_value": "mean=0.041, peak=0.14",
+              "expected_baseline": "mean=0.0917, peak=0.15"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "iteration": 0,
+      "tool_name": "rank_services_by_signal",
+      "args": {
+        "signal": "error_rate",
+        "start": "2026-11-27T05:58:26.552542+00:00",
+        "end": "2026-11-27T06:05:26.751135+00:00"
+      },
+      "result_preview": "error_rate: window mean vs pre-incident baseline, most anomalous first\n  frontend         z=   >1000  window=0.1011  baseline=0\u00b10  citation: metric:error_rate:frontend\n  flagd            z=   +2.99  w",
+      "result_excerpt": "error_rate: window mean vs pre-incident baseline, most anomalous first\n  frontend         z=   >1000  window=0.1011  baseline=0\u00b10  citation: metric:error_rate:frontend\n  flagd            z=   +2.99  window=0.008708  baseline=0.0006717\u00b10.0027  citation: metric:error_rate:flagd\n  cart             z=   +0.00  window=0  baseline=0\u00b10  citation: metric:error_rate:cart\n  checkout         z=   +0.00  window=0  baseline=0\u00b10  citation: metric:error_rate:checkout\n  currency         z=   +0.00  window=0  baseline=0\u00b10  citation: metric:error_rate:currency",
+      "query_or_id": [
+        "sum(rate(calls_total{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+        "sum(rate(calls_total{service_name=\"cart\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+        "sum(rate(calls_total{service_name=\"checkout\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+        "sum(rate(calls_total{service_name=\"currency\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+        "sum(rate(calls_total{service_name=\"email\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+        "sum(rate(calls_total{service_name=\"payment\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+        "sum(rate(calls_total{service_name=\"product-catalog\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+        "sum(rate(calls_total{service_name=\"recommendation\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+        "sum(rate(calls_total{service_name=\"shipping\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+        "sum(rate(calls_total{service_name=\"ad\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+        "sum(rate(calls_total{service_name=\"load-generator\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+        "sum(rate(calls_total{service_name=\"accounting\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+        "sum(rate(calls_total{service_name=\"fraud-detection\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+        "sum(rate(calls_total{service_name=\"quote\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+        "sum(rate(calls_total{service_name=\"flagd\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)"
+      ],
+      "elapsed_s": 0.003,
+      "evidence_ids": [
+        "metric:error_rate:frontend",
+        "metric:error_rate:flagd",
+        "metric:error_rate:cart",
+        "metric:error_rate:checkout",
+        "metric:error_rate:currency"
+      ],
+      "verified_refs": [
+        "metric|metric:error_rate:frontend",
+        "metric|metric:error_rate:flagd",
+        "metric|metric:error_rate:cart",
+        "metric|metric:error_rate:checkout",
+        "metric|metric:error_rate:currency"
+      ]
+    },
+    {
+      "iteration": 1,
+      "tool_name": "rank_services_by_signal",
+      "args": {
+        "signal": "request_rate",
+        "start": "2026-11-27T05:58:26.552542+00:00",
+        "end": "2026-11-27T06:05:26.751135+00:00"
+      },
+      "result_preview": "request_rate: window mean vs pre-incident baseline, most anomalous first\n  recommendation   z=   +0.42  window=1.915  baseline=1.754\u00b10.38  citation: metric:request_rate:recommendation\n  frontend      ",
+      "result_excerpt": "request_rate: window mean vs pre-incident baseline, most anomalous first\n  recommendation   z=   +0.42  window=1.915  baseline=1.754\u00b10.38  citation: metric:request_rate:recommendation\n  frontend         z=   +0.39  window=34.86  baseline=32.05\u00b17.2  citation: metric:request_rate:frontend\n  product-catalog  z=   +0.31  window=11.75  baseline=10.96\u00b12.6  citation: metric:request_rate:product-catalog\n  flagd            z=   +0.25  window=20.7  baseline=19.57\u00b14.6  citation: metric:request_rate:flagd\n  ad               z=   +0.18  window=0.8002  baseline=0.7626\u00b10.2  citation: metric:request_rate:ad",
+      "query_or_id": [
+        "sum(rate(calls_total{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) or vector(0)",
+        "sum(rate(calls_total{service_name=\"cart\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) or vector(0)",
+        "sum(rate(calls_total{service_name=\"checkout\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) or vector(0)",
+        "sum(rate(calls_total{service_name=\"currency\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) or vector(0)",
+        "sum(rate(calls_total{service_name=\"email\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) or vector(0)",
+        "sum(rate(calls_total{service_name=\"payment\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) or vector(0)",
+        "sum(rate(calls_total{service_name=\"product-catalog\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) or vector(0)",
+        "sum(rate(calls_total{service_name=\"recommendation\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) or vector(0)",
+        "sum(rate(calls_total{service_name=\"shipping\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) or vector(0)",
+        "sum(rate(calls_total{service_name=\"ad\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) or vector(0)",
+        "sum(rate(calls_total{service_name=\"load-generator\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) or vector(0)",
+        "sum(rate(calls_total{service_name=\"accounting\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) or vector(0)",
+        "sum(rate(calls_total{service_name=\"fraud-detection\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) or vector(0)",
+        "sum(rate(calls_total{service_name=\"quote\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) or vector(0)",
+        "sum(rate(calls_total{service_name=\"flagd\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) or vector(0)"
+      ],
+      "elapsed_s": 0.002,
+      "evidence_ids": [
+        "metric:request_rate:recommendation",
+        "metric:request_rate:frontend",
+        "metric:request_rate:product-catalog",
+        "metric:request_rate:flagd",
+        "metric:request_rate:ad"
+      ],
+      "verified_refs": [
+        "metric|metric:request_rate:recommendation",
+        "metric|metric:request_rate:frontend",
+        "metric|metric:request_rate:product-catalog",
+        "metric|metric:request_rate:flagd",
+        "metric|metric:request_rate:ad"
+      ]
+    }
+  ],
+  "report": {
+    "incident_id": "INC-48509879",
+    "investigation_start_ts": "2026-11-27T16:05:26.281163+00:00",
+    "investigation_end_ts": "2026-11-27T16:06:03.457818+00:00",
+    "root_causes": [
+      {
+        "rank": 1,
+        "service": "checkout",
+        "fault_type": "pod_crash",
+        "description": "Restart increased without recorded OOM evidence.",
+        "confidence": 0.5,
+        "evidence": [
+          {
+            "signal_type": "metric",
+            "query_or_id": "metric:pod_restarts:checkout",
+            "observed_value": "mean=0.884, peak=1.25",
+            "expected_baseline": "mean=0, peak=0"
+          }
+        ]
+      },
+      {
+        "rank": 2,
+        "service": "frontend",
+        "fault_type": "http_abort",
+        "description": "Inbound server errors increased.",
+        "confidence": 0.5,
+        "evidence": [
+          {
+            "signal_type": "metric",
+            "query_or_id": "metric:error_rate:frontend",
+            "observed_value": "mean=0.101, peak=0.259",
+            "expected_baseline": "mean=0, peak=0"
+          }
+        ]
+      },
+      {
+        "rank": 3,
+        "service": "email",
+        "fault_type": "http_abort",
+        "description": "Inbound request rate declined; correlated drops can reflect propagation.",
+        "confidence": 0.5,
+        "evidence": [
+          {
+            "signal_type": "metric",
+            "query_or_id": "metric:request_rate:email",
+            "observed_value": "mean=0.0403, peak=0.14",
+            "expected_baseline": "mean=0.0934, peak=0.157"
+          }
+        ]
+      }
+    ],
+    "remediation_steps": [],
+    "fault_type_classification": "pod_crash",
+    "grounding_score": 1.0,
+    "latency_s": 6.910618233000392,
+    "cost_usd": 0.0,
+    "total_prompt_tokens": 8854,
+    "total_completion_tokens": 958,
+    "llm_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+    "agent_version": "0.2.0"
+  },
+  "grounding": {
+    "score": 1.0,
+    "verified": 3,
+    "total": 3,
+    "failed_items": []
+  },
+  "metrics": {
+    "scenario_id": "checkout-pod_crash-seed42",
+    "ground_truth_service": "checkout",
+    "ground_truth_fault_type": "pod_crash",
+    "predicted_service": "checkout",
+    "predicted_fault_type": "pod_crash",
+    "accuracy_at_1": 1.0,
+    "accuracy_at_3": 1.0,
+    "mrr": 1.0,
+    "service_at_1": 1.0,
+    "service_at_3": 1.0,
+    "fault_type_correct": 1,
+    "grounding_score": 1.0,
+    "latency_s": 6.910618233000392,
+    "cost_usd": 0.0,
+    "prompt_tokens": 8854,
+    "completion_tokens": 958,
+    "total_tokens": 9812,
+    "hallucination_warning": false,
+    "repeat": 0,
+    "llm_calls": 3,
+    "tool_calls": 3,
+    "rate_limit_wait_s": 30.266036766999605,
+    "cached_requests": 0,
+    "evidence_count": 3,
+    "verified_evidence_count": 3
+  },
+  "recorded_in_run": "round2-reference-aligned",
+  "repeat": 0
+}

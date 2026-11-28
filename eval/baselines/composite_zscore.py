@@ -1,4 +1,4 @@
-"""Baseline 3: Composite Z-score over 4 signals.
+"""Baseline 3: Composite Z-score over 5 signals.
 
 For each service: Z-scores of error_rate, p99_latency, cpu_usage, memory_usage.
 composite_score = max(z_err, z_lat, z_cpu, z_mem).
@@ -9,6 +9,8 @@ This is the strongest non-LLM baseline. The agent must beat it to justify LLM co
 
 from __future__ import annotations
 
+from typing import Any
+
 import numpy as np
 
 from src.agent.schemas import InvestigationReport, RootCauseHypothesis
@@ -16,16 +18,16 @@ from src.datasources.live import ASTRONOMY_SHOP_SERVICES
 from src.datasources.protocol import DataSource
 from src.telemetry_queries import METRIC_QUERIES, SIGNAL_TO_FAULT
 
-# Five anomaly signals (request_rate is excluded — it is not an anomaly direction on its own).
+# Five anomaly signals (request_rate is excluded because it is not an anomaly direction on its own).
 _SIGNALS = ["error_rate", "p99_latency_ms", "cpu_usage", "memory_usage", "pod_restarts"]
 _QUERIES = {k: METRIC_QUERIES[k] for k in _SIGNALS}
 
 # Signal → fault_type mapping (canonical, includes pod_restarts → pod_crash).
-_SIGNAL_TO_FAULT = SIGNAL_TO_FAULT
+_SIGNAL_TO_FAULT: dict[str, Any] = SIGNAL_TO_FAULT
 
 
 class CompositeZScoreBaseline:
-    """Ranks services by max Z-score across 4 signals. Infers fault type from dominant signal."""
+    """Ranks services by max Z-score across 5 signals. Infers fault type from dominant signal."""
 
     def predict(
         self,
@@ -102,13 +104,13 @@ class CompositeZScoreBaseline:
         )
 
 
-def _extract_values(series: list[dict[str, object]]) -> list[float]:
+def _extract_values(series: list[dict[str, Any]]) -> list[float]:
     values: list[float] = []
     for s in series:
         for _ts, val in s.get("values", []):
             try:
                 v = float(val)
-                if not (v != v):
+                if v == v:  # skip NaN
                     values.append(v)
             except (ValueError, TypeError):
                 pass

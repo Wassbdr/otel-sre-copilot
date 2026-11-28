@@ -1,0 +1,28 @@
+metadata:
+  scenario_id: quote-http_abort-seed42
+  fault_service: quote
+  fault_type: http_abort
+  seed: 42
+  split: development
+  fault_duration_s: 300
+  window_extra_s: 60
+  namespace: otel-demo
+
+chaos_manifest:
+  apiVersion: chaos-mesh.org/v1alpha1
+  kind: NetworkChaos
+  metadata:
+    name: quote-http-abort-seed42
+    namespace: chaos-mesh
+  spec:
+    mode: all
+    selector:
+      namespaces: [otel-demo]
+      labelSelectors:
+        app.kubernetes.io/component: quote
+    duration: "300s"
+    action: loss
+    direction: to
+    loss:
+      loss: "100"
+      correlation: "0"

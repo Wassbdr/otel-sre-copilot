@@ -1,0 +1,41 @@
+{
+  "model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "base_url": "https://integrate.api.nvidia.com/v1",
+  "repeats": 3,
+  "split": "held-out",
+  "random_seed": 42,
+  "agent_variant": "agent_full",
+  "snapshots": [
+    {
+      "path": "snapshots/ad-pod_crash-seed23",
+      "scenario_id": "ad-pod_crash-seed23",
+      "sha256": "991d0f821d1678e5c535b07bfbbb14f050b9082b1610e900e965d6a788a6faa3"
+    },
+    {
+      "path": "snapshots/ad-pod_crash-seed42",
+      "scenario_id": "ad-pod_crash-seed42",
+      "sha256": "ab46eb8fce36727470e5b7ce0844a360ec173b35ceb9a562f73d9fa23c6d399c"
+    },
+    {
+      "path": "snapshots/ad-pod_crash-seed7",
+      "scenario_id": "ad-pod_crash-seed7",
+      "sha256": "3df6c4fbdb051807af1ed88906e7ca6ee84bf48fbbb8a35529f558e2be18ef0a"
+    },
+    {
+      "path": "snapshots/currency-cart-multi-seed23",
+      "scenario_id": "currency-cart-multi-seed23",
+      "sha256": "97746654c75e63d33fe30bec35dc7dd9ad61878662c409da4d656c7e5d225e44"
+    },
+    {
+      "path": "snapshots/currency-cart-multi-seed42",
+      "scenario_id": "currency-cart-multi-seed42",
+      "sha256": "f19c5fcd3bc541a4cb956b535fcd996fad533d3bff2263bf2c521af866a24c4a"
+    },
+    {
+      "path": "snapshots/currency-cart-multi-seed7",
+      "scenario_id": "currency-cart-multi-seed7",
+      "sha256": "7c65c4f8827733a72418d50451d11193cb690494ad2eaac698b67ba2454d6819"
+    }
+  ],
+  "hardware": "x86_64, 8 vCPU, Linux, no GPU"
+}

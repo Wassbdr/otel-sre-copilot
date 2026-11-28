@@ -1,21 +1,35 @@
 """Evaluation metrics for root-cause analysis quality.
 
 All metrics operate on lists of (InvestigationReport, ground_truth_dict) pairs.
-Metrics are never self-reported by the agent — this module is the single source of truth.
+Metrics are never self-reported by the agent. This module is the single source of truth.
 
 Metrics:
-  accuracy_at_k(k)   — fraction where correct (service, fault_type) is in top-k
-  mrr                — mean reciprocal rank of correct hypothesis
-  fault_type_accuracy — fraction where top-1 fault_type matches ground truth
-  mean_latency_s     — mean wall-clock investigation latency
-  total_cost_usd     — total cost across all scenarios
+  accuracy_at_k(k)  : fraction where correct (service, fault_type) is in top-k
+  mrr               : mean reciprocal rank of correct hypothesis
+  service_at_k(k)   : fraction where the faulty service is in top-k, fault type ignored
+  fault_type_accuracy: fraction where top-1 fault_type matches ground truth
+  mean_latency_s    : mean wall-clock investigation latency
+  total_cost_usd    : total cost across all scenarios
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 from src.agent.schemas import InvestigationReport
+from src.datasources.live import ASTRONOMY_SHOP_SERVICES
+
+_SERVICE_ALIASES = {
+    compact: service
+    for service in ASTRONOMY_SHOP_SERVICES
+    for compact in (service.replace("-", ""), service.replace("-", "") + "service")
+}
+
+
+def canonical_service(service: str) -> str:
+    label = service.strip().lower().replace("-", "").replace("_", "").replace(" ", "")
+    return _SERVICE_ALIASES.get(label, service)
 
 
 @dataclass
@@ -48,7 +62,7 @@ class EvalMetrics:
 class ScenarioResult:
     scenario_id: str
     report: InvestigationReport
-    ground_truth: dict[str, str]
+    ground_truth: dict[str, Any]
     grounding_score: float   # injected by harness after grounding_verifier.verify()
 
 
@@ -67,29 +81,11 @@ def compute_metrics(results: list[ScenarioResult]) -> EvalMetrics:
     cost_sum = 0.0
 
     for sr in results:
-        gt_service = sr.ground_truth.get("fault_service", "")
-        gt_fault = sr.ground_truth.get("fault_type", "")
-        rc = sr.report.root_causes
-
-        # Accuracy@1: both service AND fault_type match rank-1
-        if rc and rc[0].service == gt_service and rc[0].fault_type == gt_fault:
-            acc1_sum += 1.0
-
-        # Accuracy@3: correct (service, fault_type) pair anywhere in top-3
-        for h in rc[:3]:
-            if h.service == gt_service and h.fault_type == gt_fault:
-                acc3_sum += 1.0
-                break
-
-        # MRR: 1/rank_i of first correct hypothesis (0 if not found)
-        for i, h in enumerate(rc[:3]):
-            if h.service == gt_service and h.fault_type == gt_fault:
-                mrr_sum += 1.0 / (i + 1)
-                break
-
-        # Fault type accuracy: only top-1 fault_type must match (service agnostic)
-        if rc and rc[0].fault_type == gt_fault:
-            fault_type_sum += 1.0
+        row = compute_per_scenario(sr)
+        acc1_sum += float(row["accuracy_at_1"])
+        acc3_sum += float(row["accuracy_at_3"])
+        mrr_sum += float(row["mrr"])
+        fault_type_sum += float(row["fault_type_correct"])
 
         grounding_sum += sr.grounding_score
         latency_sum += sr.report.latency_s
@@ -108,30 +104,37 @@ def compute_metrics(results: list[ScenarioResult]) -> EvalMetrics:
     )
 
 
-def compute_per_scenario(sr: ScenarioResult) -> dict[str, object]:
-    """Compute per-scenario metrics for detailed artifact logging."""
+def compute_per_scenario(sr: ScenarioResult) -> dict[str, Any]:
+    """Score the fraction of true causes covered at each rank, averaged per snapshot."""
     gt_service = sr.ground_truth.get("fault_service", "")
     gt_fault = sr.ground_truth.get("fault_type", "")
-    rc = sr.report.root_causes
-
-    rank = None
-    for i, h in enumerate(rc[:3]):
-        if h.service == gt_service and h.fault_type == gt_fault:
-            rank = i + 1
-            break
-
+    faults = sr.ground_truth.get("faults") or [sr.ground_truth]
+    true_pairs = {
+        (canonical_service(fault.get("fault_service", "")), fault.get("fault_type", ""))
+        for fault in faults
+    }
+    true_services = {service for service, _ in true_pairs}
+    rc = sr.report.root_causes or []
+    pairs = [(canonical_service(h.service), h.fault_type) for h in rc[:3]]
+    services = [service for service, _ in pairs]
     return {
         "scenario_id": sr.scenario_id,
         "ground_truth_service": gt_service,
         "ground_truth_fault_type": gt_fault,
-        "predicted_service": rc[0].service if rc else "none",
+        "predicted_service": services[0] if services else "none",
         "predicted_fault_type": rc[0].fault_type if rc else "unknown",
-        "accuracy_at_1": 1 if rank == 1 else 0,
-        "accuracy_at_3": 1 if rank is not None else 0,
-        "mrr": 1.0 / rank if rank else 0.0,
-        "fault_type_correct": 1 if rc and rc[0].fault_type == gt_fault else 0,
+        "accuracy_at_1": len(true_pairs.intersection(pairs[:1])) / len(true_pairs),
+        "accuracy_at_3": len(true_pairs.intersection(pairs)) / len(true_pairs),
+        "mrr": sum(1 / (pairs.index(pair) + 1) for pair in true_pairs if pair in pairs)
+        / len(true_pairs),
+        "service_at_1": len(true_services.intersection(services[:1])) / len(true_services),
+        "service_at_3": len(true_services.intersection(services)) / len(true_services),
+        "fault_type_correct": int(bool(rc) and rc[0].fault_type in {typ for _, typ in true_pairs}),
         "grounding_score": sr.grounding_score,
         "latency_s": sr.report.latency_s,
         "cost_usd": sr.report.cost_usd,
+        "prompt_tokens": sr.report.total_prompt_tokens,
+        "completion_tokens": sr.report.total_completion_tokens,
+        "total_tokens": sr.report.total_prompt_tokens + sr.report.total_completion_tokens,
         "hallucination_warning": sr.grounding_score < 0.8,
     }

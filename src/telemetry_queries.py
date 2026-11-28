@@ -1,4 +1,4 @@
-"""Canonical telemetry query templates — single source of truth.
+"""Canonical telemetry query templates.
 
 The snapshot script captures *exactly* these queries; the baselines and (via the system
 prompt) the agent replay them. ReplayDataSource matches on the query string, so every
@@ -48,6 +48,29 @@ METRIC_QUERIES: dict[str, str] = {
     "pod_restarts": (
         'max(increase(kube_pod_container_status_restarts_total'
         '{{namespace="otel-demo",pod=~"{svc}-.*"}}[5m])) or vector(0)'
+    ),
+}
+
+FINGERPRINT_QUERIES: dict[str, str] = {
+    "memory_limit_ratio": (
+        'max((container_memory_working_set_bytes{{namespace="otel-demo",pod=~"{svc}-.*",'
+        'container!="",container!="POD"}}) / on(namespace,pod,container) '
+        '(kube_pod_container_resource_limits{{namespace="otel-demo",pod=~"{svc}-.*",'
+        'resource="memory",unit="byte"}} > 0))'
+    ),
+    "cpu_throttle_ratio": (
+        'sum(rate(container_cpu_cfs_throttled_periods_total{{namespace="otel-demo",'
+        'pod=~"{svc}-.*"}}[2m])) / sum(rate(container_cpu_cfs_periods_total'
+        '{{namespace="otel-demo",pod=~"{svc}-.*"}}[2m]))'
+    ),
+    "pod_not_ready": (
+        'max(1 - kube_pod_status_ready{{namespace="otel-demo",pod=~"{svc}-.*",'
+        'condition="true"}})'
+    ),
+    "network_drop_rate": (
+        'sum(rate(container_network_receive_packets_dropped_total{{namespace="otel-demo",'
+        'pod=~"{svc}-.*"}}[2m])) + sum(rate(container_network_transmit_packets_dropped_total'
+        '{{namespace="otel-demo",pod=~"{svc}-.*"}}[2m]))'
     ),
 }
 

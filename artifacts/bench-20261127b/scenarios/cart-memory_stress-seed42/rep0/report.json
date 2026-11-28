@@ -1,0 +1,119 @@
+{
+  "incident_id": "INC-4c7c8a31",
+  "investigation_start_ts": "2026-11-27T09:25:43.694784+00:00",
+  "investigation_end_ts": "2026-11-27T09:28:29.961770+00:00",
+  "root_causes": [
+    {
+      "rank": 1,
+      "service": "cart",
+      "fault_type": "pod_crash",
+      "description": "Cart service experienced extreme resource exhaustion with pod_restarts z=>1000, cpu_usage z=+12.54, and memory_usage z=+21.72, causing propagated errors to frontend and elevated p99_latency_ms z=+1.61. As a leaf service, cart's failure cascades to frontend and dependent services.",
+      "confidence": 0.96,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"cart-.*\"}[2m]))",
+          "observed_value": "cpu_usage z=+12.54, window=0.0246, baseline=0.007696±0.0013",
+          "expected_baseline": "cpu_usage z≈0 (pre-incident stable)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"cart-.*\"})",
+          "observed_value": "memory_usage z=+21.72, window=1.259e+08, baseline=1.089e+08±7.9e+05",
+          "expected_baseline": "memory_usage z≈0 (pre-incident stable)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "max(increase(kube_pod_container_status_restarts_total{namespace=\"otel-demo\",pod=~\"cart-.*\"}[5m]))",
+          "observed_value": "pod_restarts z=>1000, window=0.6241, baseline=0±0",
+          "expected_baseline": "pod_restarts z≈0 (pre-incident stable)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"cart\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "p99_latency_ms z=+1.61, window=4.229, baseline=2.759±0.92",
+          "expected_baseline": "p99_latency_ms z≈0 (pre-incident stable)"
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "service": "frontend",
+      "fault_type": "http_abort",
+      "description": "Frontend error_rate z=>1000 is a propagated symptom from cart failure; frontend depends on cart per topology, and cart's resource exhaustion causes frontend to return errors at extreme rate.",
+      "confidence": 0.88,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(rate(calls_total{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+          "observed_value": "frontend error_rate z=>1000, window=0.01905, baseline=0±0",
+          "expected_baseline": "error_rate z≈0 (pre-incident stable)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(rate(calls_total{service_name=\"cart\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+          "observed_value": "cart error_rate baseline 0±0 with z=>1000 pod_restarts",
+          "expected_baseline": "error_rate z≈0 (pre-incident stable)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(rate(calls_total{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) or vector(0)",
+          "observed_value": "frontend request_rate normal baseline",
+          "expected_baseline": "request_rate normal when cart healthy"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "frontend p99_latency_ms z=+0.06, window=39.49, baseline=39.16±5.5",
+          "expected_baseline": "p99_latency_ms z≈0 (pre-incident stable)"
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "service": "checkout",
+      "fault_type": "high_latency",
+      "description": "Checkout p99_latency_ms z=+1.99 is the highest latency anomaly, downstream effect of cart failure impacting checkout pipeline through shared dependencies.",
+      "confidence": 0.72,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"checkout\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "checkout p99_latency_ms z=+1.99, window=61.77, baseline=38.69±12",
+          "expected_baseline": "p99_latency_ms z≈0 (pre-incident stable)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(rate(calls_total{service_name=\"checkout\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+          "observed_value": "checkout error_rate window=0, baseline=0±0",
+          "expected_baseline": "error_rate z≈0 (pre-incident stable)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"checkout-.*\"}[2m]))",
+          "observed_value": "checkout cpu_usage z=+0.07, window=0.001915, baseline=0.001878±0.00052",
+          "expected_baseline": "cpu_usage z≈0 (pre-incident stable)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"checkout-.*\"})",
+          "observed_value": "checkout memory_usage z=-0.27, window=2.381e+07, baseline=2.384e+07±9.6e+04",
+          "expected_baseline": "memory_usage z≈0 (pre-incident stable)"
+        }
+      ]
+    }
+  ],
+  "remediation_steps": [
+    "Restart cart pods immediately to clear resource-exhausted containers",
+    "Investigate cart pod OOM killer triggers and increase resource limits if validated",
+    "Monitor frontend error_rate and checkout latency post-cart restart"
+  ],
+  "fault_type_classification": "pod_crash",
+  "grounding_score": 1.0,
+  "latency_s": 69.02185017400134,
+  "cost_usd": 0.0,
+  "total_prompt_tokens": 85497,
+  "total_completion_tokens": 7357,
+  "llm_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "agent_version": "0.2.0"
+}

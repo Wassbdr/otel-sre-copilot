@@ -1,0 +1,15 @@
+{
+  "grounding_score": 0.8571,
+  "verified": 6,
+  "total": 7,
+  "failed_items": [
+    {
+      "rank": "3",
+      "service": "frontend",
+      "signal_type": "k8s_event",
+      "query_or_id": "get_pod_events namespace=otel-demo",
+      "reason": "no matching tool call found"
+    }
+  ],
+  "has_hallucination_warning": false
+}

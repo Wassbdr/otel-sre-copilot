@@ -1,0 +1,241 @@
+[
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?frontend\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T07:23:47.932623+00:00",
+    "end": "2026-11-27T07:30:48.144320+00:00",
+    "result": [
+      {
+        "stream": {
+          "detected_level": "ERROR",
+          "job": "opentelemetry-demo/frontend",
+          "level": "ERROR",
+          "service_name": "opentelemetry-demo/frontend"
+        },
+        "values": [
+          [
+            "1795764638386000000",
+            "{\"body\":\"Checkout failed to place order\",\"traceid\":\"7be06fa924cb65a83d10aab82b87839b\",\"spanid\":\"b54eb5f30316a960\",\"severity\":\"error\",\"flags\":1,\"attributes\":{\"exception.message\":\"14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 10.96.109.192:8080. Resolution note: \",\"exception.stacktrace\":\"Error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 10.96.109.192:8080. Resolution note: \\n    at callErrorFromStatus (/app/node_modules/@grpc/grpc-js/build/src/call.js:32:19)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client.js:193:76)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:367:141)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:327:181)\\n    at /app/node_modules/@grpc/grpc-js/build/src/resolving-call.js:135:78\\n    at process.processTicksAndRejections (node:internal/process/task_queues:85:11)\\nfor call at\\n    at ServiceClientImpl.makeUnaryRequest (/app/node_modules/@grpc/grpc-js/build/src/client.js:161:32)\\n    at ServiceClientImpl.\\u003canonymous\\u003e (/app/node_modules/@grpc/grpc-js/build/src/make-client.js:105:19)\\n    at /app/node_modules/@opentelemetry/instrumentation-grpc/build/src/clientUtils.js:119:31\\n    at /app/node_modules/@opentelemetry/instrumentation-grpc/build/src/instrumentation.js:202:209\\n    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:65:14)\\n    at AsyncLocalStorageContextManager.with (/app/node_modules/@opentelemetry/context-async-hooks/build/src/AsyncLocalStorageContextManager.js:45:40)\\n    at ContextAPI.with (/app/node_modules/@opentelemetry/api/build/src/api/context.js:51:46)\\n    at ServiceClientImpl.clientMethodTrace [as placeOrder] (/app/node_modules/@opentelemetry/instrumentation-grpc/build/src/instrumentation.js:202:42)\\n    at /app/.next/server/chunks/[root-of-the-server]__009k40p._.js:1:546\\n    at new Promise (\\u003canonymous\\u003e)\",\"exception.type\":\"14\"},\"resources\":{\"host.arch\":\"amd64\",\"host.name\":\"frontend-669cfffd8f-9mtn2\",\"k8s.namespace.name\":\"otel-demo\",\"os.type\":\"linux\",\"os.version\":\"6.8.0-1060-aws\",\"process.command\":\"/app/server.js\",\"process.command_args\":[\"/nodejs/bin/node\",\"--require=./Instrumentation.js\",\"/app/server.js\"],\"process.executable.name\":\"/nodejs/bin/node\",\"process.executable.path\":\"/nodejs/bin/node\",\"process.pid\":1,\"process.runtime.description\":\"Node.js\",\"process.runtime.name\":\"nodejs\",\"process.runtime.version\":\"24.21.0\",\"service.criticality\":\"critical\",\"service.name\":\"frontend\",\"service.namespace\":\"opentelemetry-demo\",\"service.version\":\"2.2.0\",\"telemetry.sdk.language\":\"nodejs\",\"telemetry.sdk.name\":\"opentelemetry\",\"telemetry.sdk.version\":\"2.11.0\"},\"instrumentation_scope\":{\"name\":\"@opentelemetry/instrumentation-pino\",\"version\":\"0.68.0\"}}"
+          ],
+          [
+            "1795764536486000000",
+            "{\"body\":\"Checkout failed to place order\",\"traceid\":\"87e3d02e97b312d95ebc5f7050b01643\",\"spanid\":\"54d0c042210dff19\",\"severity\":\"error\",\"flags\":1,\"attributes\":{\"exception.message\":\"14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 10.96.109.192:8080. Resolution note: \",\"exception.stacktrace\":\"Error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 10.96.109.192:8080. Resolution note: \\n    at callErrorFromStatus (/app/node_modules/@grpc/grpc-js/build/src/call.js:32:19)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client.js:193:76)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:367:141)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:327:181)\\n    at /app/node_modules/@grpc/grpc-js/build/src/resolving-call.js:135:78\\n    at process.processTicksAndRejections (node:internal/process/task_queues:85:11)\\nfor call at\\n    at ServiceClientImpl.makeUnaryRequest (/app/node_modules/@grpc/grpc-js/build/src/client.js:161:32)\\n    at ServiceClientImpl.\\u003canonymous\\u003e (/app/node_modules/@grpc/grpc-js/build/src/make-client.js:105:19)\\n    at /app/node_modules/@opentelemetry/instrumentation-grpc/build/src/clientUtils.js:119:31\\n    at /app/node_modules/@opentelemetry/instrumentation-grpc/build/src/instrumentation.js:202:209\\n    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:65:14)\\n    at AsyncLocalStorageContextManager.with (/app/node_modules/@opentelemetry/context-async-hooks/build/src/AsyncLocalStorageContextManager.js:45:40)\\n    at ContextAPI.with (/app/node_modules/@opentelemetry/api/build/src/api/context.js:51:46)\\n    at ServiceClientImpl.clientMethodTrace [as placeOrder] (/app/node_modules/@opentelemetry/instrumentation-grpc/build/src/instrumentation.js:202:42)\\n    at /app/.next/server/chunks/[root-of-the-server]__009k40p._.js:1:546\\n    at new Promise (\\u003canonymous\\u003e)\",\"exception.type\":\"14\"},\"resources\":{\"host.arch\":\"amd64\",\"host.name\":\"frontend-669cfffd8f-9mtn2\",\"k8s.namespace.name\":\"otel-demo\",\"os.type\":\"linux\",\"os.version\":\"6.8.0-1060-aws\",\"process.command\":\"/app/server.js\",\"process.command_args\":[\"/nodejs/bin/node\",\"--require=./Instrumentation.js\",\"/app/server.js\"],\"process.executable.name\":\"/nodejs/bin/node\",\"process.executable.path\":\"/nodejs/bin/node\",\"process.pid\":1,\"process.runtime.description\":\"Node.js\",\"process.runtime.name\":\"nodejs\",\"process.runtime.version\":\"24.21.0\",\"service.criticality\":\"critical\",\"service.name\":\"frontend\",\"service.namespace\":\"opentelemetry-demo\",\"service.version\":\"2.2.0\",\"telemetry.sdk.language\":\"nodejs\",\"telemetry.sdk.name\":\"opentelemetry\",\"telemetry.sdk.version\":\"2.11.0\"},\"instrumentation_scope\":{\"name\":\"@opentelemetry/instrumentation-pino\",\"version\":\"0.68.0\"}}"
+          ],
+          [
+            "1795764526383000000",
+            "{\"body\":\"Checkout failed to place order\",\"traceid\":\"5107571919308a52de65d2680c10027f\",\"spanid\":\"a4cd3e77bff93f00\",\"severity\":\"error\",\"flags\":1,\"attributes\":{\"exception.message\":\"14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 10.96.109.192:8080. Resolution note: \",\"exception.stacktrace\":\"Error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 10.96.109.192:8080. Resolution note: \\n    at callErrorFromStatus (/app/node_modules/@grpc/grpc-js/build/src/call.js:32:19)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client.js:193:76)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:367:141)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:327:181)\\n    at /app/node_modules/@grpc/grpc-js/build/src/resolving-call.js:135:78\\n    at process.processTicksAndRejections (node:internal/process/task_queues:85:11)\\nfor call at\\n    at ServiceClientImpl.makeUnaryRequest (/app/node_modules/@grpc/grpc-js/build/src/client.js:161:32)\\n    at ServiceClientImpl.\\u003canonymous\\u003e (/app/node_modules/@grpc/grpc-js/build/src/make-client.js:105:19)\\n    at /app/node_modules/@opentelemetry/instrumentation-grpc/build/src/clientUtils.js:119:31\\n    at /app/node_modules/@opentelemetry/instrumentation-grpc/build/src/instrumentation.js:202:209\\n    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:65:14)\\n    at AsyncLocalStorageContextManager.with (/app/node_modules/@opentelemetry/context-async-hooks/build/src/AsyncLocalStorageContextManager.js:45:40)\\n    at ContextAPI.with (/app/node_modules/@opentelemetry/api/build/src/api/context.js:51:46)\\n    at ServiceClientImpl.clientMethodTrace [as placeOrder] (/app/node_modules/@opentelemetry/instrumentation-grpc/build/src/instrumentation.js:202:42)\\n    at /app/.next/server/chunks/[root-of-the-server]__009k40p._.js:1:546\\n    at new Promise (\\u003canonymous\\u003e)\",\"exception.type\":\"14\"},\"resources\":{\"host.arch\":\"amd64\",\"host.name\":\"frontend-669cfffd8f-9mtn2\",\"k8s.namespace.name\":\"otel-demo\",\"os.type\":\"linux\",\"os.version\":\"6.8.0-1060-aws\",\"process.command\":\"/app/server.js\",\"process.command_args\":[\"/nodejs/bin/node\",\"--require=./Instrumentation.js\",\"/app/server.js\"],\"process.executable.name\":\"/nodejs/bin/node\",\"process.executable.path\":\"/nodejs/bin/node\",\"process.pid\":1,\"process.runtime.description\":\"Node.js\",\"process.runtime.name\":\"nodejs\",\"process.runtime.version\":\"24.21.0\",\"service.criticality\":\"critical\",\"service.name\":\"frontend\",\"service.namespace\":\"opentelemetry-demo\",\"service.version\":\"2.2.0\",\"telemetry.sdk.language\":\"nodejs\",\"telemetry.sdk.name\":\"opentelemetry\",\"telemetry.sdk.version\":\"2.11.0\"},\"instrumentation_scope\":{\"name\":\"@opentelemetry/instrumentation-pino\",\"version\":\"0.68.0\"}}"
+          ],
+          [
+            "1795764515424000000",
+            "{\"body\":\"Checkout failed to place order\",\"traceid\":\"5dcdb6399fa8779a33d7aff48e3c3f90\",\"spanid\":\"677b82898491c32b\",\"severity\":\"error\",\"flags\":1,\"attributes\":{\"exception.message\":\"14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 10.96.109.192:8080. Resolution note: \",\"exception.stacktrace\":\"Error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 10.96.109.192:8080. Resolution note: \\n    at callErrorFromStatus (/app/node_modules/@grpc/grpc-js/build/src/call.js:32:19)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client.js:193:76)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:367:141)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:327:181)\\n    at /app/node_modules/@grpc/grpc-js/build/src/resolving-call.js:135:78\\n    at process.processTicksAndRejections (node:internal/process/task_queues:85:11)\\nfor call at\\n    at ServiceClientImpl.makeUnaryRequest (/app/node_modules/@grpc/grpc-js/build/src/client.js:161:32)\\n    at ServiceClientImpl.\\u003canonymous\\u003e (/app/node_modules/@grpc/grpc-js/build/src/make-client.js:105:19)\\n    at /app/node_modules/@opentelemetry/instrumentation-grpc/build/src/clientUtils.js:119:31\\n    at /app/node_modules/@opentelemetry/instrumentation-grpc/build/src/instrumentation.js:202:209\\n    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:65:14)\\n    at AsyncLocalStorageContextManager.with (/app/node_modules/@opentelemetry/context-async-hooks/build/src/AsyncLocalStorageContextManager.js:45:40)\\n    at ContextAPI.with (/app/node_modules/@opentelemetry/api/build/src/api/context.js:51:46)\\n    at ServiceClientImpl.clientMethodTrace [as placeOrder] (/app/node_modules/@opentelemetry/instrumentation-grpc/build/src/instrumentation.js:202:42)\\n    at /app/.next/server/chunks/[root-of-the-server]__009k40p._.js:1:546\\n    at new Promise (\\u003canonymous\\u003e)\",\"exception.type\":\"14\"},\"resources\":{\"host.arch\":\"amd64\",\"host.name\":\"frontend-669cfffd8f-9mtn2\",\"k8s.namespace.name\":\"otel-demo\",\"os.type\":\"linux\",\"os.version\":\"6.8.0-1060-aws\",\"process.command\":\"/app/server.js\",\"process.command_args\":[\"/nodejs/bin/node\",\"--require=./Instrumentation.js\",\"/app/server.js\"],\"process.executable.name\":\"/nodejs/bin/node\",\"process.executable.path\":\"/nodejs/bin/node\",\"process.pid\":1,\"process.runtime.description\":\"Node.js\",\"process.runtime.name\":\"nodejs\",\"process.runtime.version\":\"24.21.0\",\"service.criticality\":\"critical\",\"service.name\":\"frontend\",\"service.namespace\":\"opentelemetry-demo\",\"service.version\":\"2.2.0\",\"telemetry.sdk.language\":\"nodejs\",\"telemetry.sdk.name\":\"opentelemetry\",\"telemetry.sdk.version\":\"2.11.0\"},\"instrumentation_scope\":{\"name\":\"@opentelemetry/instrumentation-pino\",\"version\":\"0.68.0\"}}"
+          ],
+          [
+            "1795764506713000000",
+            "{\"body\":\"Checkout failed to place order\",\"traceid\":\"5887c235f7e30be443c7ade0aa754e60\",\"spanid\":\"2c955a7e2de8f6c2\",\"severity\":\"error\",\"flags\":1,\"attributes\":{\"exception.message\":\"14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 10.96.109.192:8080. Resolution note: \",\"exception.stacktrace\":\"Error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 10.96.109.192:8080. Resolution note: \\n    at callErrorFromStatus (/app/node_modules/@grpc/grpc-js/build/src/call.js:32:19)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client.js:193:76)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:367:141)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:327:181)\\n    at /app/node_modules/@grpc/grpc-js/build/src/resolving-call.js:135:78\\n    at process.processTicksAndRejections (node:internal/process/task_queues:85:11)\\nfor call at\\n    at ServiceClientImpl.makeUnaryRequest (/app/node_modules/@grpc/grpc-js/build/src/client.js:161:32)\\n    at ServiceClientImpl.\\u003canonymous\\u003e (/app/node_modules/@grpc/grpc-js/build/src/make-client.js:105:19)\\n    at /app/node_modules/@opentelemetry/instrumentation-grpc/build/src/clientUtils.js:119:31\\n    at /app/node_modules/@opentelemetry/instrumentation-grpc/build/src/instrumentation.js:202:209\\n    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:65:14)\\n    at AsyncLocalStorageContextManager.with (/app/node_modules/@opentelemetry/context-async-hooks/build/src/AsyncLocalStorageContextManager.js:45:40)\\n    at ContextAPI.with (/app/node_modules/@opentelemetry/api/build/src/api/context.js:51:46)\\n    at ServiceClientImpl.clientMethodTrace [as placeOrder] (/app/node_modules/@opentelemetry/instrumentation-grpc/build/src/instrumentation.js:202:42)\\n    at /app/.next/server/chunks/[root-of-the-server]__009k40p._.js:1:546\\n    at new Promise (\\u003canonymous\\u003e)\",\"exception.type\":\"14\"},\"resources\":{\"host.arch\":\"amd64\",\"host.name\":\"frontend-669cfffd8f-9mtn2\",\"k8s.namespace.name\":\"otel-demo\",\"os.type\":\"linux\",\"os.version\":\"6.8.0-1060-aws\",\"process.command\":\"/app/server.js\",\"process.command_args\":[\"/nodejs/bin/node\",\"--require=./Instrumentation.js\",\"/app/server.js\"],\"process.executable.name\":\"/nodejs/bin/node\",\"process.executable.path\":\"/nodejs/bin/node\",\"process.pid\":1,\"process.runtime.description\":\"Node.js\",\"process.runtime.name\":\"nodejs\",\"process.runtime.version\":\"24.21.0\",\"service.criticality\":\"critical\",\"service.name\":\"frontend\",\"service.namespace\":\"opentelemetry-demo\",\"service.version\":\"2.2.0\",\"telemetry.sdk.language\":\"nodejs\",\"telemetry.sdk.name\":\"opentelemetry\",\"telemetry.sdk.version\":\"2.11.0\"},\"instrumentation_scope\":{\"name\":\"@opentelemetry/instrumentation-pino\",\"version\":\"0.68.0\"}}"
+          ],
+          [
+            "1795764470144000000",
+            "{\"body\":\"Checkout failed to place order\",\"traceid\":\"6301d250ecf1fc9d20b37f1d1cfc3ef4\",\"spanid\":\"80bbf7d6cefa95b0\",\"severity\":\"error\",\"flags\":1,\"attributes\":{\"exception.message\":\"14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 10.96.109.192:8080. Resolution note: \",\"exception.stacktrace\":\"Error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 10.96.109.192:8080. Resolution note: \\n    at callErrorFromStatus (/app/node_modules/@grpc/grpc-js/build/src/call.js:32:19)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client.js:193:76)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:367:141)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:327:181)\\n    at /app/node_modules/@grpc/grpc-js/build/src/resolving-call.js:135:78\\n    at process.processTicksAndRejections (node:internal/process/task_queues:85:11)\\nfor call at\\n    at ServiceClientImpl.makeUnaryRequest (/app/node_modules/@grpc/grpc-js/build/src/client.js:161:32)\\n    at ServiceClientImpl.\\u003canonymous\\u003e (/app/node_modules/@grpc/grpc-js/build/src/make-client.js:105:19)\\n    at /app/node_modules/@opentelemetry/instrumentation-grpc/build/src/clientUtils.js:119:31\\n    at /app/node_modules/@opentelemetry/instrumentation-grpc/build/src/instrumentation.js:202:209\\n    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:65:14)\\n    at AsyncLocalStorageContextManager.with (/app/node_modules/@opentelemetry/context-async-hooks/build/src/AsyncLocalStorageContextManager.js:45:40)\\n    at ContextAPI.with (/app/node_modules/@opentelemetry/api/build/src/api/context.js:51:46)\\n    at ServiceClientImpl.clientMethodTrace [as placeOrder] (/app/node_modules/@opentelemetry/instrumentation-grpc/build/src/instrumentation.js:202:42)\\n    at /app/.next/server/chunks/[root-of-the-server]__009k40p._.js:1:546\\n    at new Promise (\\u003canonymous\\u003e)\",\"exception.type\":\"14\"},\"resources\":{\"host.arch\":\"amd64\",\"host.name\":\"frontend-669cfffd8f-9mtn2\",\"k8s.namespace.name\":\"otel-demo\",\"os.type\":\"linux\",\"os.version\":\"6.8.0-1060-aws\",\"process.command\":\"/app/server.js\",\"process.command_args\":[\"/nodejs/bin/node\",\"--require=./Instrumentation.js\",\"/app/server.js\"],\"process.executable.name\":\"/nodejs/bin/node\",\"process.executable.path\":\"/nodejs/bin/node\",\"process.pid\":1,\"process.runtime.description\":\"Node.js\",\"process.runtime.name\":\"nodejs\",\"process.runtime.version\":\"24.21.0\",\"service.criticality\":\"critical\",\"service.name\":\"frontend\",\"service.namespace\":\"opentelemetry-demo\",\"service.version\":\"2.2.0\",\"telemetry.sdk.language\":\"nodejs\",\"telemetry.sdk.name\":\"opentelemetry\",\"telemetry.sdk.version\":\"2.11.0\"},\"instrumentation_scope\":{\"name\":\"@opentelemetry/instrumentation-pino\",\"version\":\"0.68.0\"}}"
+          ],
+          [
+            "1795764421367000000",
+            "{\"body\":\"Checkout failed to place order\",\"traceid\":\"56162c301d1e8897ff63720577a2ce4e\",\"spanid\":\"585bc98fa70214b7\",\"severity\":\"error\",\"flags\":1,\"attributes\":{\"exception.message\":\"14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 10.96.109.192:8080. Resolution note: \",\"exception.stacktrace\":\"Error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 10.96.109.192:8080. Resolution note: \\n    at callErrorFromStatus (/app/node_modules/@grpc/grpc-js/build/src/call.js:32:19)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client.js:193:76)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:367:141)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:327:181)\\n    at /app/node_modules/@grpc/grpc-js/build/src/resolving-call.js:135:78\\n    at process.processTicksAndRejections (node:internal/process/task_queues:85:11)\\nfor call at\\n    at ServiceClientImpl.makeUnaryRequest (/app/node_modules/@grpc/grpc-js/build/src/client.js:161:32)\\n    at ServiceClientImpl.\\u003canonymous\\u003e (/app/node_modules/@grpc/grpc-js/build/src/make-client.js:105:19)\\n    at /app/node_modules/@opentelemetry/instrumentation-grpc/build/src/clientUtils.js:119:31\\n    at /app/node_modules/@opentelemetry/instrumentation-grpc/build/src/instrumentation.js:202:209\\n    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:65:14)\\n    at AsyncLocalStorageContextManager.with (/app/node_modules/@opentelemetry/context-async-hooks/build/src/AsyncLocalStorageContextManager.js:45:40)\\n    at ContextAPI.with (/app/node_modules/@opentelemetry/api/build/src/api/context.js:51:46)\\n    at ServiceClientImpl.clientMethodTrace [as placeOrder] (/app/node_modules/@opentelemetry/instrumentation-grpc/build/src/instrumentation.js:202:42)\\n    at /app/.next/server/chunks/[root-of-the-server]__009k40p._.js:1:546\\n    at new Promise (\\u003canonymous\\u003e)\",\"exception.type\":\"14\"},\"resources\":{\"host.arch\":\"amd64\",\"host.name\":\"frontend-669cfffd8f-9mtn2\",\"k8s.namespace.name\":\"otel-demo\",\"os.type\":\"linux\",\"os.version\":\"6.8.0-1060-aws\",\"process.command\":\"/app/server.js\",\"process.command_args\":[\"/nodejs/bin/node\",\"--require=./Instrumentation.js\",\"/app/server.js\"],\"process.executable.name\":\"/nodejs/bin/node\",\"process.executable.path\":\"/nodejs/bin/node\",\"process.pid\":1,\"process.runtime.description\":\"Node.js\",\"process.runtime.name\":\"nodejs\",\"process.runtime.version\":\"24.21.0\",\"service.criticality\":\"critical\",\"service.name\":\"frontend\",\"service.namespace\":\"opentelemetry-demo\",\"service.version\":\"2.2.0\",\"telemetry.sdk.language\":\"nodejs\",\"telemetry.sdk.name\":\"opentelemetry\",\"telemetry.sdk.version\":\"2.11.0\"},\"instrumentation_scope\":{\"name\":\"@opentelemetry/instrumentation-pino\",\"version\":\"0.68.0\"}}"
+          ],
+          [
+            "1795764413648000000",
+            "{\"body\":\"Checkout failed to place order\",\"traceid\":\"5e3771be51a736d1dbc59e64cc44fbb9\",\"spanid\":\"7f9d7a148e0beaa2\",\"severity\":\"error\",\"flags\":1,\"attributes\":{\"exception.message\":\"14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 10.96.109.192:8080. Resolution note: \",\"exception.stacktrace\":\"Error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 10.96.109.192:8080. Resolution note: \\n    at callErrorFromStatus (/app/node_modules/@grpc/grpc-js/build/src/call.js:32:19)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client.js:193:76)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:367:141)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:327:181)\\n    at /app/node_modules/@grpc/grpc-js/build/src/resolving-call.js:135:78\\n    at process.processTicksAndRejections (node:internal/process/task_queues:85:11)\\nfor call at\\n    at ServiceClientImpl.makeUnaryRequest (/app/node_modules/@grpc/grpc-js/build/src/client.js:161:32)\\n    at ServiceClientImpl.\\u003canonymous\\u003e (/app/node_modules/@grpc/grpc-js/build/src/make-client.js:105:19)\\n    at /app/node_modules/@opentelemetry/instrumentation-grpc/build/src/clientUtils.js:119:31\\n    at /app/node_modules/@opentelemetry/instrumentation-grpc/build/src/instrumentation.js:202:209\\n    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:65:14)\\n    at AsyncLocalStorageContextManager.with (/app/node_modules/@opentelemetry/context-async-hooks/build/src/AsyncLocalStorageContextManager.js:45:40)\\n    at ContextAPI.with (/app/node_modules/@opentelemetry/api/build/src/api/context.js:51:46)\\n    at ServiceClientImpl.clientMethodTrace [as placeOrder] (/app/node_modules/@opentelemetry/instrumentation-grpc/build/src/instrumentation.js:202:42)\\n    at /app/.next/server/chunks/[root-of-the-server]__009k40p._.js:1:546\\n    at new Promise (\\u003canonymous\\u003e)\",\"exception.type\":\"14\"},\"resources\":{\"host.arch\":\"amd64\",\"host.name\":\"frontend-669cfffd8f-9mtn2\",\"k8s.namespace.name\":\"otel-demo\",\"os.type\":\"linux\",\"os.version\":\"6.8.0-1060-aws\",\"process.command\":\"/app/server.js\",\"process.command_args\":[\"/nodejs/bin/node\",\"--require=./Instrumentation.js\",\"/app/server.js\"],\"process.executable.name\":\"/nodejs/bin/node\",\"process.executable.path\":\"/nodejs/bin/node\",\"process.pid\":1,\"process.runtime.description\":\"Node.js\",\"process.runtime.name\":\"nodejs\",\"process.runtime.version\":\"24.21.0\",\"service.criticality\":\"critical\",\"service.name\":\"frontend\",\"service.namespace\":\"opentelemetry-demo\",\"service.version\":\"2.2.0\",\"telemetry.sdk.language\":\"nodejs\",\"telemetry.sdk.name\":\"opentelemetry\",\"telemetry.sdk.version\":\"2.11.0\"},\"instrumentation_scope\":{\"name\":\"@opentelemetry/instrumentation-pino\",\"version\":\"0.68.0\"}}"
+          ],
+          [
+            "1795764371207000000",
+            "{\"body\":\"Checkout failed to place order\",\"traceid\":\"d3479c5554fd4a8504bed0a0e6300b53\",\"spanid\":\"a0fa7c2bb52e6aed\",\"severity\":\"error\",\"flags\":1,\"attributes\":{\"exception.message\":\"14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 10.96.109.192:8080. Resolution note: \",\"exception.stacktrace\":\"Error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 10.96.109.192:8080. Resolution note: \\n    at callErrorFromStatus (/app/node_modules/@grpc/grpc-js/build/src/call.js:32:19)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client.js:193:76)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:367:141)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:327:181)\\n    at /app/node_modules/@grpc/grpc-js/build/src/resolving-call.js:135:78\\n    at process.processTicksAndRejections (node:internal/process/task_queues:85:11)\\nfor call at\\n    at ServiceClientImpl.makeUnaryRequest (/app/node_modules/@grpc/grpc-js/build/src/client.js:161:32)\\n    at ServiceClientImpl.\\u003canonymous\\u003e (/app/node_modules/@grpc/grpc-js/build/src/make-client.js:105:19)\\n    at /app/node_modules/@opentelemetry/instrumentation-grpc/build/src/clientUtils.js:119:31\\n    at /app/node_modules/@opentelemetry/instrumentation-grpc/build/src/instrumentation.js:202:209\\n    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:65:14)\\n    at AsyncLocalStorageContextManager.with (/app/node_modules/@opentelemetry/context-async-hooks/build/src/AsyncLocalStorageContextManager.js:45:40)\\n    at ContextAPI.with (/app/node_modules/@opentelemetry/api/build/src/api/context.js:51:46)\\n    at ServiceClientImpl.clientMethodTrace [as placeOrder] (/app/node_modules/@opentelemetry/instrumentation-grpc/build/src/instrumentation.js:202:42)\\n    at /app/.next/server/chunks/[root-of-the-server]__009k40p._.js:1:546\\n    at new Promise (\\u003canonymous\\u003e)\",\"exception.type\":\"14\"},\"resources\":{\"host.arch\":\"amd64\",\"host.name\":\"frontend-669cfffd8f-9mtn2\",\"k8s.namespace.name\":\"otel-demo\",\"os.type\":\"linux\",\"os.version\":\"6.8.0-1060-aws\",\"process.command\":\"/app/server.js\",\"process.command_args\":[\"/nodejs/bin/node\",\"--require=./Instrumentation.js\",\"/app/server.js\"],\"process.executable.name\":\"/nodejs/bin/node\",\"process.executable.path\":\"/nodejs/bin/node\",\"process.pid\":1,\"process.runtime.description\":\"Node.js\",\"process.runtime.name\":\"nodejs\",\"process.runtime.version\":\"24.21.0\",\"service.criticality\":\"critical\",\"service.name\":\"frontend\",\"service.namespace\":\"opentelemetry-demo\",\"service.version\":\"2.2.0\",\"telemetry.sdk.language\":\"nodejs\",\"telemetry.sdk.name\":\"opentelemetry\",\"telemetry.sdk.version\":\"2.11.0\"},\"instrumentation_scope\":{\"name\":\"@opentelemetry/instrumentation-pino\",\"version\":\"0.68.0\"}}"
+          ],
+          [
+            "1795764363494000000",
+            "{\"body\":\"Checkout failed to place order\",\"traceid\":\"c0e5b64ca434e8f92f776d4f85b3a981\",\"spanid\":\"5681dbc43264140d\",\"severity\":\"error\",\"flags\":1,\"attributes\":{\"exception.message\":\"14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 10.96.109.192:8080. Resolution note: \",\"exception.stacktrace\":\"Error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 10.96.109.192:8080. Resolution note: \\n    at callErrorFromStatus (/app/node_modules/@grpc/grpc-js/build/src/call.js:32:19)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client.js:193:76)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:367:141)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:327:181)\\n    at /app/node_modules/@grpc/grpc-js/build/src/resolving-call.js:135:78\\n    at process.processTicksAndRejections (node:internal/process/task_queues:85:11)\\nfor call at\\n    at ServiceClientImpl.makeUnaryRequest (/app/node_modules/@grpc/grpc-js/build/src/client.js:161:32)\\n    at ServiceClientImpl.\\u003canonymous\\u003e (/app/node_modules/@grpc/grpc-js/build/src/make-client.js:105:19)\\n    at /app/node_modules/@opentelemetry/instrumentation-grpc/build/src/clientUtils.js:119:31\\n    at /app/node_modules/@opentelemetry/instrumentation-grpc/build/src/instrumentation.js:202:209\\n    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:65:14)\\n    at AsyncLocalStorageContextManager.with (/app/node_modules/@opentelemetry/context-async-hooks/build/src/AsyncLocalStorageContextManager.js:45:40)\\n    at ContextAPI.with (/app/node_modules/@opentelemetry/api/build/src/api/context.js:51:46)\\n    at ServiceClientImpl.clientMethodTrace [as placeOrder] (/app/node_modules/@opentelemetry/instrumentation-grpc/build/src/instrumentation.js:202:42)\\n    at /app/.next/server/chunks/[root-of-the-server]__009k40p._.js:1:546\\n    at new Promise (\\u003canonymous\\u003e)\",\"exception.type\":\"14\"},\"resources\":{\"host.arch\":\"amd64\",\"host.name\":\"frontend-669cfffd8f-9mtn2\",\"k8s.namespace.name\":\"otel-demo\",\"os.type\":\"linux\",\"os.version\":\"6.8.0-1060-aws\",\"process.command\":\"/app/server.js\",\"process.command_args\":[\"/nodejs/bin/node\",\"--require=./Instrumentation.js\",\"/app/server.js\"],\"process.executable.name\":\"/nodejs/bin/node\",\"process.executable.path\":\"/nodejs/bin/node\",\"process.pid\":1,\"process.runtime.description\":\"Node.js\",\"process.runtime.name\":\"nodejs\",\"process.runtime.version\":\"24.21.0\",\"service.criticality\":\"critical\",\"service.name\":\"frontend\",\"service.namespace\":\"opentelemetry-demo\",\"service.version\":\"2.2.0\",\"telemetry.sdk.language\":\"nodejs\",\"telemetry.sdk.name\":\"opentelemetry\",\"telemetry.sdk.version\":\"2.11.0\"},\"instrumentation_scope\":{\"name\":\"@opentelemetry/instrumentation-pino\",\"version\":\"0.68.0\"}}"
+          ],
+          [
+            "1795764336447000000",
+            "{\"body\":\"Checkout failed to place order\",\"traceid\":\"aace6777863fd98fff2b6ac87afaed6a\",\"spanid\":\"030c8a4563e98f73\",\"severity\":\"error\",\"flags\":1,\"attributes\":{\"exception.message\":\"14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 10.96.109.192:8080. Resolution note: \",\"exception.stacktrace\":\"Error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 10.96.109.192:8080. Resolution note: \\n    at callErrorFromStatus (/app/node_modules/@grpc/grpc-js/build/src/call.js:32:19)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client.js:193:76)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:367:141)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:327:181)\\n    at /app/node_modules/@grpc/grpc-js/build/src/resolving-call.js:135:78\\n    at process.processTicksAndRejections (node:internal/process/task_queues:85:11)\\nfor call at\\n    at ServiceClientImpl.makeUnaryRequest (/app/node_modules/@grpc/grpc-js/build/src/client.js:161:32)\\n    at ServiceClientImpl.\\u003canonymous\\u003e (/app/node_modules/@grpc/grpc-js/build/src/make-client.js:105:19)\\n    at /app/node_modules/@opentelemetry/instrumentation-grpc/build/src/clientUtils.js:119:31\\n    at /app/node_modules/@opentelemetry/instrumentation-grpc/build/src/instrumentation.js:202:209\\n    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:65:14)\\n    at AsyncLocalStorageContextManager.with (/app/node_modules/@opentelemetry/context-async-hooks/build/src/AsyncLocalStorageContextManager.js:45:40)\\n    at ContextAPI.with (/app/node_modules/@opentelemetry/api/build/src/api/context.js:51:46)\\n    at ServiceClientImpl.clientMethodTrace [as placeOrder] (/app/node_modules/@opentelemetry/instrumentation-grpc/build/src/instrumentation.js:202:42)\\n    at /app/.next/server/chunks/[root-of-the-server]__009k40p._.js:1:546\\n    at new Promise (\\u003canonymous\\u003e)\",\"exception.type\":\"14\"},\"resources\":{\"host.arch\":\"amd64\",\"host.name\":\"frontend-669cfffd8f-9mtn2\",\"k8s.namespace.name\":\"otel-demo\",\"os.type\":\"linux\",\"os.version\":\"6.8.0-1060-aws\",\"process.command\":\"/app/server.js\",\"process.command_args\":[\"/nodejs/bin/node\",\"--require=./Instrumentation.js\",\"/app/server.js\"],\"process.executable.name\":\"/nodejs/bin/node\",\"process.executable.path\":\"/nodejs/bin/node\",\"process.pid\":1,\"process.runtime.description\":\"Node.js\",\"process.runtime.name\":\"nodejs\",\"process.runtime.version\":\"24.21.0\",\"service.criticality\":\"critical\",\"service.name\":\"frontend\",\"service.namespace\":\"opentelemetry-demo\",\"service.version\":\"2.2.0\",\"telemetry.sdk.language\":\"nodejs\",\"telemetry.sdk.name\":\"opentelemetry\",\"telemetry.sdk.version\":\"2.11.0\"},\"instrumentation_scope\":{\"name\":\"@opentelemetry/instrumentation-pino\",\"version\":\"0.68.0\"}}"
+          ],
+          [
+            "1795764335705000000",
+            "{\"body\":\"Checkout failed to place order\",\"traceid\":\"44f347f3c4298e5962464a8409fc332e\",\"spanid\":\"b3f7236ddd9e9260\",\"severity\":\"error\",\"flags\":1,\"attributes\":{\"exception.message\":\"14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 10.96.109.192:8080. Resolution note: \",\"exception.stacktrace\":\"Error: 14 UNAVAILABLE: No connection established. Last error: Error: connect ECONNREFUSED 10.96.109.192:8080. Resolution note: \\n    at callErrorFromStatus (/app/node_modules/@grpc/grpc-js/build/src/call.js:32:19)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client.js:193:76)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:367:141)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:327:181)\\n    at /app/node_modules/@grpc/grpc-js/build/src/resolving-call.js:135:78\\n    at processTicksAndRejections (node:internal/process/task_queues:85:11)\\n    at runNextTicks (node:internal/process/task_queues:69:3)\\n    at process.processImmediate (node:internal/timers:541:9)\\nfor call at\\n    at ServiceClientImpl.makeUnaryRequest (/app/node_modules/@grpc/grpc-js/build/src/client.js:161:32)\\n    at ServiceClientImpl.\\u003canonymous\\u003e (/app/node_modules/@grpc/grpc-js/build/src/make-client.js:105:19)\\n    at /app/node_modules/@opentelemetry/instrumentation-grpc/build/src/clientUtils.js:119:31\\n    at /app/node_modules/@opentelemetry/instrumentation-grpc/build/src/instrumentation.js:202:209\\n    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:65:14)\\n    at AsyncLocalStorageContextManager.with (/app/node_modules/@opentelemetry/context-async-hooks/build/src/AsyncLocalStorageContextManager.js:45:40)\\n    at ContextAPI.with (/app/node_modules/@opentelemetry/api/build/src/api/context.js:51:46)\\n    at ServiceClientImpl.clientMethodTrace [as placeOrder] (/app/node_modules/@opentelemetry/instrumentation-grpc/build/src/instrumentation.js:202:42)\\n    at /app/.next/server/chunks/[root-of-the-server]__009k40p._.js:1:546\\n    at new Promise (\\u003canonymous\\u003e)\",\"exception.type\":\"14\"},\"resources\":{\"host.arch\":\"amd64\",\"host.name\":\"frontend-669cfffd8f-9mtn2\",\"k8s.namespace.name\":\"otel-demo\",\"os.type\":\"linux\",\"os.version\":\"6.8.0-1060-aws\",\"process.command\":\"/app/server.js\",\"process.command_args\":[\"/nodejs/bin/node\",\"--require=./Instrumentation.js\",\"/app/server.js\"],\"process.executable.name\":\"/nodejs/bin/node\",\"process.executable.path\":\"/nodejs/bin/node\",\"process.pid\":1,\"process.runtime.description\":\"Node.js\",\"process.runtime.name\":\"nodejs\",\"process.runtime.version\":\"24.21.0\",\"service.criticality\":\"critical\",\"service.name\":\"frontend\",\"service.namespace\":\"opentelemetry-demo\",\"service.version\":\"2.2.0\",\"telemetry.sdk.language\":\"nodejs\",\"telemetry.sdk.name\":\"opentelemetry\",\"telemetry.sdk.version\":\"2.11.0\"},\"instrumentation_scope\":{\"name\":\"@opentelemetry/instrumentation-pino\",\"version\":\"0.68.0\"}}"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?frontend\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T07:23:47.932623+00:00",
+    "end": "2026-11-27T07:30:48.144320+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?cart\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T07:23:47.932623+00:00",
+    "end": "2026-11-27T07:30:48.144320+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?cart\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T07:23:47.932623+00:00",
+    "end": "2026-11-27T07:30:48.144320+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?checkout\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T07:23:47.932623+00:00",
+    "end": "2026-11-27T07:30:48.144320+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?checkout\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T07:23:47.932623+00:00",
+    "end": "2026-11-27T07:30:48.144320+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?currency\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T07:23:47.932623+00:00",
+    "end": "2026-11-27T07:30:48.144320+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?currency\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T07:23:47.932623+00:00",
+    "end": "2026-11-27T07:30:48.144320+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?email\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T07:23:47.932623+00:00",
+    "end": "2026-11-27T07:30:48.144320+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?email\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T07:23:47.932623+00:00",
+    "end": "2026-11-27T07:30:48.144320+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?payment\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T07:23:47.932623+00:00",
+    "end": "2026-11-27T07:30:48.144320+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?payment\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T07:23:47.932623+00:00",
+    "end": "2026-11-27T07:30:48.144320+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?product-catalog\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T07:23:47.932623+00:00",
+    "end": "2026-11-27T07:30:48.144320+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?product-catalog\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T07:23:47.932623+00:00",
+    "end": "2026-11-27T07:30:48.144320+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?recommendation\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T07:23:47.932623+00:00",
+    "end": "2026-11-27T07:30:48.144320+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?recommendation\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T07:23:47.932623+00:00",
+    "end": "2026-11-27T07:30:48.144320+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?shipping\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T07:23:47.932623+00:00",
+    "end": "2026-11-27T07:30:48.144320+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?shipping\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T07:23:47.932623+00:00",
+    "end": "2026-11-27T07:30:48.144320+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?ad\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T07:23:47.932623+00:00",
+    "end": "2026-11-27T07:30:48.144320+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?ad\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T07:23:47.932623+00:00",
+    "end": "2026-11-27T07:30:48.144320+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?load-generator\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T07:23:47.932623+00:00",
+    "end": "2026-11-27T07:30:48.144320+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?load-generator\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T07:23:47.932623+00:00",
+    "end": "2026-11-27T07:30:48.144320+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?accounting\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T07:23:47.932623+00:00",
+    "end": "2026-11-27T07:30:48.144320+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?accounting\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T07:23:47.932623+00:00",
+    "end": "2026-11-27T07:30:48.144320+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?fraud-detection\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T07:23:47.932623+00:00",
+    "end": "2026-11-27T07:30:48.144320+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?fraud-detection\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T07:23:47.932623+00:00",
+    "end": "2026-11-27T07:30:48.144320+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?quote\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T07:23:47.932623+00:00",
+    "end": "2026-11-27T07:30:48.144320+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?quote\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T07:23:47.932623+00:00",
+    "end": "2026-11-27T07:30:48.144320+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?flagd\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T07:23:47.932623+00:00",
+    "end": "2026-11-27T07:30:48.144320+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?flagd\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T07:23:47.932623+00:00",
+    "end": "2026-11-27T07:30:48.144320+00:00",
+    "result": []
+  }
+]

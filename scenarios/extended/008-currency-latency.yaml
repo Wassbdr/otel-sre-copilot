@@ -1,0 +1,29 @@
+metadata:
+  scenario_id: currency-high_latency-seed42
+  fault_service: currency
+  fault_type: high_latency
+  seed: 42
+  split: development
+  fault_duration_s: 300
+  window_extra_s: 60
+  namespace: otel-demo
+
+chaos_manifest:
+  apiVersion: chaos-mesh.org/v1alpha1
+  kind: NetworkChaos
+  metadata:
+    name: currency-high-latency-seed42
+    namespace: chaos-mesh
+  spec:
+    mode: all
+    selector:
+      namespaces: [otel-demo]
+      labelSelectors:
+        app.kubernetes.io/component: currency
+    duration: "300s"
+    action: delay
+    direction: to
+    delay:
+      latency: "1500ms"
+      jitter: "300ms"
+      correlation: "25"

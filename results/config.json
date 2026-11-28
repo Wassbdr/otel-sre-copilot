@@ -1,0 +1,30 @@
+{
+  "run_id": "bench-20261127b",
+  "mode": "benchmark",
+  "model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "llm_base_url": "https://integrate.api.nvidia.com/v1",
+  "repeats": 3,
+  "seed": 42,
+  "snapshots": [
+    "snapshots/checkout-pod_crash-seed42",
+    "snapshots/checkout-pod_crash-seed7",
+    "snapshots/product-catalog-high_latency-seed42",
+    "snapshots/product-catalog-high_latency-seed7",
+    "snapshots/payment-http_abort-seed42",
+    "snapshots/payment-http_abort-seed7",
+    "snapshots/recommendation-cpu_stress-seed42",
+    "snapshots/recommendation-cpu_stress-seed7",
+    "snapshots/cart-memory_stress-seed42",
+    "snapshots/cart-memory_stress-seed7",
+    "snapshots/shipping-high_latency-seed42",
+    "snapshots/shipping-high_latency-seed7",
+    "snapshots/frontend-pod_crash-seed42",
+    "snapshots/frontend-pod_crash-seed7"
+  ],
+  "excluded_snapshots_failed_validation": [],
+  "hardware": "x86_64 8 vCPU, Linux, no GPU",
+  "python": "3.12.16",
+  "agent_version": "0.2.0",
+  "n_scenarios": 14,
+  "ts": "2026-11-27T10:48:13.582586+00:00"
+}

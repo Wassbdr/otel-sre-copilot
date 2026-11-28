@@ -1,0 +1,15 @@
+{
+  "grounding_score": 0.8,
+  "verified": 4,
+  "total": 5,
+  "failed_items": [
+    {
+      "rank": "1",
+      "service": "checkout",
+      "signal_type": "k8s_event",
+      "query_or_id": "get_pod_events namespace=otel-demo pod_name_prefix=checkout since_seconds=300",
+      "reason": "no matching tool call found"
+    }
+  ],
+  "has_hallucination_warning": false
+}

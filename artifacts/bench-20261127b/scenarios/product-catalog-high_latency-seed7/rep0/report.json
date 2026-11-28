@@ -1,0 +1,82 @@
+{
+  "incident_id": "INC-70e4b7e6",
+  "investigation_start_ts": "2026-11-27T09:59:10.661973+00:00",
+  "investigation_end_ts": "2026-11-27T10:03:24.571795+00:00",
+  "root_causes": [
+    {
+      "rank": 1,
+      "service": "product-catalog",
+      "fault_type": "cpu_stress",
+      "description": "product-catalog service shows extreme resource pressure with CPU usage z-score of +5.84 and p99 latency z-score >1000, indicating CPU saturation causing latency spikes that cascade downstream",
+      "confidence": 0.92,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"product-catalog-.*\"}[2m]))",
+          "observed_value": "cpu_usage z=+5.84 at window mean",
+          "expected_baseline": "cpu_usage < 0.05 (p99 last 24h)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"product-catalog\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "p99_latency_ms z>1000 at window mean",
+          "expected_baseline": "p99_latency_ms < 50 (p99 last 24h)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"product-catalog-.*\"})",
+          "observed_value": "memory_usage z=+5.09 at window mean",
+          "expected_baseline": "memory_usage < 0.05 (p99 last 24h)"
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "service": "recommendation",
+      "fault_type": "memory_stress",
+      "description": "recommendation service shows extreme memory pressure with memory usage z-score of +16.59 and p99 latency z-score >1000, likely exacerbated by downstream product-catalog dependency degradation",
+      "confidence": 0.88,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"recommendation-.*\"})",
+          "observed_value": "memory_usage z=+16.59 at window mean",
+          "expected_baseline": "memory_usage < 0.05 (p99 last 24h)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"recommendation\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "p99_latency_ms z>1000 at window mean",
+          "expected_baseline": "p99_latency_ms < 20 (p99 last 24h)"
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "service": "frontend",
+      "fault_type": "high_latency",
+      "description": "frontend service shows elevated p99 latency z-score of +524.64, which is a symptom of downstream dependency failures in product-catalog and recommendation rather than an independent root cause",
+      "confidence": 0.75,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "p99_latency_ms z=+524.64 at window mean",
+          "expected_baseline": "p99_latency_ms < 35 (p99 last 24h)"
+        }
+      ]
+    }
+  ],
+  "remediation_steps": [
+    "Investigate product-catalog pod for OOM kills or CPU throttling; consider increasing resource limits or optimizing catalog query performance",
+    "Review recommendation service memory allocation; check for memory leaks in recommendation engine and consider adding pod restart or OOM kill mitigation"
+  ],
+  "fault_type_classification": "cpu_stress",
+  "grounding_score": 1.0,
+  "latency_s": 30.819765939999712,
+  "cost_usd": 0.0,
+  "total_prompt_tokens": 76090,
+  "total_completion_tokens": 4022,
+  "llm_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "agent_version": "0.2.0"
+}

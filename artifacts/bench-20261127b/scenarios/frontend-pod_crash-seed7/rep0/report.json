@@ -1,0 +1,71 @@
+{
+  "incident_id": "INC-71f3a540",
+  "investigation_start_ts": "2026-11-27T10:32:03.721772+00:00",
+  "investigation_end_ts": "2026-11-27T10:35:41.503448+00:00",
+  "root_causes": [
+    {
+      "rank": 1,
+      "service": "frontend",
+      "fault_type": "pod_crash",
+      "description": "Frontend pods experiencing extreme restart rate (z>1000 vs baseline), indicating process crashes or OOM kills as the primary anomaly in the incident window.",
+      "confidence": 0.92,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "max(increase(kube_pod_container_status_restarts_total{namespace=\"otel-demo\",pod=~\"frontend-.*\"}[5m])) or vector(0)",
+          "observed_value": "pod_restarts z-score >1000 at 08:37-08:44",
+          "expected_baseline": "pod_restarts < 0.01 (pre-incident baseline)"
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "service": "flagd",
+      "fault_type": "high_latency",
+      "description": "flagd p99 latency spiked to ~600s (z=+7.59 vs baseline 4023±180ms), likely propagating dependency delays through the checkout path.",
+      "confidence": 0.78,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"flagd\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "p99_latency_ms z=+7.59, window p95=600001ms",
+          "expected_baseline": "p99_latency_ms < 0.5s (pre-incident baseline)"
+        },
+        {
+          "signal_type": "trace",
+          "query_or_id": "361333df479b4afd",
+          "observed_value": "flagd.evaluation.v2.Service/EventStream trace p95_duration=600001ms, status=ok",
+          "expected_baseline": "p95_duration < 1s (pre-incident baseline)"
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "service": "accounting",
+      "fault_type": "memory_stress",
+      "description": "accounting service memory usage spiked +22.27z above baseline (2.778e8 bytes vs 2.769e8±3.8e4), indicating memory pressure potentially impacting downstream checkout dependency.",
+      "confidence": 0.65,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"accounting-.*\"})",
+          "observed_value": "memory_usage z=+22.27 at 08:37-08:44",
+          "expected_baseline": "memory_usage < 2.77e8 bytes (pre-incident baseline p99)"
+        }
+      ]
+    }
+  ],
+  "remediation_steps": [
+    "Restart frontend deployment pods to immediately restore service availability",
+    "Investigate flagd EventStream evaluation path for latency bottleneck causing 600s durations",
+    "Review accounting memory allocation and consider increasing container memory limits"
+  ],
+  "fault_type_classification": "pod_crash",
+  "grounding_score": 1.0,
+  "latency_s": 44.65562481300498,
+  "cost_usd": 0.0,
+  "total_prompt_tokens": 76430,
+  "total_completion_tokens": 6405,
+  "llm_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "agent_version": "0.2.0"
+}

@@ -1,0 +1,48 @@
+{
+  "incident_id": "INC-71f3a540",
+  "investigation_start_ts": "2026-11-27T10:35:41.523114+00:00",
+  "investigation_end_ts": "2026-11-27T10:37:40.419657+00:00",
+  "root_causes": [
+    {
+      "rank": 1,
+      "service": "frontend",
+      "fault_type": "pod_crash",
+      "description": "Frontend pods experiencing extreme restart activity (z>1000) combined with dramatically lower-than-baseline memory (z=-681.48) and CPU (z=-11.21) usage, indicating OOM kill and rapid restart cycle that cascades failures to all downstream services per the service topology.",
+      "confidence": 0.96,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "max(increase(kube_pod_container_status_restarts_total{namespace=\"otel-demo\",pod=~\"frontend-.*\"}[5m])) or vector(0)",
+          "observed_value": "pod_restarts z-score >1000 vs baseline 0",
+          "expected_baseline": "pod_restarts z-score < 0.1 (pre-incident stable operation)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"frontend-.*\"})",
+          "observed_value": "memory_usage z-score -681.48 vs baseline 3.244e+08",
+          "expected_baseline": "memory_usage z-score near 0 (within normal variance)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"frontend-.*\"}[2m]))",
+          "observed_value": "cpu_usage z-score -11.21 vs baseline 0.1036",
+          "expected_baseline": "cpu_usage z-score near 0 (within normal variance)"
+        }
+      ]
+    }
+  ],
+  "remediation_steps": [
+    "Investigate OOM events on frontend pods: kubectl describe pod <frontend-pod> -n otel-demo, check kube_pod_container_status_messages",
+    "Increase frontend resource limits or optimize application memory footprint to prevent OOM kills",
+    "Rollout updated frontend deployment with higher memory requests/limits once OOM root cause is addressed",
+    "Monitor pod restart rates and set alert on z-score >3 for early detection"
+  ],
+  "fault_type_classification": "pod_crash",
+  "grounding_score": 1.0,
+  "latency_s": 38.33635788400095,
+  "cost_usd": 0.0,
+  "total_prompt_tokens": 76305,
+  "total_completion_tokens": 4975,
+  "llm_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "agent_version": "0.2.0"
+}

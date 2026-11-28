@@ -1,4 +1,4 @@
-.PHONY: setup up down health-check fault investigate eval eval-replay eval-baselines compare test lint fmt demo help
+.PHONY: setup up down compose-up compose-down health-check fault investigate eval eval-replay eval-baselines reproduce-baselines compare test lint fmt check-python demo demo-live bench benchmark help
 
 CLUSTER_NAME      := otel-sre-copilot
 KUBECONFIG_PATH   := $(HOME)/.kube/config
@@ -6,8 +6,15 @@ NAMESPACE         := otel-demo
 CHAOS_NAMESPACE   := chaos-mesh
 
 SCENARIO          ?= scenarios/mvp/001-checkoutservice-pod-crash.yaml
+TRACE             ?= examples/checkout-pod-crash.trace.json
+SNAPSHOT          ?= snapshots/checkout-pod_crash-seed42
+REPEATS           ?= 3
+BENCH_ID          := bench-$(shell date -u +%Y%m%dT%H%M%SZ)
+BENCH_RUN_ID      ?= round2-baseline
+BENCH_SPLIT       ?= development
 SCENARIO_DIR      ?= scenarios/mvp
 RUN_ID            ?=
+PYTHON            ?= $(if $(wildcard .venv/bin/python),.venv/bin/python,python3)
 INCIDENT_ID       ?=
 START             ?=
 END               ?=
@@ -17,7 +24,7 @@ setup:
 	@echo "==> WSL2 preflight (inotify limits)"
 	@bash scripts/wsl2_preflight.sh
 	@echo "==> Installing Python dependencies"
-	pip install -e ".[dev]"
+	$(PYTHON) -m pip install -e ".[dev]"
 	@echo "==> Checking kind"
 	@which kind || (echo "Install kind: https://kind.sigs.k8s.io/docs/user/quick-start/#installation" && exit 1)
 	@echo "==> Checking helm"
@@ -43,7 +50,7 @@ up:
 	helm repo add chaos-mesh https://charts.chaos-mesh.org 2>/dev/null || true
 	helm repo update
 	@echo "==> Installing Prometheus"
-	helm upgrade --install prometheus prometheus-community/kube-prometheus-stack \
+	helm upgrade --install prometheus prometheus-community/prometheus \
 		--namespace monitoring --create-namespace \
 		--values infra/helm/prometheus-values.yaml \
 		--wait --timeout 5m
@@ -57,6 +64,11 @@ up:
 		--namespace monitoring \
 		--values infra/helm/loki-values.yaml \
 		--wait --timeout 3m
+	@echo "==> Pinning NodePorts to the kind host mappings (9090/3200/3100)"
+	kubectl -n monitoring patch svc tempo \
+		-p '{"spec":{"type":"NodePort","ports":[{"port":3200,"nodePort":30200}]}}'
+	kubectl -n monitoring patch svc loki \
+		-p '{"spec":{"type":"NodePort","ports":[{"port":3100,"nodePort":30100}]}}'
 	@echo "==> Deploying OTel Collector"
 	kubectl apply -f infra/collector/otelcol-config.yaml
 	kubectl apply -f infra/collector/otelcol-daemonset.yaml
@@ -81,19 +93,19 @@ down:
 
 # ── Health check ───────────────────────────────────────────────────────────
 health-check:
-	@python3 scripts/health_check.py
+	@$(PYTHON) scripts/health_check.py
 
 # ── Fault injection ────────────────────────────────────────────────────────
 fault:
 	@test -f "$(SCENARIO)" || (echo "ERROR: SCENARIO not found: $(SCENARIO)" && exit 1)
-	@python3 scripts/inject_and_snapshot.py --scenario $(SCENARIO)
+	@$(PYTHON) scripts/inject_and_snapshot.py --scenario $(SCENARIO)
 
 # ── Agent (live mode) ─────────────────────────────────────────────────────
 investigate:
 	@test -n "$(INCIDENT_ID)" || (echo "ERROR: INCIDENT_ID required" && exit 1)
 	@test -n "$(START)"       || (echo "ERROR: START required (ISO-8601)" && exit 1)
 	@test -n "$(END)"         || (echo "ERROR: END required (ISO-8601)" && exit 1)
-	@python3 -m src.agent.run \
+	@$(PYTHON) -m src.agent.run \
 		--incident-id "$(INCIDENT_ID)" \
 		--start "$(START)" \
 		--end "$(END)" \
@@ -101,46 +113,73 @@ investigate:
 
 # ── Evaluation ────────────────────────────────────────────────────────────
 eval:
-	@python3 -m eval.scenario_runner \
+	@$(PYTHON) -m eval.scenario_runner \
 		--scenario-dir "$(SCENARIO_DIR)" \
 		--mode replay
 
 eval-replay:
 	@test -n "$(RUN_ID)" || (echo "ERROR: RUN_ID required" && exit 1)
-	@python3 -m eval.scenario_runner \
+	@$(PYTHON) -m eval.scenario_runner \
 		--scenario-dir "$(SCENARIO_DIR)" \
 		--mode replay \
 		--run-id "$(RUN_ID)"
 
 eval-baselines:
-	@python3 -m eval.scenario_runner \
+	@$(PYTHON) -m eval.scenario_runner \
 		--scenario-dir "$(SCENARIO_DIR)" \
 		--mode baselines-only
 
+reproduce-baselines: check-python
+	@$(PYTHON) -m eval.scenario_runner --mode baselines-only --run-id verify-baselines \
+		--snapshot-run-id "$$(cat results/RUN_ID)"
+	@$(PYTHON) scripts/check_baselines.py artifacts/verify-baselines \
+		"artifacts/$$(cat results/RUN_ID)"
+
+compose-up:
+	docker compose up -d
+
+compose-down:
+	docker compose down
+
 compare:
-	@python3 -m eval.compare
+	@$(PYTHON) -m eval.compare
 
 # ── Dev ───────────────────────────────────────────────────────────────────
 test:
-	pytest --cov=src --cov=eval --cov-report=term-missing -q
+	$(PYTHON) -m pytest --cov=src --cov=eval --cov-report=term-missing -q
 
 lint:
-	ruff check src/ eval/ scripts/ tests/
-	mypy src/ eval/ --ignore-missing-imports
+	$(PYTHON) -m ruff check src/ eval/ scripts/ tests/
+	$(PYTHON) -m mypy src/ eval/ --ignore-missing-imports
 
 fmt:
-	ruff format src/ eval/ scripts/ tests/
+	$(PYTHON) -m ruff format src/ eval/ scripts/ tests/
 
 # ── Demo ──────────────────────────────────────────────────────────────────
-demo:
-	@echo "Running demo on most recent snapshot..."
-	@LATEST=$$(ls -td snapshots/*/ground_truth.json 2>/dev/null | head -1 | xargs dirname); \
-	test -n "$$LATEST" || (echo "No snapshots found. Run: make fault SCENARIO=..." && exit 1); \
-	SCENARIO_ID=$$(basename $$LATEST); \
-	python3 -m eval.scenario_runner \
-		--snapshot-dir "$$LATEST" \
-		--mode single \
-		--print-report
+check-python:
+	@$(PYTHON) -c 'import sys; sys.exit(sys.version_info < (3, 12))' || { \
+	  echo "Python >= 3.12 required ($(PYTHON) is older): uv venv -p 3.12 && uv pip install -e ." >&2; exit 1; }
+
+demo: check-python  ## Offline: replay the recorded checkout pod-crash investigation (no key, no cluster)
+	@$(PYTHON) -m src.demo --trace "$(TRACE)"
+
+demo-live: check-python  ## Live LLM on a recorded snapshot (needs LLM_API_KEY or NIM_API_KEY)
+	@$(PYTHON) -m src.demo --live --snapshot-dir "$(SNAPSHOT)"
+
+benchmark:  ## Agent x REPEATS + 3 baselines on every snapshot, then results/
+	@$(PYTHON) -m eval.scenario_runner --scenario-dir "$(SCENARIO_DIR)" --mode benchmark \
+		--repeats $(REPEATS) --run-id $(BENCH_ID)
+	@$(PYTHON) -m eval.report --run-id $(BENCH_ID)
+	@$(PYTHON) -m eval.compare --run-id $(BENCH_ID)
+
+bench: check-python  ## Compare methods on snapshots and resume with the same BENCH_RUN_ID
+	@$(PYTHON) -m eval.bench --run-id "$(BENCH_RUN_ID)" --repeats "$(REPEATS)" \
+		--split "$(BENCH_SPLIT)" $(if $(BENCH_METHODS),--methods $(BENCH_METHODS)) \
+		$(if $(BENCH_SNAPSHOT_SET_FROM),--snapshot-set-from "$(BENCH_SNAPSHOT_SET_FROM)") \
+		$(if $(BENCH_RECORDED_FROM),--recorded-from "$(BENCH_RECORDED_FROM)") \
+		$(if $(BENCH_MAX_SNAPSHOTS),--max-snapshots "$(BENCH_MAX_SNAPSHOTS)") \
+		$(if $(BENCH_MAX_REPEATS),--max-repeats "$(BENCH_MAX_REPEATS)") \
+		$(if $(BENCH_CHANGE),--change "$(BENCH_CHANGE)")
 
 help:
 	@echo ""
@@ -149,6 +188,8 @@ help:
 	@echo "  make setup          Install dependencies + check tools"
 	@echo "  make up             Create kind cluster + deploy all backends"
 	@echo "  make down           Destroy cluster"
+	@echo "  make compose-up     Start the local telemetry backends and sample traffic"
+	@echo "  make compose-down   Stop the local Compose stack"
 	@echo "  make health-check   Verify all backends healthy"
 	@echo ""
 	@echo "  make fault SCENARIO=<path>     Inject fault + snapshot telemetry"

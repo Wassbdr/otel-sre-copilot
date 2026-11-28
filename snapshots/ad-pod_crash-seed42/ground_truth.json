@@ -1,0 +1,14 @@
+{
+  "scenario_id": "ad-pod_crash-seed42",
+  "fault_service": "ad",
+  "fault_type": "pod_crash",
+  "chaos_kind": "PodChaos",
+  "injection_ts": "2026-11-27T18:20:07.272650+00:00",
+  "recovery_ts": "2026-11-27T18:25:07.493367+00:00",
+  "seed": 42,
+  "chaos_manifest_hash": "19a6a1a7bf60b0c8",
+  "split": "held-out",
+  "window_start": "2026-11-27T18:19:07.272650+00:00",
+  "window_end": "2026-11-27T18:26:07.493367+00:00",
+  "validation_passed": true
+}

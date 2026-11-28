@@ -1,0 +1,15 @@
+{
+  "grounding_score": 0.75,
+  "verified": 3,
+  "total": 4,
+  "failed_items": [
+    {
+      "rank": "1",
+      "service": "frontend",
+      "signal_type": "k8s_event",
+      "query_or_id": "K8s events: Created: Created container frontend (count=3); Started: Started container frontend (count=3); Killing: Conta",
+      "reason": "no matching tool call found"
+    }
+  ],
+  "has_hallucination_warning": true
+}

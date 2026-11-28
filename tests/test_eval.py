@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from src.agent.schemas import EvidenceItem, InvestigationReport, RootCauseHypothesis
 from src.datasources.replay import ReplayDataSource
 
 # ── Grounding verifier tests ───────────────────────────────────────────────────
 
 class TestGroundingVerifier:
-    def _make_report_with_evidence(self, query_or_id: str, signal_type: str = "metric") -> InvestigationReport:
+    def _make_report_with_evidence(
+        self, query_or_id: str, signal_type: str = "metric"
+    ) -> InvestigationReport:
         return InvestigationReport(
             incident_id="test",
             investigation_start_ts="2024-01-15T14:00:00Z",
@@ -34,7 +38,10 @@ class TestGroundingVerifier:
 
     def test_verified_evidence_scores_1(self) -> None:
         from eval.grounding_verifier import verify
-        query = 'sum(rate(http_server_request_duration_seconds_count{service_name="checkoutservice"}[2m]))'
+        query = (
+            'sum(rate(http_server_request_duration_seconds_count{service_name="checkoutservice"}'
+            "[2m]))"
+        )
         report = self._make_report_with_evidence(query, "metric")
         tool_log = [{"tool_name": "query_prometheus_range", "args": {"query": query},
                      "query_or_id": [query], "result_preview": "mean=0.95"}]
@@ -53,6 +60,19 @@ class TestGroundingVerifier:
         assert result.grounding_score == 0.0
         assert result.has_hallucination_warning
         assert len(result.failed_items) == 1
+
+    def test_compact_citations_require_exact_emitted_id_and_signal_type(self) -> None:
+        from eval.grounding_verifier import verify
+
+        citation = "trace:3cec650e9f4bc75756c66f915a5ba14"
+        tool_log: list[dict[str, object]] = [{"evidence_ids": [citation]}]
+        assert verify(self._make_report_with_evidence(citation, "trace"), tool_log).verified_count
+        assert not verify(
+            self._make_report_with_evidence(citation[:-1], "trace"), tool_log,
+        ).verified_count
+        assert not verify(
+            self._make_report_with_evidence(citation, "metric"), tool_log,
+        ).verified_count
 
     def test_no_evidence_scores_1(self) -> None:
         from eval.grounding_verifier import verify
@@ -154,6 +174,13 @@ class TestMetrics:
         assert metrics.accuracy_at_1 == 0.0   # both must match
         assert metrics.fault_type_accuracy == 0.0
 
+    def test_recorded_service_alias(self) -> None:
+        from eval.metrics import compute_per_scenario
+        sr = self._make_sr("checkout", "pod_crash")
+        row = compute_per_scenario(sr)
+        assert row["accuracy_at_1"] == row["service_at_1"] == 1.0
+        assert row["predicted_service"] == "checkout"
+
     def test_empty_results(self) -> None:
         from eval.metrics import compute_metrics
         metrics = compute_metrics([])
@@ -246,3 +273,29 @@ class TestCompositeZScoreBaseline:
         assert report.fault_type_classification in [
             "pod_crash", "high_latency", "cpu_stress", "memory_stress", "http_abort"
         ]
+
+
+def test_incident_id_given_to_agent_does_not_leak_the_answer() -> None:
+    from eval.scenario_runner import opaque_incident_id
+
+    iid = opaque_incident_id("checkout-pod_crash-seed42")
+    assert iid.startswith("INC-")
+    assert "checkout" not in iid and "crash" not in iid
+    assert iid == opaque_incident_id("checkout-pod_crash-seed42")
+
+
+def test_recorded_miss_is_rescored_as_a_miss(tmp_path: Path) -> None:
+    import json
+
+    from eval.scenario_runner import _metrics_from_trace
+
+    trace = {
+        "scenario_id": "s", "ground_truth": {"service": "cart", "fault_type": "memory_stress"},
+        "grounding": {"score": 0.0}, "metrics": {"rate_limit_wait_s": 3.0},
+        "report": {"root_causes": [], "remediation_steps": [], "latency_s": 1.0,
+                   "cost_usd": 0.0, "total_prompt_tokens": 10, "total_completion_tokens": 2},
+    }
+    (tmp_path / "trace.json").write_text(json.dumps(trace))
+    m = _metrics_from_trace(tmp_path / "trace.json")
+    assert (m["accuracy_at_1"], m["accuracy_at_3"], m["total_tokens"]) == (0, 0, 12)
+    assert m["rate_limit_wait_s"] == 3.0

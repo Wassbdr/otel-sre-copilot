@@ -1,0 +1,273 @@
+[
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?frontend\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T16:11:59.901036+00:00",
+    "end": "2026-11-27T16:19:00.198466+00:00",
+    "result": [
+      {
+        "stream": {
+          "detected_level": "ERROR",
+          "job": "opentelemetry-demo/frontend",
+          "level": "ERROR",
+          "service_name": "opentelemetry-demo/frontend"
+        },
+        "values": [
+          [
+            "1795796265125000000",
+            "{\"body\":\"API request failed\",\"traceid\":\"3aeec1589f155494736d2b45c8170d78\",\"spanid\":\"504883b73c29e6af\",\"severity\":\"error\",\"flags\":1,\"attributes\":{\"exception.message\":\"HTTP error: 500 Internal Server Error - Failed to get quote: code: 'Unknown error', message: \\\"Failed to call quote service: Timeout while waiting for response\\\"\",\"exception.stacktrace\":\"Error: HTTP error: 500 Internal Server Error - Failed to get quote: code: 'Unknown error', message: \\\"Failed to call quote service: Timeout while waiting for response\\\"\\n    at Object.getShippingCost (/app/.next/server/chunks/[root-of-the-server]__0pe_9rx._.js:1:722)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\\n    at async o (/app/.next/server/chunks/[root-of-the-server]__0pe_9rx._.js:1:3992)\\n    at async o (/app/.next/server/chunks/[root-of-the-server]__0_2l2ql._.js:1:102954)\\n    at async /app/.next/server/chunks/[root-of-the-server]__0_2l2ql._.js:1:103090\\n    at async tO (/app/node_modules/next/dist/compiled/next-server/pages-api-turbo.runtime.prod.js:1:108006)\\n    at async tA.render (/app/node_modules/next/dist/compiled/next-server/pages-api-turbo.runtime.prod.js:1:108721)\\n    at async Module.l [as handler] (/app/.next/server/chunks/[root-of-the-server]__0pe_9rx._.js:1:3305)\\n    at async NextNodeServer.runApi (/app/node_modules/next/dist/server/next-server.js:700:9)\\n    at async NextNodeServer.handleCatchallRenderRequest (/app/node_modules/next/dist/server/next-server.js:335:37)\",\"exception.type\":\"Error\",\"http.request.method\":\"GET\",\"http.response.status_code\":500,\"url.path\":\"/api/shipping\"},\"resources\":{\"host.arch\":\"amd64\",\"host.name\":\"frontend-5bd88c6fd9-9dhgg\",\"k8s.namespace.name\":\"otel-demo\",\"os.type\":\"linux\",\"os.version\":\"6.8.0-1060-aws\",\"process.command\":\"/app/server.js\",\"process.command_args\":[\"/nodejs/bin/node\",\"--require=./Instrumentation.js\",\"/app/server.js\"],\"process.executable.name\":\"/nodejs/bin/node\",\"process.executable.path\":\"/nodejs/bin/node\",\"process.pid\":1,\"process.runtime.description\":\"Node.js\",\"process.runtime.name\":\"nodejs\",\"process.runtime.version\":\"24.21.0\",\"service.criticality\":\"critical\",\"service.name\":\"frontend\",\"service.namespace\":\"opentelemetry-demo\",\"service.version\":\"2.2.0\",\"telemetry.sdk.language\":\"nodejs\",\"telemetry.sdk.name\":\"opentelemetry\",\"telemetry.sdk.version\":\"2.11.0\"},\"instrumentation_scope\":{\"name\":\"@opentelemetry/instrumentation-pino\",\"version\":\"0.68.0\"}}"
+          ],
+          [
+            "1795796251386000000",
+            "{\"body\":\"Checkout failed to place order\",\"traceid\":\"c9dc6852479bf32327a77d5afa783ac8\",\"spanid\":\"10e318f55ebf3a82\",\"severity\":\"error\",\"flags\":1,\"attributes\":{\"exception.message\":\"13 INTERNAL: shipping quote failure: failed POST to shipping service: expected 200, got 500\",\"exception.stacktrace\":\"Error: 13 INTERNAL: shipping quote failure: failed POST to shipping service: expected 200, got 500\\n    at callErrorFromStatus (/app/node_modules/@grpc/grpc-js/build/src/call.js:32:19)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client.js:193:76)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:367:141)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:327:181)\\n    at /app/node_modules/@grpc/grpc-js/build/src/resolving-call.js:135:78\\n    at process.processTicksAndRejections (node:internal/process/task_queues:85:11)\\nfor call at\\n    at ServiceClientImpl.makeUnaryRequest (/app/node_modules/@grpc/grpc-js/build/src/client.js:161:32)\\n    at ServiceClientImpl.\\u003canonymous\\u003e (/app/node_modules/@grpc/grpc-js/build/src/make-client.js:105:19)\\n    at /app/node_modules/@opentelemetry/instrumentation-grpc/build/src/clientUtils.js:119:31\\n    at /app/node_modules/@opentelemetry/instrumentation-grpc/build/src/instrumentation.js:202:209\\n    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:65:14)\\n    at AsyncLocalStorageContextManager.with (/app/node_modules/@opentelemetry/context-async-hooks/build/src/AsyncLocalStorageContextManager.js:45:40)\\n    at ContextAPI.with (/app/node_modules/@opentelemetry/api/build/src/api/context.js:51:46)\\n    at ServiceClientImpl.clientMethodTrace [as placeOrder] (/app/node_modules/@opentelemetry/instrumentation-grpc/build/src/instrumentation.js:202:42)\\n    at /app/.next/server/chunks/[root-of-the-server]__009k40p._.js:1:546\\n    at new Promise (\\u003canonymous\\u003e)\",\"exception.type\":\"13\"},\"resources\":{\"host.arch\":\"amd64\",\"host.name\":\"frontend-5bd88c6fd9-9dhgg\",\"k8s.namespace.name\":\"otel-demo\",\"os.type\":\"linux\",\"os.version\":\"6.8.0-1060-aws\",\"process.command\":\"/app/server.js\",\"process.command_args\":[\"/nodejs/bin/node\",\"--require=./Instrumentation.js\",\"/app/server.js\"],\"process.executable.name\":\"/nodejs/bin/node\",\"process.executable.path\":\"/nodejs/bin/node\",\"process.pid\":1,\"process.runtime.description\":\"Node.js\",\"process.runtime.name\":\"nodejs\",\"process.runtime.version\":\"24.21.0\",\"service.criticality\":\"critical\",\"service.name\":\"frontend\",\"service.namespace\":\"opentelemetry-demo\",\"service.version\":\"2.2.0\",\"telemetry.sdk.language\":\"nodejs\",\"telemetry.sdk.name\":\"opentelemetry\",\"telemetry.sdk.version\":\"2.11.0\"},\"instrumentation_scope\":{\"name\":\"@opentelemetry/instrumentation-pino\",\"version\":\"0.68.0\"}}"
+          ],
+          [
+            "1795796202871000000",
+            "{\"body\":\"Checkout failed to place order\",\"traceid\":\"adf941604f3c2ada953a143390b701a3\",\"spanid\":\"0404a63790c09f14\",\"severity\":\"error\",\"flags\":1,\"attributes\":{\"exception.message\":\"13 INTERNAL: shipping quote failure: failed POST to shipping service: Post \\\"http://shipping:8080/get-quote\\\": EOF\",\"exception.stacktrace\":\"Error: 13 INTERNAL: shipping quote failure: failed POST to shipping service: Post \\\"http://shipping:8080/get-quote\\\": EOF\\n    at callErrorFromStatus (/app/node_modules/@grpc/grpc-js/build/src/call.js:32:19)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client.js:193:76)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:367:141)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:327:181)\\n    at /app/node_modules/@grpc/grpc-js/build/src/resolving-call.js:135:78\\n    at process.processTicksAndRejections (node:internal/process/task_queues:85:11)\\nfor call at\\n    at ServiceClientImpl.makeUnaryRequest (/app/node_modules/@grpc/grpc-js/build/src/client.js:161:32)\\n    at ServiceClientImpl.\\u003canonymous\\u003e (/app/node_modules/@grpc/grpc-js/build/src/make-client.js:105:19)\\n    at /app/node_modules/@opentelemetry/instrumentation-grpc/build/src/clientUtils.js:119:31\\n    at /app/node_modules/@opentelemetry/instrumentation-grpc/build/src/instrumentation.js:202:209\\n    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:65:14)\\n    at AsyncLocalStorageContextManager.with (/app/node_modules/@opentelemetry/context-async-hooks/build/src/AsyncLocalStorageContextManager.js:45:40)\\n    at ContextAPI.with (/app/node_modules/@opentelemetry/api/build/src/api/context.js:51:46)\\n    at ServiceClientImpl.clientMethodTrace [as placeOrder] (/app/node_modules/@opentelemetry/instrumentation-grpc/build/src/instrumentation.js:202:42)\\n    at /app/.next/server/chunks/[root-of-the-server]__009k40p._.js:1:546\\n    at new Promise (\\u003canonymous\\u003e)\",\"exception.type\":\"13\"},\"resources\":{\"host.arch\":\"amd64\",\"host.name\":\"frontend-5bd88c6fd9-9dhgg\",\"k8s.namespace.name\":\"otel-demo\",\"os.type\":\"linux\",\"os.version\":\"6.8.0-1060-aws\",\"process.command\":\"/app/server.js\",\"process.command_args\":[\"/nodejs/bin/node\",\"--require=./Instrumentation.js\",\"/app/server.js\"],\"process.executable.name\":\"/nodejs/bin/node\",\"process.executable.path\":\"/nodejs/bin/node\",\"process.pid\":1,\"process.runtime.description\":\"Node.js\",\"process.runtime.name\":\"nodejs\",\"process.runtime.version\":\"24.21.0\",\"service.criticality\":\"critical\",\"service.name\":\"frontend\",\"service.namespace\":\"opentelemetry-demo\",\"service.version\":\"2.2.0\",\"telemetry.sdk.language\":\"nodejs\",\"telemetry.sdk.name\":\"opentelemetry\",\"telemetry.sdk.version\":\"2.11.0\"},\"instrumentation_scope\":{\"name\":\"@opentelemetry/instrumentation-pino\",\"version\":\"0.68.0\"}}"
+          ],
+          [
+            "1795796197765000000",
+            "{\"body\":\"Checkout failed to place order\",\"traceid\":\"598d0cd3f0e017fd2700883cc353f9a4\",\"spanid\":\"22cd38e2bb5cf696\",\"severity\":\"error\",\"flags\":1,\"attributes\":{\"exception.message\":\"13 INTERNAL: shipping quote failure: failed POST to shipping service: expected 200, got 500\",\"exception.stacktrace\":\"Error: 13 INTERNAL: shipping quote failure: failed POST to shipping service: expected 200, got 500\\n    at callErrorFromStatus (/app/node_modules/@grpc/grpc-js/build/src/call.js:32:19)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client.js:193:76)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:367:141)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:327:181)\\n    at /app/node_modules/@grpc/grpc-js/build/src/resolving-call.js:135:78\\n    at process.processTicksAndRejections (node:internal/process/task_queues:85:11)\\nfor call at\\n    at ServiceClientImpl.makeUnaryRequest (/app/node_modules/@grpc/grpc-js/build/src/client.js:161:32)\\n    at ServiceClientImpl.\\u003canonymous\\u003e (/app/node_modules/@grpc/grpc-js/build/src/make-client.js:105:19)\\n    at /app/node_modules/@opentelemetry/instrumentation-grpc/build/src/clientUtils.js:119:31\\n    at /app/node_modules/@opentelemetry/instrumentation-grpc/build/src/instrumentation.js:202:209\\n    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:65:14)\\n    at AsyncLocalStorageContextManager.with (/app/node_modules/@opentelemetry/context-async-hooks/build/src/AsyncLocalStorageContextManager.js:45:40)\\n    at ContextAPI.with (/app/node_modules/@opentelemetry/api/build/src/api/context.js:51:46)\\n    at ServiceClientImpl.clientMethodTrace [as placeOrder] (/app/node_modules/@opentelemetry/instrumentation-grpc/build/src/instrumentation.js:202:42)\\n    at /app/.next/server/chunks/[root-of-the-server]__009k40p._.js:1:546\\n    at new Promise (\\u003canonymous\\u003e)\",\"exception.type\":\"13\"},\"resources\":{\"host.arch\":\"amd64\",\"host.name\":\"frontend-5bd88c6fd9-9dhgg\",\"k8s.namespace.name\":\"otel-demo\",\"os.type\":\"linux\",\"os.version\":\"6.8.0-1060-aws\",\"process.command\":\"/app/server.js\",\"process.command_args\":[\"/nodejs/bin/node\",\"--require=./Instrumentation.js\",\"/app/server.js\"],\"process.executable.name\":\"/nodejs/bin/node\",\"process.executable.path\":\"/nodejs/bin/node\",\"process.pid\":1,\"process.runtime.description\":\"Node.js\",\"process.runtime.name\":\"nodejs\",\"process.runtime.version\":\"24.21.0\",\"service.criticality\":\"critical\",\"service.name\":\"frontend\",\"service.namespace\":\"opentelemetry-demo\",\"service.version\":\"2.2.0\",\"telemetry.sdk.language\":\"nodejs\",\"telemetry.sdk.name\":\"opentelemetry\",\"telemetry.sdk.version\":\"2.11.0\"},\"instrumentation_scope\":{\"name\":\"@opentelemetry/instrumentation-pino\",\"version\":\"0.68.0\"}}"
+          ],
+          [
+            "1795796093462000000",
+            "{\"body\":\"API request failed\",\"traceid\":\"afb7f13237695329bbc4e7da631d1504\",\"spanid\":\"f3c6735dfe2fb4d8\",\"severity\":\"error\",\"flags\":1,\"attributes\":{\"exception.message\":\"HTTP error: 500 Internal Server Error - Failed to get quote: code: 'Unknown error', message: \\\"Failed to call quote service: Timeout while waiting for response\\\"\",\"exception.stacktrace\":\"Error: HTTP error: 500 Internal Server Error - Failed to get quote: code: 'Unknown error', message: \\\"Failed to call quote service: Timeout while waiting for response\\\"\\n    at Object.getShippingCost (/app/.next/server/chunks/[root-of-the-server]__0pe_9rx._.js:1:722)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\\n    at async o (/app/.next/server/chunks/[root-of-the-server]__0pe_9rx._.js:1:3992)\\n    at async o (/app/.next/server/chunks/[root-of-the-server]__0_2l2ql._.js:1:102954)\\n    at async /app/.next/server/chunks/[root-of-the-server]__0_2l2ql._.js:1:103090\\n    at async tO (/app/node_modules/next/dist/compiled/next-server/pages-api-turbo.runtime.prod.js:1:108006)\\n    at async tA.render (/app/node_modules/next/dist/compiled/next-server/pages-api-turbo.runtime.prod.js:1:108721)\\n    at async Module.l [as handler] (/app/.next/server/chunks/[root-of-the-server]__0pe_9rx._.js:1:3305)\\n    at async NextNodeServer.runApi (/app/node_modules/next/dist/server/next-server.js:700:9)\\n    at async NextNodeServer.handleCatchallRenderRequest (/app/node_modules/next/dist/server/next-server.js:335:37)\",\"exception.type\":\"Error\",\"http.request.method\":\"GET\",\"http.response.status_code\":500,\"url.path\":\"/api/shipping\"},\"resources\":{\"host.arch\":\"amd64\",\"host.name\":\"frontend-5bd88c6fd9-9dhgg\",\"k8s.namespace.name\":\"otel-demo\",\"os.type\":\"linux\",\"os.version\":\"6.8.0-1060-aws\",\"process.command\":\"/app/server.js\",\"process.command_args\":[\"/nodejs/bin/node\",\"--require=./Instrumentation.js\",\"/app/server.js\"],\"process.executable.name\":\"/nodejs/bin/node\",\"process.executable.path\":\"/nodejs/bin/node\",\"process.pid\":1,\"process.runtime.description\":\"Node.js\",\"process.runtime.name\":\"nodejs\",\"process.runtime.version\":\"24.21.0\",\"service.criticality\":\"critical\",\"service.name\":\"frontend\",\"service.namespace\":\"opentelemetry-demo\",\"service.version\":\"2.2.0\",\"telemetry.sdk.language\":\"nodejs\",\"telemetry.sdk.name\":\"opentelemetry\",\"telemetry.sdk.version\":\"2.11.0\"},\"instrumentation_scope\":{\"name\":\"@opentelemetry/instrumentation-pino\",\"version\":\"0.68.0\"}}"
+          ],
+          [
+            "1795796061465000000",
+            "{\"body\":\"API request failed\",\"traceid\":\"74e9d7691e672ea398732e2fcc8858b2\",\"spanid\":\"9b58291774e46dcb\",\"severity\":\"error\",\"flags\":1,\"attributes\":{\"exception.message\":\"fetch failed: other side closed\",\"exception.stacktrace\":\"TypeError: fetch failed\\ncaused by: SocketError: other side closed\\n    at Socket.onHttpSocketEnd (node:internal/deps/undici/undici:7833:26)\\n    at Socket.emit (node:events:526:24)\\n    at endReadableNT (node:internal/streams/readable:1764:12)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)\",\"exception.type\":\"TypeError\",\"http.request.method\":\"GET\",\"http.response.status_code\":500,\"url.path\":\"/api/shipping\"},\"resources\":{\"host.arch\":\"amd64\",\"host.name\":\"frontend-5bd88c6fd9-9dhgg\",\"k8s.namespace.name\":\"otel-demo\",\"os.type\":\"linux\",\"os.version\":\"6.8.0-1060-aws\",\"process.command\":\"/app/server.js\",\"process.command_args\":[\"/nodejs/bin/node\",\"--require=./Instrumentation.js\",\"/app/server.js\"],\"process.executable.name\":\"/nodejs/bin/node\",\"process.executable.path\":\"/nodejs/bin/node\",\"process.pid\":1,\"process.runtime.description\":\"Node.js\",\"process.runtime.name\":\"nodejs\",\"process.runtime.version\":\"24.21.0\",\"service.criticality\":\"critical\",\"service.name\":\"frontend\",\"service.namespace\":\"opentelemetry-demo\",\"service.version\":\"2.2.0\",\"telemetry.sdk.language\":\"nodejs\",\"telemetry.sdk.name\":\"opentelemetry\",\"telemetry.sdk.version\":\"2.11.0\"},\"instrumentation_scope\":{\"name\":\"@opentelemetry/instrumentation-pino\",\"version\":\"0.68.0\"}}"
+          ],
+          [
+            "1795796033693000000",
+            "{\"body\":\"Checkout failed to place order\",\"traceid\":\"25819d77a9a198c719b28e23bacc8ad6\",\"spanid\":\"ab44b7aced63f6d3\",\"severity\":\"error\",\"flags\":1,\"attributes\":{\"exception.message\":\"13 INTERNAL: shipping quote failure: failed POST to shipping service: expected 200, got 500\",\"exception.stacktrace\":\"Error: 13 INTERNAL: shipping quote failure: failed POST to shipping service: expected 200, got 500\\n    at callErrorFromStatus (/app/node_modules/@grpc/grpc-js/build/src/call.js:32:19)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client.js:193:76)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:367:141)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:327:181)\\n    at /app/node_modules/@grpc/grpc-js/build/src/resolving-call.js:135:78\\n    at process.processTicksAndRejections (node:internal/process/task_queues:85:11)\\nfor call at\\n    at ServiceClientImpl.makeUnaryRequest (/app/node_modules/@grpc/grpc-js/build/src/client.js:161:32)\\n    at ServiceClientImpl.\\u003canonymous\\u003e (/app/node_modules/@grpc/grpc-js/build/src/make-client.js:105:19)\\n    at /app/node_modules/@opentelemetry/instrumentation-grpc/build/src/clientUtils.js:119:31\\n    at /app/node_modules/@opentelemetry/instrumentation-grpc/build/src/instrumentation.js:202:209\\n    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:65:14)\\n    at AsyncLocalStorageContextManager.with (/app/node_modules/@opentelemetry/context-async-hooks/build/src/AsyncLocalStorageContextManager.js:45:40)\\n    at ContextAPI.with (/app/node_modules/@opentelemetry/api/build/src/api/context.js:51:46)\\n    at ServiceClientImpl.clientMethodTrace [as placeOrder] (/app/node_modules/@opentelemetry/instrumentation-grpc/build/src/instrumentation.js:202:42)\\n    at /app/.next/server/chunks/[root-of-the-server]__009k40p._.js:1:546\\n    at new Promise (\\u003canonymous\\u003e)\",\"exception.type\":\"13\"},\"resources\":{\"host.arch\":\"amd64\",\"host.name\":\"frontend-5bd88c6fd9-9dhgg\",\"k8s.namespace.name\":\"otel-demo\",\"os.type\":\"linux\",\"os.version\":\"6.8.0-1060-aws\",\"process.command\":\"/app/server.js\",\"process.command_args\":[\"/nodejs/bin/node\",\"--require=./Instrumentation.js\",\"/app/server.js\"],\"process.executable.name\":\"/nodejs/bin/node\",\"process.executable.path\":\"/nodejs/bin/node\",\"process.pid\":1,\"process.runtime.description\":\"Node.js\",\"process.runtime.name\":\"nodejs\",\"process.runtime.version\":\"24.21.0\",\"service.criticality\":\"critical\",\"service.name\":\"frontend\",\"service.namespace\":\"opentelemetry-demo\",\"service.version\":\"2.2.0\",\"telemetry.sdk.language\":\"nodejs\",\"telemetry.sdk.name\":\"opentelemetry\",\"telemetry.sdk.version\":\"2.11.0\"},\"instrumentation_scope\":{\"name\":\"@opentelemetry/instrumentation-pino\",\"version\":\"0.68.0\"}}"
+          ],
+          [
+            "1795796016330000000",
+            "{\"body\":\"Checkout failed to place order\",\"traceid\":\"34fd12c9e78ab0d55a5d4ad8786e2f81\",\"spanid\":\"3f52554210a3b685\",\"severity\":\"error\",\"flags\":1,\"attributes\":{\"exception.message\":\"14 UNAVAILABLE: shipping error: failed POST to shipping service: Post \\\"http://shipping:8080/ship-order\\\": EOF\",\"exception.stacktrace\":\"Error: 14 UNAVAILABLE: shipping error: failed POST to shipping service: Post \\\"http://shipping:8080/ship-order\\\": EOF\\n    at callErrorFromStatus (/app/node_modules/@grpc/grpc-js/build/src/call.js:32:19)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client.js:193:76)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:367:141)\\n    at Object.onReceiveStatus (/app/node_modules/@grpc/grpc-js/build/src/client-interceptors.js:327:181)\\n    at /app/node_modules/@grpc/grpc-js/build/src/resolving-call.js:135:78\\n    at process.processTicksAndRejections (node:internal/process/task_queues:85:11)\\nfor call at\\n    at ServiceClientImpl.makeUnaryRequest (/app/node_modules/@grpc/grpc-js/build/src/client.js:161:32)\\n    at ServiceClientImpl.\\u003canonymous\\u003e (/app/node_modules/@grpc/grpc-js/build/src/make-client.js:105:19)\\n    at /app/node_modules/@opentelemetry/instrumentation-grpc/build/src/clientUtils.js:119:31\\n    at /app/node_modules/@opentelemetry/instrumentation-grpc/build/src/instrumentation.js:202:209\\n    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:65:14)\\n    at AsyncLocalStorageContextManager.with (/app/node_modules/@opentelemetry/context-async-hooks/build/src/AsyncLocalStorageContextManager.js:45:40)\\n    at ContextAPI.with (/app/node_modules/@opentelemetry/api/build/src/api/context.js:51:46)\\n    at ServiceClientImpl.clientMethodTrace [as placeOrder] (/app/node_modules/@opentelemetry/instrumentation-grpc/build/src/instrumentation.js:202:42)\\n    at /app/.next/server/chunks/[root-of-the-server]__009k40p._.js:1:546\\n    at new Promise (\\u003canonymous\\u003e)\",\"exception.type\":\"14\"},\"resources\":{\"host.arch\":\"amd64\",\"host.name\":\"frontend-5bd88c6fd9-9dhgg\",\"k8s.namespace.name\":\"otel-demo\",\"os.type\":\"linux\",\"os.version\":\"6.8.0-1060-aws\",\"process.command\":\"/app/server.js\",\"process.command_args\":[\"/nodejs/bin/node\",\"--require=./Instrumentation.js\",\"/app/server.js\"],\"process.executable.name\":\"/nodejs/bin/node\",\"process.executable.path\":\"/nodejs/bin/node\",\"process.pid\":1,\"process.runtime.description\":\"Node.js\",\"process.runtime.name\":\"nodejs\",\"process.runtime.version\":\"24.21.0\",\"service.criticality\":\"critical\",\"service.name\":\"frontend\",\"service.namespace\":\"opentelemetry-demo\",\"service.version\":\"2.2.0\",\"telemetry.sdk.language\":\"nodejs\",\"telemetry.sdk.name\":\"opentelemetry\",\"telemetry.sdk.version\":\"2.11.0\"},\"instrumentation_scope\":{\"name\":\"@opentelemetry/instrumentation-pino\",\"version\":\"0.68.0\"}}"
+          ],
+          [
+            "1795796005879000000",
+            "{\"body\":\"API request failed\",\"traceid\":\"ef5e41625ed780d992ff036b7066bd77\",\"spanid\":\"9fde9374a7fd7833\",\"severity\":\"error\",\"flags\":1,\"attributes\":{\"exception.message\":\"HTTP error: 500 Internal Server Error - Failed to get quote: code: 'Unknown error', message: \\\"Failed to call quote service: Timeout while waiting for response\\\"\",\"exception.stacktrace\":\"Error: HTTP error: 500 Internal Server Error - Failed to get quote: code: 'Unknown error', message: \\\"Failed to call quote service: Timeout while waiting for response\\\"\\n    at Object.getShippingCost (/app/.next/server/chunks/[root-of-the-server]__0pe_9rx._.js:1:722)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\\n    at async o (/app/.next/server/chunks/[root-of-the-server]__0pe_9rx._.js:1:3992)\\n    at async o (/app/.next/server/chunks/[root-of-the-server]__0_2l2ql._.js:1:102954)\\n    at async /app/.next/server/chunks/[root-of-the-server]__0_2l2ql._.js:1:103090\\n    at async tO (/app/node_modules/next/dist/compiled/next-server/pages-api-turbo.runtime.prod.js:1:108006)\\n    at async tA.render (/app/node_modules/next/dist/compiled/next-server/pages-api-turbo.runtime.prod.js:1:108721)\\n    at async Module.l [as handler] (/app/.next/server/chunks/[root-of-the-server]__0pe_9rx._.js:1:3305)\\n    at async NextNodeServer.runApi (/app/node_modules/next/dist/server/next-server.js:700:9)\\n    at async NextNodeServer.handleCatchallRenderRequest (/app/node_modules/next/dist/server/next-server.js:335:37)\",\"exception.type\":\"Error\",\"http.request.method\":\"GET\",\"http.response.status_code\":500,\"url.path\":\"/api/shipping\"},\"resources\":{\"host.arch\":\"amd64\",\"host.name\":\"frontend-5bd88c6fd9-9dhgg\",\"k8s.namespace.name\":\"otel-demo\",\"os.type\":\"linux\",\"os.version\":\"6.8.0-1060-aws\",\"process.command\":\"/app/server.js\",\"process.command_args\":[\"/nodejs/bin/node\",\"--require=./Instrumentation.js\",\"/app/server.js\"],\"process.executable.name\":\"/nodejs/bin/node\",\"process.executable.path\":\"/nodejs/bin/node\",\"process.pid\":1,\"process.runtime.description\":\"Node.js\",\"process.runtime.name\":\"nodejs\",\"process.runtime.version\":\"24.21.0\",\"service.criticality\":\"critical\",\"service.name\":\"frontend\",\"service.namespace\":\"opentelemetry-demo\",\"service.version\":\"2.2.0\",\"telemetry.sdk.language\":\"nodejs\",\"telemetry.sdk.name\":\"opentelemetry\",\"telemetry.sdk.version\":\"2.11.0\"},\"instrumentation_scope\":{\"name\":\"@opentelemetry/instrumentation-pino\",\"version\":\"0.68.0\"}}"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?frontend\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T16:11:59.901036+00:00",
+    "end": "2026-11-27T16:19:00.198466+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?cart\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T16:11:59.901036+00:00",
+    "end": "2026-11-27T16:19:00.198466+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?cart\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T16:11:59.901036+00:00",
+    "end": "2026-11-27T16:19:00.198466+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?checkout\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T16:11:59.901036+00:00",
+    "end": "2026-11-27T16:19:00.198466+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?checkout\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T16:11:59.901036+00:00",
+    "end": "2026-11-27T16:19:00.198466+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?currency\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T16:11:59.901036+00:00",
+    "end": "2026-11-27T16:19:00.198466+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?currency\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T16:11:59.901036+00:00",
+    "end": "2026-11-27T16:19:00.198466+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?email\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T16:11:59.901036+00:00",
+    "end": "2026-11-27T16:19:00.198466+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?email\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T16:11:59.901036+00:00",
+    "end": "2026-11-27T16:19:00.198466+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?payment\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T16:11:59.901036+00:00",
+    "end": "2026-11-27T16:19:00.198466+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?payment\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T16:11:59.901036+00:00",
+    "end": "2026-11-27T16:19:00.198466+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?product-catalog\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T16:11:59.901036+00:00",
+    "end": "2026-11-27T16:19:00.198466+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?product-catalog\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T16:11:59.901036+00:00",
+    "end": "2026-11-27T16:19:00.198466+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?recommendation\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T16:11:59.901036+00:00",
+    "end": "2026-11-27T16:19:00.198466+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?recommendation\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T16:11:59.901036+00:00",
+    "end": "2026-11-27T16:19:00.198466+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?shipping\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T16:11:59.901036+00:00",
+    "end": "2026-11-27T16:19:00.198466+00:00",
+    "result": [
+      {
+        "stream": {
+          "detected_level": "WARN",
+          "job": "opentelemetry-demo/shipping",
+          "level": "WARN",
+          "service_name": "opentelemetry-demo/shipping"
+        },
+        "values": [
+          [
+            "1795796138603988152",
+            "{\"traceid\":\"42d45c6a3d76a04ad2b2592c37e338af\",\"spanid\":\"b62b631c65ce7aa9\",\"severity\":\"WARN\",\"flags\":1,\"attributes\":{\"error\":\"EvaluationError { code: General(\\\"request timeout or cancelled\\\"), message: Some(\\\"Timeout expired\\\") }\"},\"resources\":{\"host.arch\":\"x86_64\",\"k8s.namespace.name\":\"otel-demo\",\"os.type\":\"linux\",\"process.command_args\":[\"./shipping\"],\"process.pid\":1,\"process.runtime.description\":\"rustc 1.98.0 (88d9e12ae 2026-08-18)\",\"process.runtime.name\":\"rustc\",\"process.runtime.version\":\"1.98.0\",\"service.criticality\":\"high\",\"service.name\":\"shipping\",\"service.namespace\":\"opentelemetry-demo\",\"service.version\":\"2.2.0\",\"telemetry.sdk.language\":\"rust\",\"telemetry.sdk.name\":\"opentelemetry\",\"telemetry.sdk.version\":\"0.32.1\"},\"instrumentation_scope\":{\"name\":\"shipping::shipping_service\"}}"
+          ]
+        ]
+      },
+      {
+        "stream": {
+          "detected_level": "ERROR",
+          "job": "opentelemetry-demo/shipping",
+          "level": "ERROR",
+          "service_name": "opentelemetry-demo/shipping"
+        },
+        "values": [
+          [
+            "1795796138603930340",
+            "{\"body\":\"failed to resolve integer flag\",\"traceid\":\"42d45c6a3d76a04ad2b2592c37e338af\",\"spanid\":\"b62b631c65ce7aa9\",\"severity\":\"ERROR\",\"flags\":1,\"attributes\":{\"error\":\"code: 'The operation was cancelled', message: \\\"Timeout expired\\\", source: tonic::transport::Error(Transport, TimeoutExpired(()))\",\"flag_key\":\"intlShippingSlowdown\"},\"resources\":{\"host.arch\":\"x86_64\",\"k8s.namespace.name\":\"otel-demo\",\"os.type\":\"linux\",\"process.command_args\":[\"./shipping\"],\"process.pid\":1,\"process.runtime.description\":\"rustc 1.98.0 (88d9e12ae 2026-08-18)\",\"process.runtime.name\":\"rustc\",\"process.runtime.version\":\"1.98.0\",\"service.criticality\":\"high\",\"service.name\":\"shipping\",\"service.namespace\":\"opentelemetry-demo\",\"service.version\":\"2.2.0\",\"telemetry.sdk.language\":\"rust\",\"telemetry.sdk.name\":\"opentelemetry\",\"telemetry.sdk.version\":\"0.32.1\"},\"instrumentation_scope\":{\"name\":\"open_feature_flagd::resolver::rpc\"}}"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?shipping\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T16:11:59.901036+00:00",
+    "end": "2026-11-27T16:19:00.198466+00:00",
+    "result": [
+      {
+        "stream": {
+          "detected_level": "WARN",
+          "job": "opentelemetry-demo/shipping",
+          "level": "WARN",
+          "service_name": "opentelemetry-demo/shipping"
+        },
+        "values": [
+          [
+            "1795796138603988152",
+            "{\"traceid\":\"42d45c6a3d76a04ad2b2592c37e338af\",\"spanid\":\"b62b631c65ce7aa9\",\"severity\":\"WARN\",\"flags\":1,\"attributes\":{\"error\":\"EvaluationError { code: General(\\\"request timeout or cancelled\\\"), message: Some(\\\"Timeout expired\\\") }\"},\"resources\":{\"host.arch\":\"x86_64\",\"k8s.namespace.name\":\"otel-demo\",\"os.type\":\"linux\",\"process.command_args\":[\"./shipping\"],\"process.pid\":1,\"process.runtime.description\":\"rustc 1.98.0 (88d9e12ae 2026-08-18)\",\"process.runtime.name\":\"rustc\",\"process.runtime.version\":\"1.98.0\",\"service.criticality\":\"high\",\"service.name\":\"shipping\",\"service.namespace\":\"opentelemetry-demo\",\"service.version\":\"2.2.0\",\"telemetry.sdk.language\":\"rust\",\"telemetry.sdk.name\":\"opentelemetry\",\"telemetry.sdk.version\":\"0.32.1\"},\"instrumentation_scope\":{\"name\":\"shipping::shipping_service\"}}"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?ad\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T16:11:59.901036+00:00",
+    "end": "2026-11-27T16:19:00.198466+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?ad\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T16:11:59.901036+00:00",
+    "end": "2026-11-27T16:19:00.198466+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?load-generator\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T16:11:59.901036+00:00",
+    "end": "2026-11-27T16:19:00.198466+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?load-generator\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T16:11:59.901036+00:00",
+    "end": "2026-11-27T16:19:00.198466+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?accounting\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T16:11:59.901036+00:00",
+    "end": "2026-11-27T16:19:00.198466+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?accounting\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T16:11:59.901036+00:00",
+    "end": "2026-11-27T16:19:00.198466+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?fraud-detection\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T16:11:59.901036+00:00",
+    "end": "2026-11-27T16:19:00.198466+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?fraud-detection\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T16:11:59.901036+00:00",
+    "end": "2026-11-27T16:19:00.198466+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?quote\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T16:11:59.901036+00:00",
+    "end": "2026-11-27T16:19:00.198466+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?quote\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T16:11:59.901036+00:00",
+    "end": "2026-11-27T16:19:00.198466+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?flagd\"} |~ \"(?i)(error|exception|fail)\"",
+    "start": "2026-11-27T16:11:59.901036+00:00",
+    "end": "2026-11-27T16:19:00.198466+00:00",
+    "result": []
+  },
+  {
+    "logql": "{service_name=~\"(opentelemetry-demo/)?flagd\"} |~ \"(?i)warn\"",
+    "start": "2026-11-27T16:11:59.901036+00:00",
+    "end": "2026-11-27T16:19:00.198466+00:00",
+    "result": []
+  }
+]

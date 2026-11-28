@@ -1,0 +1,31 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - run: pip install -e ".[dev]"
+      - run: ruff check src/ eval/ scripts/ tests/ showcase/
+      - run: mypy src/ eval/
+      - run: pytest --cov=src --cov=eval -q
+      - name: Offline demo (recorded trace, no key)
+        run: python -m src.demo --speed 0
+      - name: Baselines reproduce the committed run
+        run: |
+          make reproduce-baselines
+      - name: Agent graph end-to-end with the fake LLM
+        env:
+          LLM_PROVIDER: fake
+        run: python -m eval.scenario_runner --mode replay --run-id verify-fake

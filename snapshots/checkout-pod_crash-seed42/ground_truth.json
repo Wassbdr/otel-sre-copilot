@@ -3,11 +3,11 @@
   "fault_service": "checkout",
   "fault_type": "pod_crash",
   "chaos_kind": "PodChaos",
-  "injection_ts": "2026-06-14T00:54:31.332797+00:00",
-  "recovery_ts": "2026-06-14T00:59:52.737294+00:00",
+  "injection_ts": "2026-11-27T05:59:26.552542+00:00",
+  "recovery_ts": "2026-11-27T06:04:26.751135+00:00",
   "seed": 42,
   "chaos_manifest_hash": "6bd9557af8fb5e98",
-  "window_start": "2026-06-14T00:53:31.332797+00:00",
-  "window_end": "2026-06-14T01:00:52.737294+00:00",
+  "window_start": "2026-11-27T05:58:26.552542+00:00",
+  "window_end": "2026-11-27T06:05:26.751135+00:00",
   "validation_passed": true
 }

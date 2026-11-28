@@ -1,0 +1,14 @@
+{
+  "scenario_id": "product-catalog-cpu_stress-seed42",
+  "fault_service": "product-catalog",
+  "fault_type": "cpu_stress",
+  "chaos_kind": "StressChaos",
+  "injection_ts": "2026-11-27T18:34:14.257012+00:00",
+  "recovery_ts": "2026-11-27T18:39:14.478399+00:00",
+  "seed": 42,
+  "chaos_manifest_hash": "d57a93558e590f66",
+  "split": "development",
+  "window_start": "2026-11-27T18:33:14.257012+00:00",
+  "window_end": "2026-11-27T18:40:14.478399+00:00",
+  "validation_passed": true
+}

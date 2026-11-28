@@ -1,9 +1,10 @@
-"""LiveDataSource — makes HTTP calls to a running cluster's NodePort backends."""
+"""LiveDataSource makes HTTP calls to a running cluster's NodePort backends."""
 
 from __future__ import annotations
 
 import os
 from datetime import UTC, datetime
+from typing import Self
 
 import httpx
 import structlog
@@ -14,7 +15,7 @@ log = structlog.get_logger()
 
 # OTel Astronomy Shop 2.x service names. These match `service.name` (set from the pod label
 # app.kubernetes.io/component) and the pod-name prefix `<svc>-<hash>`. The 1.x names
-# (checkoutservice, cartservice, …) are GONE — the demo renamed every service in 2.0.
+# (checkoutservice, cartservice, …) were replaced when the demo renamed every service in 2.0.
 ASTRONOMY_SHOP_SERVICES = [
     "frontend", "cart", "checkout", "currency",
     "email", "payment", "product-catalog",
@@ -54,20 +55,30 @@ class LiveDataSource:
         tempo_url: str | None = None,
         loki_url: str | None = None,
         timeout: float = 10.0,
+        topology: dict[str, list[str]] | None = None,
     ) -> None:
-        self._prom = (prometheus_url or os.getenv("PROMETHEUS_URL", "http://localhost:9090")).rstrip("/")
-        self._tempo = (tempo_url or os.getenv("TEMPO_URL", "http://localhost:3200")).rstrip("/")
-        self._loki = (loki_url or os.getenv("LOKI_URL", "http://localhost:3100")).rstrip("/")
+        self._prom = (prometheus_url or os.getenv("PROMETHEUS_URL") or "http://localhost:9090").rstrip(
+            "/"
+        )
+        self._tempo = (tempo_url or os.getenv("TEMPO_URL") or "http://localhost:3200").rstrip("/")
+        self._loki = (loki_url or os.getenv("LOKI_URL") or "http://localhost:3100").rstrip("/")
         self._client = httpx.Client(timeout=timeout)
         self._k8s: k8s_client.CoreV1Api | None = None
+        self._topology = _STATIC_TOPOLOGY if topology is None else topology
+
+    def __enter__(self) -> Self:
+        return self
+
+    def __exit__(self, *_exc: object) -> None:
+        self.close()
 
     def _k8s_client(self) -> k8s_client.CoreV1Api:
         if self._k8s is None:
-            kube_context = os.getenv("KUBE_CONTEXT", "kind-otel-sre-copilot")
+            kube_context = os.getenv("KUBE_CONTEXT")
             try:
-                k8s_config.load_kube_config(context=kube_context)
+                k8s_config.load_kube_config(context=kube_context)  # type: ignore[no-untyped-call]
             except Exception:
-                k8s_config.load_incluster_config()
+                k8s_config.load_incluster_config()  # type: ignore[no-untyped-call]
             self._k8s = k8s_client.CoreV1Api()
         return self._k8s
 
@@ -89,7 +100,7 @@ class LiveDataSource:
             params={"query": query, "start": start, "end": end, "step": step},
         )
         resp.raise_for_status()
-        return resp.json().get("data", {}).get("result", [])
+        return list(resp.json().get("data", {}).get("result", []))
 
     def search_traces(
         self,
@@ -100,24 +111,25 @@ class LiveDataSource:
         error_only: bool = False,
         limit: int = 20,
     ) -> list[dict[str, object]]:
-        params: dict[str, object] = {
-            "service.name": service_name,
+        params: dict[str, str | int] = {
             "start": _to_unix_s(start),
             "end": _to_unix_s(end),
             "limit": limit,
         }
+        if service_name:
+            params["service.name"] = service_name
         if min_duration_ms is not None:
             params["minDuration"] = f"{min_duration_ms}ms"
         if error_only:
             params["tags"] = "error=true"
         resp = self._client.get(f"{self._tempo}/api/search", params=params)
         resp.raise_for_status()
-        return resp.json().get("traces", [])
+        return list(resp.json().get("traces", []))
 
     def get_trace(self, trace_id: str) -> dict[str, object]:
         resp = self._client.get(f"{self._tempo}/api/traces/{trace_id}")
         resp.raise_for_status()
-        return resp.json()  # type: ignore[return-value]
+        return dict(resp.json())
 
     def query_loki(
         self,
@@ -127,7 +139,7 @@ class LiveDataSource:
         limit: int = 100,
         direction: str = "backward",
     ) -> list[dict[str, object]]:
-        params = {
+        params: dict[str, str | int] = {
             "query": logql,
             "start": _to_unix_ns(start),
             "end": _to_unix_ns(end),
@@ -136,7 +148,7 @@ class LiveDataSource:
         }
         resp = self._client.get(f"{self._loki}/loki/api/v1/query_range", params=params)
         resp.raise_for_status()
-        return resp.json().get("data", {}).get("result", [])
+        return list(resp.json().get("data", {}).get("result", []))
 
     def get_pod_events(
         self,
@@ -166,7 +178,7 @@ class LiveDataSource:
         return results
 
     def get_service_topology(self, namespace: str) -> dict[str, list[str]]:
-        return dict(_STATIC_TOPOLOGY)
+        return dict(self._topology)
 
     def close(self) -> None:
         self._client.close()

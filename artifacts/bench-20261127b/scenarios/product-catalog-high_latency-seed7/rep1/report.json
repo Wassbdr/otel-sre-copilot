@@ -1,0 +1,89 @@
+{
+  "incident_id": "INC-70e4b7e6",
+  "investigation_start_ts": "2026-11-27T10:03:24.592571+00:00",
+  "investigation_end_ts": "2026-11-27T10:05:05.817233+00:00",
+  "root_causes": [
+    {
+      "rank": 1,
+      "service": "product-catalog",
+      "fault_type": "high_latency",
+      "description": "product-catalog service experienced extreme p99 latency spike (z>1000) with concurrent high CPU (z=+5.84) and high memory (z=+5.09) usage, causing downstream dependency failures",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"product-catalog\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "p99_latency_ms z-score >1000 vs baseline 25.8ms",
+          "expected_baseline": "p99_latency_ms < 100ms (p99 last 24h)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"product-catalog-.*\"}[2m]))",
+          "observed_value": "cpu_usage z-score +5.84 vs baseline 0.04723",
+          "expected_baseline": "cpu_usage < 0.1 (p99 last 24h)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"product-catalog-.*\")}",
+          "observed_value": "memory_usage z-score +5.09 vs baseline 2.437e+07",
+          "expected_baseline": "memory_usage < 5e+07 (p99 last 24h)"
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "service": "recommendation",
+      "fault_type": "memory_stress",
+      "description": "recommendation service showed extreme memory pressure (z=+16.59) and severe latency degradation (z>1000), likely downstream effect of product-catalog dependency failure",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"recommendation-.*\")}",
+          "observed_value": "memory_usage z-score +16.59 vs baseline 9.981e+07",
+          "expected_baseline": "memory_usage < 1.5e+08 (p99 last 24h)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"recommendation\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "p99_latency_ms z-score >1000 vs baseline 13.39ms",
+          "expected_baseline": "p99_latency_ms < 200ms (p99 last 24h)"
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "service": "frontend",
+      "fault_type": "dependency_failure",
+      "description": "frontend entry point showed elevated p99 latency (z=+524.64) and memory increase (z=+2.88), but topology analysis confirms these are propagated symptoms from downstream product-catalog and recommendation failures rather than primary cause",
+      "confidence": 0.7,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "p99_latency_ms z-score +524.64 vs baseline 31.16ms",
+          "expected_baseline": "p99_latency_ms < 50ms (p99 last 24h)"
+        },
+        {
+          "signal_type": "k8s_event",
+          "query_or_id": "get_pod_events namespace=otel-demo",
+          "observed_value": "no pod restart events observed for frontend during incident window",
+          "expected_baseline": "pod_restarts stable at 0"
+        }
+      ]
+    }
+  ],
+  "remediation_steps": [
+    "Investigate product-catalog service resource limits and database query performance - extreme latency (z>1000) suggests DB bottleneck or resource exhaustion",
+    "Apply memory pressure mitigation to recommendation service and verify product-catalog API response times recover",
+    "Monitor frontend latency as indicator of downstream dependency health; if product-catalog recovers, frontend should normalize"
+  ],
+  "fault_type_classification": "high_latency",
+  "grounding_score": 0.8571,
+  "latency_s": 37.0903284229984,
+  "cost_usd": 0.0,
+  "total_prompt_tokens": 75640,
+  "total_completion_tokens": 4855,
+  "llm_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "agent_version": "0.2.0"
+}

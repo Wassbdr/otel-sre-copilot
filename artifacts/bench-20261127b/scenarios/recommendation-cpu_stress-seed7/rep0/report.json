@@ -1,0 +1,42 @@
+{
+  "incident_id": "INC-6016e59b",
+  "investigation_start_ts": "2026-11-27T10:07:14.331283+00:00",
+  "investigation_end_ts": "2026-11-27T10:10:56.353896+00:00",
+  "root_causes": [
+    {
+      "rank": 1,
+      "service": "recommendation",
+      "fault_type": "memory_stress",
+      "description": "Recommendation service exhibited extreme memory usage anomaly (z-score >1000) with memory working set at 1.06e+08 bytes vs baseline of 9.995e+07 bytes, alongside severe CPU usage spike (z=+810.80) from baseline of 0.02506 to window mean of 2.342, indicating resource exhaustion as the root cause",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"recommendation-.*\"})",
+          "observed_value": "memory_usage z=>1000 at 2026-11-27T07:59:57.044488+00:00",
+          "expected_baseline": "memory_usage < 0.01 (p99 last 24h) - baseline 9.995e+07"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"recommendation-.*\"}[2m]))",
+          "observed_value": "cpu_usage z=+810.80 at 2026-11-27T07:59:57.044488+00:00",
+          "expected_baseline": "cpu_usage < 0.01 (p99 last 24h) - baseline 0.02506"
+        }
+      ]
+    }
+  ],
+  "remediation_steps": [
+    "Investigate and restart recommendation pods experiencing memory pressure",
+    "Review recommendation service code for memory leaks or unbounded resource consumption",
+    "Implement resource limits and requests for recommendation deployment",
+    "Monitor for recurrence and scale horizontally if needed"
+  ],
+  "fault_type_classification": "memory_stress",
+  "grounding_score": 1.0,
+  "latency_s": 44.579875701999214,
+  "cost_usd": 0.0,
+  "total_prompt_tokens": 75701,
+  "total_completion_tokens": 7435,
+  "llm_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "agent_version": "0.2.0"
+}

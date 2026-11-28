@@ -1,0 +1,70 @@
+{
+  "incident_id": "INC-7b36015e",
+  "investigation_start_ts": "2026-11-27T09:47:47.809051+00:00",
+  "investigation_end_ts": "2026-11-27T09:49:46.105277+00:00",
+  "root_causes": [
+    {
+      "rank": 1,
+      "service": "frontend",
+      "fault_type": "pod_crash",
+      "description": "frontend pods experiencing excessive restarts (z>1000) due to definition changes, confirmed by K8s events showing 'Container frontend definition changed, will be restarted (count=2)'. This is the most anomalous signal across all metrics and services in the incident window.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "max(increase(kube_pod_container_status_restarts_total{namespace=\"otel-demo\",pod=~\"frontend-.*\"}[5m])) or vector(0)",
+          "observed_value": "pod_restarts z>1000 at window mean",
+          "expected_baseline": "pod_restarts z=0 (baseline 0±0)"
+        },
+        {
+          "signal_type": "k8s_event",
+          "query_or_id": "K8s events: Created: Created container frontend (count=3); Started: Started container frontend (count=3); Killing: Container frontend definition changed, will be restarted (count=2)",
+          "observed_value": "Container frontend definition changed, will be restarted (count=2) during incident window",
+          "expected_baseline": "No container definition change events expected in normal operation"
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "service": "payment",
+      "fault_type": "memory_stress",
+      "description": "payment service shows extreme memory usage anomaly (z=+9.25, window=1.397e+08) significantly above baseline (1.392e+08±5.7e+04), indicating potential memory pressure that could contribute to instability across dependent services.",
+      "confidence": 0.65,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"payment-.*\"})",
+          "observed_value": "memory_usage z=+9.25 at window mean=1.397e+08",
+          "expected_baseline": "memory_usage z≈0 (baseline 1.392e+08±5.7e+04)"
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "service": "ad",
+      "fault_type": "memory_stress",
+      "description": "ad service shows elevated memory usage anomaly (z=+4.18, window=4.762e+08) above baseline (4.751e+08±2.5e+05), suggesting memory pressure that may impact service stability.",
+      "confidence": 0.55,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"ad-.*\"})",
+          "observed_value": "memory_usage z=+4.18 at window mean=4.762e+08",
+          "expected_baseline": "memory_usage z≈0 (baseline 4.751e+08±2.5e+05)"
+        }
+      ]
+    }
+  ],
+  "remediation_steps": [
+    "Roll back frontend deployment or pause ongoing deployment causing definition changes; investigate CI/CD pipeline for changes that triggered frontend pod restarts",
+    "Monitor payment and ad memory usage; consider increasing memory limits or optimizing resource consumption if anomalies persist"
+  ],
+  "fault_type_classification": "pod_crash",
+  "grounding_score": 0.75,
+  "latency_s": 37.62913131600142,
+  "cost_usd": 0.0,
+  "total_prompt_tokens": 75898,
+  "total_completion_tokens": 5615,
+  "llm_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "agent_version": "0.2.0"
+}

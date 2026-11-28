@@ -1,0 +1,29 @@
+[
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container: cart",
+    "count": 2,
+    "first_time": "2026-11-27 15:00:30+00:00",
+    "last_time": "2026-11-27 15:58:26+00:00",
+    "involved_object_name": "cart-7ff5444c9c-mfwf7"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container cart",
+    "count": 2,
+    "first_time": "2026-11-27 15:00:30+00:00",
+    "last_time": "2026-11-27 15:58:26+00:00",
+    "involved_object_name": "cart-7ff5444c9c-mfwf7"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Container image \"ghcr.io/open-telemetry/demo:3.1.0-cart\" already present on machine",
+    "count": 1,
+    "first_time": "2026-11-27 15:58:26+00:00",
+    "last_time": "2026-11-27 15:58:26+00:00",
+    "involved_object_name": "cart-7ff5444c9c-mfwf7"
+  }
+]

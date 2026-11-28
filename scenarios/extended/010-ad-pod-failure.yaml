@@ -1,0 +1,24 @@
+metadata:
+  scenario_id: ad-pod_crash-seed42
+  fault_service: ad
+  fault_type: pod_crash
+  seed: 42
+  split: held-out
+  fault_duration_s: 300
+  window_extra_s: 60
+  namespace: otel-demo
+
+chaos_manifest:
+  apiVersion: chaos-mesh.org/v1alpha1
+  kind: PodChaos
+  metadata:
+    name: ad-pod-crash-seed42
+    namespace: chaos-mesh
+  spec:
+    mode: all
+    selector:
+      namespaces: [otel-demo]
+      labelSelectors:
+        app.kubernetes.io/component: ad
+    duration: "300s"
+    action: pod-failure

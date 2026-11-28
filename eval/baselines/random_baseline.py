@@ -1,4 +1,4 @@
-"""Baseline 1: Random — random service and fault type selection.
+"""Baseline 1: Random: random service and fault type selection.
 
 Establishes the performance floor. Expected Accuracy@1 ≈ 1/(7×5) = 2.9%.
 """
@@ -6,11 +6,14 @@ Establishes the performance floor. Expected Accuracy@1 ≈ 1/(7×5) = 2.9%.
 from __future__ import annotations
 
 import random
+from typing import Any
 
 from src.agent.schemas import InvestigationReport, RootCauseHypothesis
 from src.datasources.live import ASTRONOMY_SHOP_SERVICES
 
-_FAULT_TYPES = ["pod_crash", "high_latency", "cpu_stress", "memory_stress", "http_abort"]
+_FAULT_TYPES: list[Any] = [
+    "pod_crash", "high_latency", "cpu_stress", "memory_stress", "http_abort"
+]
 
 
 class RandomBaseline:
@@ -28,7 +31,8 @@ class RandomBaseline:
         scenario_id: str,
     ) -> InvestigationReport:
         rng = random.Random(self._seed)
-        sampled_services = rng.sample(ASTRONOMY_SHOP_SERVICES, k=min(3, len(ASTRONOMY_SHOP_SERVICES)))
+        k = min(3, len(ASTRONOMY_SHOP_SERVICES))
+        sampled_services = rng.sample(ASTRONOMY_SHOP_SERVICES, k=k)
         top_fault = rng.choice(_FAULT_TYPES)
 
         return InvestigationReport(

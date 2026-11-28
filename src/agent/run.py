@@ -45,8 +45,9 @@ def main(argv: list[str] | None = None) -> None:
 
     # Select data source
     if args.snapshot_dir:
+        from src.datasources.protocol import DataSource
         from src.datasources.replay import ReplayDataSource
-        ds = ReplayDataSource(args.snapshot_dir)
+        ds: DataSource = ReplayDataSource(args.snapshot_dir)
         log.info("mode", type="replay", snapshot_dir=args.snapshot_dir)
     else:
         from src.datasources.live import LiveDataSource

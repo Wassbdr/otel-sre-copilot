@@ -1,0 +1,71 @@
+{
+  "incident_id": "INC-cb6eef04",
+  "investigation_start_ts": "2026-11-27T08:38:06.047642+00:00",
+  "investigation_end_ts": "2026-11-27T08:41:44.664196+00:00",
+  "root_causes": [
+    {
+      "rank": 1,
+      "service": "fraud-detection",
+      "fault_type": "memory_stress",
+      "description": "Extreme memory usage spike (z=+10.52) far exceeding all other services, accompanied by elevated CPU usage (z=+1.11). This is the most anomalous signal in the incident window and likely causes downstream propagation of errors and latency.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"fraud-detection-.\"\")}",
+          "observed_value": "window mean 4.657e+08 bytes vs baseline 4.577e+08±7.6e+05 (z=+10.52)",
+          "expected_baseline": "window mean < 4.577e+08 bytes (p99 last 24h)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"fraud-detection-.\"\")[2m])}",
+          "observed_value": "window mean z=+1.11 vs baseline 0.008776±0.00094",
+          "expected_baseline": "window mean < 0.008776 (p99 last 24h)"
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "service": "ad",
+      "fault_type": "memory_stress",
+      "description": "Significant memory usage spike (z=+2.69) above baseline, the second highest memory anomaly in the window. May contribute to degraded performance or propagation of issues through the ad service dependency path.",
+      "confidence": 0.75,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"ad-.\"\")}",
+          "observed_value": "window mean 4.712e+08 bytes vs baseline 4.697e+08±5.3e+05 (z=+2.69)",
+          "expected_baseline": "window mean < 4.697e+08 bytes (p99 last 24h)"
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "service": "cart",
+      "fault_type": "high_latency",
+      "description": "P99 latency spike (z=+0.90) is the most notable latency anomaly in the window, with observed window mean of 3.979ms vs baseline 2.978±1.1ms. Cart is an entry point service and latency here could propagate to frontend users.",
+      "confidence": 0.7,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"cart\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))}",
+          "observed_value": "window mean 3.979ms vs baseline 2.978±1.1ms (z=+0.90)",
+          "expected_baseline": "window mean < 2.978ms (p99 last 24h)"
+        }
+      ]
+    }
+  ],
+  "remediation_steps": [
+    "Investigate fraud-detection container for memory leak or unbounded resource consumption - consider adding memory limits/restarts policy",
+    "Review ad service memory allocation and check for similar leak patterns; consider resource limit adjustments",
+    "Profile cart service latency spikes - check for downstream dependency bottlenecks or increased request volume"
+  ],
+  "fault_type_classification": "memory_stress",
+  "grounding_score": 1.0,
+  "latency_s": 28.738544238998486,
+  "cost_usd": 0.0,
+  "total_prompt_tokens": 75733,
+  "total_completion_tokens": 4669,
+  "llm_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "agent_version": "0.2.0"
+}

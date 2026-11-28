@@ -1,0 +1,14 @@
+{
+  "scenario_id": "quote-http_abort-seed23",
+  "fault_service": "quote",
+  "fault_type": "http_abort",
+  "chaos_kind": "NetworkChaos",
+  "injection_ts": "2026-11-27T16:55:12.911817+00:00",
+  "recovery_ts": "2026-11-27T17:00:13.328122+00:00",
+  "seed": 23,
+  "chaos_manifest_hash": "4f8f2258ed9712f1",
+  "split": "development",
+  "window_start": "2026-11-27T16:54:12.911817+00:00",
+  "window_end": "2026-11-27T17:01:13.328122+00:00",
+  "validation_passed": true
+}

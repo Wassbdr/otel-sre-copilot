@@ -1,0 +1,82 @@
+{
+  "incident_id": "INC-4c7c8a31",
+  "investigation_start_ts": "2026-11-27T09:31:02.377853+00:00",
+  "investigation_end_ts": "2026-11-27T09:33:00.759006+00:00",
+  "root_causes": [
+    {
+      "rank": 1,
+      "service": "cart",
+      "fault_type": "pod_crash",
+      "description": "Cart service pods experiencing excessive restarts (z=>1000) with extreme cpu spike (z=+12.54) and memory spike (z=+21.72), indicating OOM kill or process failure. Frontend errors propagate from downstream cart dependency failure.",
+      "confidence": 0.96,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "max(increase(kube_pod_container_status_restarts_total{namespace=\"otel-demo\",pod=~\"cart-.*\"}[5m])) or vector(0)",
+          "observed_value": "pod_restarts z=>1000 at 06:47-06:54",
+          "expected_baseline": "pod_restarts < 0.01 (pre-incident)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"cart-.*\"}[2m]))",
+          "observed_value": "cpu_usage z=+12.54 at 06:47-06:54",
+          "expected_baseline": "cpu_usage < 0.01 (p99 last 24h)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"cart-.*\"})",
+          "observed_value": "memory_usage z=+21.72 at 06:47-06:54",
+          "expected_baseline": "memory_usage < 0.01 (p99 last 24h)"
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "service": "frontend",
+      "fault_type": "http_abort",
+      "description": "Frontend error_rate z=>1000 observed, but analysis shows this is a symptom of downstream cart pod_crash rather than primary cause. Frontend propagates errors from cart dependency failure.",
+      "confidence": 0.82,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(rate(calls_total{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+          "observed_value": "error_rate z=>1000 at 06:47-06:54",
+          "expected_baseline": "error_rate < 0.01 (p99 last 24h)"
+        },
+        {
+          "signal_type": "trace",
+          "query_or_id": "search_traces service_name=\"frontend\" error_only=true start=2026-11-27T06:47:09.777815+00:00 end=2026-11-27T06:54:09.991129+00:00",
+          "observed_value": "no error traces found in frontend during window",
+          "expected_baseline": "error traces present under normal operation"
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "service": "checkout",
+      "fault_type": "high_latency",
+      "description": "Checkout p99_latency_ms z=+1.99 observed (61.77ms window vs 38.69ms baseline), indicating increased latency. However, checkout shows no corresponding cpu/memory/restart anomalies, suggesting this is a secondary effect rather than root cause.",
+      "confidence": 0.54,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"checkout\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "p99_latency_ms z=+1.99 at 06:47-06:54",
+          "expected_baseline": "p99_latency_ms < 0.5 (p99 last 24h)"
+        }
+      ]
+    }
+  ],
+  "remediation_steps": [
+    "Restart cart pods and investigate OOM conditions - check container logs for memory allocation failures",
+    "Implement cart pod resource limits and requests to prevent future OOM kills; add monitoring alerts on cart memory/cpu thresholds"
+  ],
+  "fault_type_classification": "pod_crash",
+  "grounding_score": 1.0,
+  "latency_s": 37.91265396400168,
+  "cost_usd": 0.0,
+  "total_prompt_tokens": 75629,
+  "total_completion_tokens": 4982,
+  "llm_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "agent_version": "0.2.0"
+}

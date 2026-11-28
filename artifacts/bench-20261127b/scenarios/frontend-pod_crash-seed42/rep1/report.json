@@ -1,0 +1,67 @@
+{
+  "incident_id": "INC-7b36015e",
+  "investigation_start_ts": "2026-11-27T09:44:30.152629+00:00",
+  "investigation_end_ts": "2026-11-27T09:47:47.768425+00:00",
+  "root_causes": [
+    {
+      "rank": 1,
+      "service": "payment",
+      "fault_type": "memory_stress",
+      "description": "Payment service experienced extreme memory usage spike (z=+9.25) causing memory stress that propagated through checkout dependency to frontend, triggering pod restarts as the entry point symptom.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"payment-.*\")}",
+          "observed_value": "memory_usage z=+9.25, mean=139686161.067 bytes",
+          "expected_baseline": "memory_usage baseline=1.392e+08±5.7e+04 (p99 last 24h)"
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "service": "frontend",
+      "fault_type": "pod_crash",
+      "description": "Frontend service exhibited extreme pod restart activity (z>1000, 2 restart events recorded), with pod events showing 'Container frontend definition changed, will be restarted'. Frontend restarts are a downstream symptom of payment memory stress propagating through the dependency chain.",
+      "confidence": 0.92,
+      "evidence": [
+        {
+          "signal_type": "k8s_event",
+          "query_or_id": "get_pod_events{namespace=\"otel-demo\",pod_name_prefix=\"frontend\",since_seconds=360}",
+          "observed_value": "pod_restarts z>1000, 'Killing: Container frontend definition changed, will be restarted (count=2)'",
+          "expected_baseline": "pod_restarts baseline=0±0 (pre-incident)"
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "service": "checkout",
+      "fault_type": "dependency_failure",
+      "description": "Checkout service showed high p99 latency (z=-1.06, window=24.85s) as the intermediate dependency between frontend and payment, contributing to frontend errors while root cause originates from payment memory stress.",
+      "confidence": 0.88,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"checkout\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "p99_latency_ms z=-1.06, window=24.85s",
+          "expected_baseline": "p99_latency_ms baseline=5295±5e+03 (p99 last 24h)"
+        }
+      ]
+    }
+  ],
+  "remediation_steps": [
+    "Restart payment pods immediately to relieve memory pressure",
+    "Investigate and fix memory leak in payment service deployment",
+    "Add memory limits/requests for payment Kubernetes deployment",
+    "Monitor frontend pods after payment restart to confirm recovery",
+    "Review k8s pod definition changes that triggered frontend restarts"
+  ],
+  "fault_type_classification": "memory_stress",
+  "grounding_score": 0.6667,
+  "latency_s": 85.46952065399995,
+  "cost_usd": 0.0,
+  "total_prompt_tokens": 85936,
+  "total_completion_tokens": 11428,
+  "llm_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "agent_version": "0.2.0"
+}

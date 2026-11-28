@@ -1,0 +1,76 @@
+{
+  "incident_id": "INC-79a55d3b",
+  "investigation_start_ts": "2026-11-27T08:33:01.733671+00:00",
+  "investigation_end_ts": "2026-11-27T08:38:06.027867+00:00",
+  "root_causes": [
+    {
+      "rank": 1,
+      "service": "recommendation",
+      "fault_type": "memory_stress",
+      "description": "Recommendation service exhibits extreme memory pressure (z=+23.37, window=9.868e+07 bytes) causing p99 latency to spike to z>1000, propagating failures through topology to frontend and checkout.",
+      "confidence": 0.92,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"recommendation-.*\")}",
+          "observed_value": "memory_usage z=+23.37 at 06:10-06:17",
+          "expected_baseline": "memory_usage < 0.01 (p99 last 24h)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"recommendation\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "p99_latency_ms z>1000 at 06:10-06:17",
+          "expected_baseline": "p99_latency_ms < 50 (p99 last 24h)"
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "service": "product-catalog",
+      "fault_type": "cpu_stress",
+      "description": "Product-catalog service shows very high CPU usage (z=+6.66) combined with extreme p99 latency (z>1000), directly impacting checkout and frontend through dependency chains.",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"product-catalog-.*\"}[2m]))",
+          "observed_value": "cpu_usage z=+6.66 at 06:10-06:17",
+          "expected_baseline": "cpu_usage < 0.01 (p99 last 24h)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"product-catalog\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "p99_latency_ms z>1000 at 06:10-06:17",
+          "expected_baseline": "p99_latency_ms < 30 (p99 last 24h)"
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "service": "checkout",
+      "fault_type": "high_latency",
+      "description": "Checkout service shows very high p99 latency (z=+983.21), which is a downstream effect of memory_stress in recommendation and cpu_stress in product-catalog, rather than a primary root cause.",
+      "confidence": 0.78,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"checkout\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "p99_latency_ms z=+983.21 at 06:10-06:17",
+          "expected_baseline": "p99_latency_ms < 20 (p99 last 24h)"
+        }
+      ]
+    }
+  ],
+  "remediation_steps": [
+    "Investigate and restart recommendation pods with memory pressure, check for memory leaks in recommendation service code",
+    "Review product-catalog resource requests/limits, consider scaling or optimizing CPU-intensive catalog queries"
+  ],
+  "fault_type_classification": "memory_stress",
+  "grounding_score": 1.0,
+  "latency_s": 81.28139714699972,
+  "cost_usd": 0.0,
+  "total_prompt_tokens": 76006,
+  "total_completion_tokens": 5689,
+  "llm_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "agent_version": "0.2.0"
+}

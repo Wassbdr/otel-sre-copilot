@@ -1,0 +1,76 @@
+{
+  "incident_id": "INC-71cdc9bc",
+  "investigation_start_ts": "2026-11-27T09:56:46.982503+00:00",
+  "investigation_end_ts": "2026-11-27T09:59:10.637218+00:00",
+  "root_causes": [
+    {
+      "rank": 1,
+      "service": "checkout",
+      "fault_type": "pod_crash",
+      "description": "checkout pods experiencing restarts (z>1000, 4 restart events observed in pod events), causing downstream frontend errors and propagating failure through the service dependency graph",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "signal_type": "k8s_event",
+          "query_or_id": "get_pod_events namespace=otel-demo pod_name_prefix=checkout since_seconds=300",
+          "observed_value": "Killing: Container checkout definition changed, will be restarted (count=4)",
+          "expected_baseline": "0 pod restarts per window (baseline=0±0)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "max(increase(kube_pod_container_status_restarts_total{namespace=\"otel-demo\",pod=~\"checkout-.*\"}[5m])) or vector(0)",
+          "observed_value": "pod_restarts z=>1000 window=0.9167 baseline=0±0",
+          "expected_baseline": "pod_restarts < 0.01 (p99 last 24h)"
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "service": "frontend",
+      "fault_type": "http_abort",
+      "description": "frontend error_rate z>1000 spike observed; likely symptom of checkout dependency failure rather than primary root cause, as frontend depends on checkout in the service topology",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(rate(calls_total{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+          "observed_value": "error_rate window mean=0.101 baseline=0±0 z>1000",
+          "expected_baseline": "error_rate < 0.01 (p99 last 24h)"
+        },
+        {
+          "signal_type": "trace",
+          "query_or_id": "search_traces service_name=frontend error_only=true start=2026-11-27T07:23:47.932623+00:00 end=2026-11-27T07:30:48.144320+00:00",
+          "observed_value": "no traces found",
+          "expected_baseline": "traces present for normal error patterns"
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "service": "quote",
+      "fault_type": "high_latency",
+      "description": "quote p99_latency_ms z>1000 spike observed; separate from checkout/frontend issue, may indicate independent performance degradation in quote service",
+      "confidence": 0.75,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"quote\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "p99_latency_ms z>1000 window=2.585 baseline=1.98±2.6e-16",
+          "expected_baseline": "p99_latency_ms < 25th percentile (baseline=1.98ms)"
+        }
+      ]
+    }
+  ],
+  "remediation_steps": [
+    "Investigate checkout pod definition changes and rolling updates that triggered 4 container restarts; pinfix the faulty deployment or config change",
+    "Monitor frontend error rates post-checkout fix; if errors persist, investigate cart memory pressure (z=+3.48) and ad memory pressure (z=+3.07) as contributing factors"
+  ],
+  "fault_type_classification": "pod_crash",
+  "grounding_score": 0.8,
+  "latency_s": 34.448538627000175,
+  "cost_usd": 0.0,
+  "total_prompt_tokens": 85989,
+  "total_completion_tokens": 5402,
+  "llm_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "agent_version": "0.2.0"
+}

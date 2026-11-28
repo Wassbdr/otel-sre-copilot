@@ -1,0 +1,82 @@
+{
+  "incident_id": "INC-c78b003a",
+  "investigation_start_ts": "2026-11-27T09:35:43.174105+00:00",
+  "investigation_end_ts": "2026-11-27T09:40:03.868136+00:00",
+  "root_causes": [
+    {
+      "rank": 1,
+      "service": "shipping",
+      "fault_type": "dependency_failure",
+      "description": "Shipping service experiencing extreme error_rate (z>1000) and p99_latency_ms (z+701.96), propagating errors to frontend and latency to downstream quote. Topology shows frontend→shipping→quote chain; shipping failure explains both frontend errors and quote latency.",
+      "confidence": 0.92,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "error_rate: window mean vs pre-incident baseline, most anomalous first - shipping z=   >1000",
+          "observed_value": "error_rate z-score >1000 in window 2026-11-27T06:59:42 to 2026-11-27T07:06:42",
+          "expected_baseline": "error_rate < 0.01 (p99 last 24h)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "p99_latency_ms: window mean vs pre-incident baseline, most anomalous first - shipping z= +701.96",
+          "observed_value": "p99_latency_ms z-score +701.96 in window",
+          "expected_baseline": "p99_latency_ms baseline ~8.233ms (p99 last 24h)"
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "service": "frontend",
+      "fault_type": "http_abort",
+      "description": "Frontend entry point showing extreme error_rate (z>1000) and p99_latency_ms (z+657.73); symptoms of downstream shipping dependency failure rather than primary cause. Errors propagate from shipping service through the frontend.",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "error_rate: window mean vs pre-incident baseline, most anomalous first - frontend z=   >1000",
+          "observed_value": "error_rate z-score >1000 in window 2026-11-27T06:59:42 to 2026-11-27T07:06:42",
+          "expected_baseline": "error_rate < 0.01 (p99 last 24h)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "p99_latency_ms: window mean vs pre-incident baseline, most anomalous first - frontend z= +657.73",
+          "observed_value": "p99_latency_ms z-score +657.73 in window",
+          "expected_baseline": "p99_latency_ms baseline ~38.54ms (p99 last 24h)"
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "service": "quote",
+      "fault_type": "high_latency",
+      "description": "Quote service showing extreme p99_latency_ms (z>1000) but no corresponding error spike; latency spike caused by upstream shipping dependency failure. No error_rate anomaly observed (z≈0), consistent with dependency rather than service-internal issue.",
+      "confidence": 0.78,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "p99_latency_ms: window mean vs pre-incident baseline, most anomalous first - quote z=   >1000",
+          "observed_value": "p99_latency_ms z-score >1000 in window",
+          "expected_baseline": "p99_latency_ms baseline ~1.98ms (p99 last 24h)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "error_rate: window mean vs pre-incident baseline, most anomalous first - quote z= +0.00",
+          "observed_value": "error_rate z-score +0.00 in window",
+          "expected_baseline": "error_rate < 0.01 (p99 last 24h)"
+        }
+      ]
+    }
+  ],
+  "remediation_steps": [
+    "Investigate shipping service pods for crashes, OOM kills, or resource exhaustion - check kube_events and container logs for shipping deployment in otel-demo namespace",
+    "Scale or restart shipping pods if resource exhaustion confirmed; add circuit breaker at frontend level to gracefully handle shipping downstream failures"
+  ],
+  "fault_type_classification": "dependency_failure",
+  "grounding_score": 1.0,
+  "latency_s": 131.91226425499826,
+  "cost_usd": 0.0,
+  "total_prompt_tokens": 76100,
+  "total_completion_tokens": 4429,
+  "llm_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "agent_version": "0.2.0"
+}

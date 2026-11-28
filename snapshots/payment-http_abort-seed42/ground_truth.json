@@ -3,11 +3,11 @@
   "fault_service": "payment",
   "fault_type": "http_abort",
   "chaos_kind": "NetworkChaos",
-  "injection_ts": "2026-06-18T22:12:43.072861+00:00",
-  "recovery_ts": "2026-06-18T22:18:06.174217+00:00",
+  "injection_ts": "2026-11-27T06:23:32.616937+00:00",
+  "recovery_ts": "2026-11-27T06:28:32.821515+00:00",
   "seed": 42,
   "chaos_manifest_hash": "ac98e178aa69849d",
-  "window_start": "2026-06-18T22:11:43.072861+00:00",
-  "window_end": "2026-06-18T22:19:06.174217+00:00",
+  "window_start": "2026-11-27T06:22:32.616937+00:00",
+  "window_end": "2026-11-27T06:29:32.821515+00:00",
   "validation_passed": true
 }

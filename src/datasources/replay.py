@@ -1,4 +1,4 @@
-"""ReplayDataSource — reads from a snapshot directory, no live cluster needed.
+"""Read recorded telemetry without a live cluster.
 
 The snapshot format is:
   <snapshot_dir>/
@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 import structlog
 
@@ -38,12 +39,16 @@ class ReplayDataSource:
         self._dir = Path(snapshot_dir)
         if not self._dir.exists():
             raise FileNotFoundError(f"Snapshot directory not found: {self._dir}")
-        self._prom_queries: list[dict[str, object]] = self._load_json("prometheus/raw_queries.json", [])
-        self._trace_summaries: list[dict[str, object]] = self._load_json("tempo/trace_summaries.json", [])
-        self._loki_queries: list[dict[str, object]] = self._load_json("loki/raw_queries.json", [])
-        self._k8s_events: list[dict[str, object]] = self._load_json("k8s/events.json", [])
+        self._prom_queries: list[dict[str, Any]] = self._load_json(
+            "prometheus/raw_queries.json", []
+        )
+        self._trace_summaries: list[dict[str, Any]] = self._load_json(
+            "tempo/trace_summaries.json", []
+        )
+        self._loki_queries: list[dict[str, Any]] = self._load_json("loki/raw_queries.json", [])
+        self._k8s_events: list[dict[str, Any]] = self._load_json("k8s/events.json", [])
 
-    def _load_json(self, relative_path: str, default: object) -> object:
+    def _load_json(self, relative_path: str, default: Any) -> Any:  # noqa: ANN401
         path = self._dir / relative_path
         if not path.exists():
             log.warning("snapshot_file_missing", path=str(path))
@@ -52,10 +57,10 @@ class ReplayDataSource:
             return json.load(f)
 
     def query_prometheus_instant(self, query: str, time: str) -> dict[str, object]:
-        for entry in self._prom_queries:  # type: ignore[union-attr]
+        for entry in self._prom_queries:
             if entry.get("type") == "instant" and entry.get("query") == query:
                 result = entry.get("result", [])
-                return result[0] if result else {}
+                return dict(result[0]) if result else {}
         log.warning("prom_instant_cache_miss", query=query[:80])
         return {}
 
@@ -65,7 +70,7 @@ class ReplayDataSource:
         # Exact match INCLUDING the time window. This is essential: the Z-score baselines
         # query the same PromQL for both the fault window and the baseline window, so matching
         # on query alone would return identical data for both → z=0 (a hollow baseline).
-        for entry in self._prom_queries:  # type: ignore[union-attr]
+        for entry in self._prom_queries:
             if (
                 entry.get("type") == "range"
                 and entry.get("query") == query
@@ -73,20 +78,35 @@ class ReplayDataSource:
                 and entry.get("start") == start
                 and entry.get("end") == end
             ):
-                return entry.get("result", [])  # type: ignore[return-value]
+                return list(entry.get("result", []))
+        # A window that ends where the snapshot's baseline ends is a baseline request, whatever
+        # its start (baselines may ask for a longer lookback than was captured).
+        for entry in self._prom_queries:
+            if (
+                entry.get("type") == "range"
+                and entry.get("is_baseline")
+                and entry.get("query") == query
+                and entry.get("step", "30s") == step
+                and entry.get("end") == end
+            ):
+                return list(entry.get("result", []))
         # Fall back: same PromQL+step, any window (the agent's LLM may not echo the exact
         # window). Prefer a non-baseline (fault-window) entry so the agent sees fault data.
         candidates = [
-            e for e in self._prom_queries  # type: ignore[union-attr]
+            e for e in self._prom_queries
             if e.get("type") == "range" and e.get("query") == query
             and e.get("step", "30s") == step
         ]
         if candidates:
             log.warning("prom_range_window_mismatch", query=query[:80])
             best = next((e for e in candidates if not e.get("is_baseline")), candidates[0])
-            return best.get("result", [])  # type: ignore[return-value]
+            return list(best.get("result", []))
         log.warning("prom_range_cache_miss", query=query[:80])
         return []
+
+    def has_prometheus_range(self, query: str) -> bool:
+        return any(e.get("type") == "range" and e.get("query") == query
+                   for e in self._prom_queries)
 
     def search_traces(
         self,
@@ -98,8 +118,8 @@ class ReplayDataSource:
         limit: int = 20,
     ) -> list[dict[str, object]]:
         matches = [
-            t for t in self._trace_summaries  # type: ignore[union-attr]
-            if t.get("rootServiceName") == service_name
+            t for t in self._trace_summaries
+            if not service_name or t.get("rootServiceName") == service_name
             or any(
                 s.get("attributes", {}).get("service.name") == service_name
                 for s in t.get("spanSets", [])
@@ -117,7 +137,10 @@ class ReplayDataSource:
             log.warning("trace_not_in_snapshot", trace_id=trace_id)
             return {}
         with open(path) as f:
-            return json.load(f)  # type: ignore[return-value]
+            return dict(json.load(f))
+
+    def has_trace(self, trace_id: str) -> bool:
+        return (self._dir / "tempo" / "traces" / f"{trace_id}.json").is_file()
 
     def query_loki(
         self,
@@ -127,20 +150,20 @@ class ReplayDataSource:
         limit: int = 100,
         direction: str = "backward",
     ) -> list[dict[str, object]]:
-        for entry in self._loki_queries:  # type: ignore[union-attr]
+        for entry in self._loki_queries:
             if entry.get("logql") == logql:
-                return entry.get("result", [])  # type: ignore[return-value]
+                return list(entry.get("result", []))
         # Partial match: only if the service_name value (quoted in the selector) matches.
         # Extract service_name value from logql e.g. {service_name="checkoutservice"}
         import re as _re
         svc_match = _re.search(r'service_name="([^"]+)"', logql)
         if svc_match:
             svc = svc_match.group(1)
-            for entry in self._loki_queries:  # type: ignore[union-attr]
+            for entry in self._loki_queries:
                 stored_logql: str = str(entry.get("logql", ""))
                 if f'service_name="{svc}"' in stored_logql:
                     log.warning("loki_partial_match", requested=logql[:80])
-                    return entry.get("result", [])  # type: ignore[return-value]
+                    return list(entry.get("result", []))
         log.warning("loki_cache_miss", logql=logql[:80])
         return []
 
@@ -150,9 +173,12 @@ class ReplayDataSource:
         pod_name_prefix: str | None = None,
         since_seconds: int = 600,
     ) -> list[dict[str, object]]:
-        events: list[dict[str, object]] = list(self._k8s_events)  # type: ignore[arg-type]
+        events: list[dict[str, object]] = list(self._k8s_events)
         if pod_name_prefix:
-            events = [e for e in events if str(e.get("involved_object_name", "")).startswith(pod_name_prefix)]
+            events = [
+                e for e in events
+                if str(e.get("involved_object_name", "")).startswith(pod_name_prefix)
+            ]
         return events
 
     def get_service_topology(self, namespace: str) -> dict[str, list[str]]:
@@ -161,7 +187,7 @@ class ReplayDataSource:
             with open(path) as f:
                 meta = json.load(f)
                 if "service_topology" in meta:
-                    return meta["service_topology"]  # type: ignore[return-value]
+                    return dict(meta["service_topology"])
         # Fall back to hardcoded Astronomy Shop topology
         from src.datasources.live import _STATIC_TOPOLOGY
         return dict(_STATIC_TOPOLOGY)

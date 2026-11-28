@@ -1,0 +1,88 @@
+{
+  "incident_id": "INC-d4278e77",
+  "investigation_start_ts": "2026-11-27T10:27:31.889127+00:00",
+  "investigation_end_ts": "2026-11-27T10:29:18.244705+00:00",
+  "root_causes": [
+    {
+      "rank": 1,
+      "service": "frontend",
+      "fault_type": "http_abort",
+      "description": "Frontend shows extreme error_rate z>1000, p99_latency_ms z=388.16, and memory_usage z=+5.90, indicating request failures and resource pressure likely propagating to downstream services.",
+      "confidence": 0.92,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(rate(calls_total{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+          "observed_value": "error_rate z>1000 at 08:25-08:32",
+          "expected_baseline": "error_rate < 0.01 (p99 last 24h)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "p99_latency_ms z=388.16 at 08:25-08:32",
+          "expected_baseline": "p99_latency_ms < 100ms (p99 last 24h)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"frontend-.*\"})",
+          "observed_value": "memory_usage z=+5.90 at 08:25-08:32",
+          "expected_baseline": "memory_usage < baseline + 3σ (p99 last 24h)"
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "service": "shipping",
+      "fault_type": "dependency_failure",
+      "description": "Shipping shows extreme error_rate z>1000 and p99_latency_ms z>1000, consistent with a downstream dependency failure exacerbated by frontend traffic pressure; topology shows frontend→shipping path.",
+      "confidence": 0.88,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(rate(calls_total{service_name=\"shipping\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+          "observed_value": "error_rate z>1000 at 08:25-08:32",
+          "expected_baseline": "error_rate < 0.01 (p99 last 24h)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"shipping\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "p99_latency_ms z>1000 at 08:25-08:32",
+          "expected_baseline": "p99_latency_ms < 100ms (p99 last 24h)"
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "service": "checkout",
+      "fault_type": "high_latency",
+      "description": "Checkout shows p99_latency_ms z=541.33 and memory_usage z=+5.03, indicating latency spike and memory pressure; topology shows checkout is a central hub serving payment, shipping, cart, and other services.",
+      "confidence": 0.81,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"checkout\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "p99_latency_ms z=541.33 at 08:25-08:32",
+          "expected_baseline": "p99_latency_ms < 100ms (p99 last 24h)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"checkout-.*\"})",
+          "observed_value": "memory_usage z=+5.03 at 08:25-08:32",
+          "expected_baseline": "memory_usage < baseline + 3σ (p99 last 24h)"
+        }
+      ]
+    }
+  ],
+  "remediation_steps": [
+    "Investigate frontend resource limits and request handling - check for thread pool exhaustion, connection pool limits, or configuration changes that caused memory_usage z=+5.90 and error_rate z>1000",
+    "Verify shipping service dependency health - check database connectivity, external service calls, and circuit breaker state; consider adding circuit breaker around shipping calls from frontend"
+  ],
+  "fault_type_classification": "http_abort",
+  "grounding_score": 1.0,
+  "latency_s": 25.496861914999798,
+  "cost_usd": 0.0,
+  "total_prompt_tokens": 75843,
+  "total_completion_tokens": 4028,
+  "llm_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "agent_version": "0.2.0"
+}

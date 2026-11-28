@@ -1,0 +1,13 @@
+{
+  "scenario_id": "checkout-pod_crash-seed7",
+  "fault_service": "checkout",
+  "fault_type": "pod_crash",
+  "chaos_kind": "PodChaos",
+  "injection_ts": "2026-11-27T07:24:47.932623+00:00",
+  "recovery_ts": "2026-11-27T07:29:48.144320+00:00",
+  "seed": 7,
+  "chaos_manifest_hash": "a629bbc7aa9941ac",
+  "window_start": "2026-11-27T07:23:47.932623+00:00",
+  "window_end": "2026-11-27T07:30:48.144320+00:00",
+  "validation_passed": true
+}

@@ -1,0 +1,27 @@
+metadata:
+  scenario_id: product-catalog-cpu_stress-seed42
+  fault_service: product-catalog
+  fault_type: cpu_stress
+  seed: 42
+  split: development
+  fault_duration_s: 300
+  window_extra_s: 60
+  namespace: otel-demo
+
+chaos_manifest:
+  apiVersion: chaos-mesh.org/v1alpha1
+  kind: StressChaos
+  metadata:
+    name: product-catalog-cpu-stress-seed42
+    namespace: chaos-mesh
+  spec:
+    mode: all
+    selector:
+      namespaces: [otel-demo]
+      labelSelectors:
+        app.kubernetes.io/component: product-catalog
+    duration: "300s"
+    stressors:
+      cpu:
+        workers: 2
+        load: 90

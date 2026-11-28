@@ -1,0 +1,89 @@
+{
+  "incident_id": "INC-70e4b7e6",
+  "investigation_start_ts": "2026-11-27T10:05:05.836828+00:00",
+  "investigation_end_ts": "2026-11-27T10:07:14.309929+00:00",
+  "root_causes": [
+    {
+      "rank": 1,
+      "service": "product-catalog",
+      "fault_type": "high_latency",
+      "description": "product-catalog experienced extreme p99 latency spike (z>1000) driven by high cpu usage (z=+5.84) and memory pressure (z=+5.09), propagating latency issues upstream to recommendation and frontend via topology dependencies",
+      "confidence": 0.92,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"product-catalog\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "p99_latency_ms z>1000 at 07:35-07:42",
+          "expected_baseline": "p99_latency_ms baseline=25.8±6.5 (pre-incident)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"product-catalog-.*\"}[2m]))",
+          "observed_value": "cpu_usage z=+5.84 at 07:35-07:42",
+          "expected_baseline": "cpu_usage baseline=0.04723±0.01 (pre-incident)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"product-catalog-.*\"})",
+          "observed_value": "memory_usage z=+5.09 at 07:35-07:42",
+          "expected_baseline": "memory_usage baseline=2.437e+07±2.2e+05 (pre-incident)"
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "service": "recommendation",
+      "fault_type": "high_latency",
+      "description": "recommendation showed extreme p99 latency spike (z>1000) combined with very high memory usage (z=+16.59), likely experiencing propagated latency from product-catalog dependency plus its own memory pressure",
+      "confidence": 0.78,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"recommendation\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "p99_latency_ms z>1000 at 07:35-07:42",
+          "expected_baseline": "p99_latency_ms baseline=13.39±3.1 (pre-incident)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"recommendation-.*\"})",
+          "observed_value": "memory_usage z=+16.59 at 07:35-07:42",
+          "expected_baseline": "memory_usage baseline=9.981e+07±9.8e+03 (pre-incident)"
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "service": "frontend",
+      "fault_type": "high_latency",
+      "description": "frontend p99 latency z=+524.64 propagated from downstream dependencies (recommendation and product-catalog), with error_rate actually at -0.96 (below baseline), indicating latency propagation rather than origin error",
+      "confidence": 0.65,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "histogram_quantile(0.99, sum(rate(duration_milliseconds_bucket{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\"}[2m])) by (le))",
+          "observed_value": "p99_latency_ms z=+524.64 at 07:35-07:42",
+          "expected_baseline": "p99_latency_ms baseline=31.16±13 (pre-incident)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(rate(calls_total{service_name=\"frontend\",span_kind=\"SPAN_KIND_SERVER\",status_code=\"STATUS_CODE_ERROR\"}[2m])) or vector(0)",
+          "observed_value": "error_rate z=-0.96 at 07:35-07:42",
+          "expected_baseline": "error_rate baseline=0.06779±0.071 (pre-incident)"
+        }
+      ]
+    }
+  ],
+  "remediation_steps": [
+    "Investigate product-catalog resource limits and identify cause of cpu/memory pressure - consider scaling or optimizing catalog queries",
+    "Review recommendation memory consumption patterns and add memory limits/optimizations to prevent OOM-induced latency",
+    "Add circuit breakers and latency thresholds on frontend-checkout path to degrade gracefully under downstream latency spikes"
+  ],
+  "fault_type_classification": "high_latency",
+  "grounding_score": 1.0,
+  "latency_s": 47.61886518199978,
+  "cost_usd": 0.0,
+  "total_prompt_tokens": 75935,
+  "total_completion_tokens": 6211,
+  "llm_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "agent_version": "0.2.0"
+}

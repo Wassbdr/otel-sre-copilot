@@ -1,0 +1,47 @@
+{
+  "incident_id": "INC-4c7c8a31",
+  "investigation_start_ts": "2026-11-27T09:28:29.983017+00:00",
+  "investigation_end_ts": "2026-11-27T09:31:02.353503+00:00",
+  "root_causes": [
+    {
+      "rank": 1,
+      "service": "cart",
+      "fault_type": "pod_crash",
+      "description": "Cart service experiencing extreme CPU stress (z=+12.54) and memory stress (z=+21.72) leading to pod restarts (z=>1000), which propagates errors to upstream frontend service",
+      "confidence": 0.96,
+      "evidence": [
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(rate(container_cpu_usage_seconds_total{namespace=\"otel-demo\",pod=~\"cart-.*\"}[2m]))",
+          "observed_value": "cpu_usage z=+12.54 at 06:47:09-06:54:09",
+          "expected_baseline": "cpu_usage < 0.007696 (p99 last 24h)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "sum(container_memory_working_set_bytes{namespace=\"otel-demo\",pod=~\"cart-.*\")}",
+          "observed_value": "memory_usage z=+21.72 at 06:47:09-06:54:09",
+          "expected_baseline": "memory_usage < 1.089e+08 (p99 last 24h)"
+        },
+        {
+          "signal_type": "metric",
+          "query_or_id": "max(increase(kube_pod_container_status_restarts_total{namespace=\"otel-demo\",pod=~\"cart-.*\"}[5m]))",
+          "observed_value": "pod_restarts z=>1000 at 06:47:09-06:54:09",
+          "expected_baseline": "pod_restarts ≈ 0 (p99 last 24h)"
+        }
+      ]
+    }
+  ],
+  "remediation_steps": [
+    "Restart cart pods to immediately relieve resource pressure",
+    "Investigate cart service memory leak and CPU saturation root cause, scale resources or optimize code",
+    "Monitor frontend error_rate after cart restart to confirm propagation reversal"
+  ],
+  "fault_type_classification": "pod_crash",
+  "grounding_score": 1.0,
+  "latency_s": 38.96483590900081,
+  "cost_usd": 0.0,
+  "total_prompt_tokens": 77314,
+  "total_completion_tokens": 5671,
+  "llm_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "agent_version": "0.2.0"
+}

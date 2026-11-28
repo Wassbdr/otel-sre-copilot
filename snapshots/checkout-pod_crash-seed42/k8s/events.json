@@ -1,0 +1,56 @@
+[
+  {
+    "type": "Normal",
+    "reason": "Created",
+    "message": "Created container checkout",
+    "count": 3,
+    "first_time": "2026-11-27 05:48:07+00:00",
+    "last_time": "2026-11-27 06:04:26+00:00",
+    "involved_object_name": "checkout-7cc968d487-6hz45"
+  },
+  {
+    "type": "Normal",
+    "reason": "Started",
+    "message": "Started container checkout",
+    "count": 3,
+    "first_time": "2026-11-27 05:48:07+00:00",
+    "last_time": "2026-11-27 06:04:26+00:00",
+    "involved_object_name": "checkout-7cc968d487-6hz45"
+  },
+  {
+    "type": "Normal",
+    "reason": "Killing",
+    "message": "Container checkout definition changed, will be restarted",
+    "count": 2,
+    "first_time": "2026-11-27 05:59:26+00:00",
+    "last_time": "2026-11-27 06:04:26+00:00",
+    "involved_object_name": "checkout-7cc968d487-6hz45"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulling",
+    "message": "Pulling image \"gcr.io/google-containers/pause:latest\"",
+    "count": 1,
+    "first_time": "2026-11-27 05:59:26+00:00",
+    "last_time": "2026-11-27 05:59:26+00:00",
+    "involved_object_name": "checkout-7cc968d487-6hz45"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Successfully pulled image \"gcr.io/google-containers/pause:latest\" in 944ms (944ms including waiting). Image size: 72335 bytes.",
+    "count": 1,
+    "first_time": "2026-11-27 05:59:27+00:00",
+    "last_time": "2026-11-27 05:59:27+00:00",
+    "involved_object_name": "checkout-7cc968d487-6hz45"
+  },
+  {
+    "type": "Normal",
+    "reason": "Pulled",
+    "message": "Container image \"ghcr.io/open-telemetry/demo:3.1.0-checkout\" already present on machine",
+    "count": 1,
+    "first_time": "2026-11-27 06:04:26+00:00",
+    "last_time": "2026-11-27 06:04:26+00:00",
+    "involved_object_name": "checkout-7cc968d487-6hz45"
+  }
+]

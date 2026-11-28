@@ -1,4 +1,4 @@
-"""DataSource Protocol — the central abstraction seam.
+"""DataSource protocol for live and replay telemetry.
 
 Every component (agent tools, eval harness, scripts) receives a DataSource.
 LiveDataSource makes HTTP calls to a running cluster.
@@ -51,7 +51,7 @@ class DataSource(Protocol):
         error_only: bool = False,
         limit: int = 20,
     ) -> list[dict[str, object]]:
-        """Search Tempo for traces matching criteria.
+        """Search Tempo for traces matching criteria. An empty service name searches all services.
 
         Returns list of trace summaries:
         {"traceID": str, "rootServiceName": str, "rootTraceName": str,

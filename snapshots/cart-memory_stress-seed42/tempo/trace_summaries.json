@@ -1,93 +1,50 @@
 [
   {
-    "traceID": "5635ec62c2ba4170db39cecbac8b65a6",
-    "rootServiceName": "load-generator",
-    "rootTraceName": "user_checkout_single",
-    "startTimeUnixNano": "1781831731317697051",
-    "durationMs": 705
+    "traceID": "13557470271ee0239f235149c03a0da9",
+    "rootServiceName": "<root span not yet received>",
+    "startTimeUnixNano": "1795762090964900000",
+    "durationMs": 3
   },
   {
-    "traceID": "794d1c89e7de3227ee85bc8f3c26aed0",
-    "rootServiceName": "load-generator",
-    "rootTraceName": "user_checkout_single",
-    "startTimeUnixNano": "1781831719931109238",
-    "durationMs": 695
+    "traceID": "e7e4d1231f02d2965291fa73c11415d3",
+    "rootServiceName": "frontend-web",
+    "rootTraceName": "GET",
+    "startTimeUnixNano": "1795762089940000000",
+    "durationMs": 2433
   },
   {
-    "traceID": "ebfacaf19bbe556f02d7f17c22b4e7b1",
+    "traceID": "5c482ae17197276391356f33363f1a12",
     "rootServiceName": "load-generator",
-    "rootTraceName": "user_checkout_single",
-    "startTimeUnixNano": "1781831680158835690",
-    "durationMs": 615
+    "rootTraceName": "browser_change_currency",
+    "startTimeUnixNano": "1795762032662408211",
+    "durationMs": 2235
   },
   {
-    "traceID": "432c4f599bfce1bfb13b2056b1c2c01f",
-    "rootServiceName": "load-generator",
-    "rootTraceName": "user_checkout_multi",
-    "startTimeUnixNano": "1781831674188627020",
-    "durationMs": 743
+    "traceID": "66d534c9a45d2e0c286749370338a16b",
+    "rootServiceName": "frontend-proxy",
+    "rootTraceName": "ingress",
+    "startTimeUnixNano": "1795762029348234000",
+    "durationMs": 3142
   },
   {
-    "traceID": "865c4292581ac35adc500a2083242e63",
+    "traceID": "72cfbc20c31e2dced74b64677890b645",
     "rootServiceName": "load-generator",
-    "rootTraceName": "user_checkout_single",
-    "startTimeUnixNano": "1781831672248799899",
-    "durationMs": 715
+    "rootTraceName": "browser_change_currency",
+    "startTimeUnixNano": "1795762029184708006",
+    "durationMs": 2288
   },
   {
-    "traceID": "8928177ddc529e1a474032fc997a7a18",
-    "rootServiceName": "load-generator",
-    "rootTraceName": "user_checkout_single",
-    "startTimeUnixNano": "1781831597581279973",
-    "durationMs": 1075
+    "traceID": "a48a119be282c2b3e24e901226110e56",
+    "rootServiceName": "frontend-proxy",
+    "rootTraceName": "ingress",
+    "startTimeUnixNano": "1795762025886074000",
+    "durationMs": 3116
   },
   {
-    "traceID": "bacd0c904683127316a14dae49e98cb4",
-    "rootServiceName": "load-generator",
-    "rootTraceName": "user_checkout_multi",
-    "startTimeUnixNano": "1781831589243128869",
-    "durationMs": 970
-  },
-  {
-    "traceID": "3c0c97268a25daf952c6dc2a9c26b3f7",
-    "rootServiceName": "load-generator",
-    "rootTraceName": "user_checkout_single",
-    "startTimeUnixNano": "1781831575494363835",
-    "durationMs": 719
-  },
-  {
-    "traceID": "d1d3e1bf287a433a9d73a7ea04242e03",
-    "rootServiceName": "load-generator",
-    "rootTraceName": "user_checkout_single",
-    "startTimeUnixNano": "1781831570915296723",
-    "durationMs": 2134
-  },
-  {
-    "traceID": "853beb231c4aeb2413dba7fc9b93f548",
-    "rootServiceName": "load-generator",
-    "rootTraceName": "user_checkout_single",
-    "startTimeUnixNano": "1781831537255405985",
-    "durationMs": 737
-  },
-  {
-    "traceID": "69f8e75bed82e621424167f2cd3d1be7",
-    "rootServiceName": "load-generator",
-    "rootTraceName": "user_checkout_multi",
-    "startTimeUnixNano": "1781831800984274672",
-    "durationMs": 738
-  },
-  {
-    "traceID": "135a85af32eb483ed9ef62bfbcc3d602",
-    "rootServiceName": "load-generator",
-    "rootTraceName": "user_checkout_single",
-    "startTimeUnixNano": "1781831746658981518",
-    "durationMs": 1374
-  },
-  {
-    "traceID": "5659fd1df9cd96b1163055c24f799b94",
-    "rootServiceName": "recommendation",
-    "rootTraceName": "/flagd.evaluation.v1.Service/EventStream",
-    "startTimeUnixNano": "1781831289551624268",
-    "durationMs": 668161
+    "traceID": "b073552f013aa7010f0080ef9bd75d31",
+    "rootServiceName": "ad",
+    "rootTraceName": "flagd.evaluation.v2.Service/EventStream",
+    "startTimeUnixNano": "1795761432404814178",
+    "durationMs": 600001
   }
 ]

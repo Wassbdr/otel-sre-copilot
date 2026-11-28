@@ -1,0 +1,13 @@
+{
+  "scenario_id": "product-catalog-high_latency-seed7",
+  "fault_service": "product-catalog",
+  "fault_type": "high_latency",
+  "chaos_kind": "NetworkChaos",
+  "injection_ts": "2026-11-27T07:36:51.746210+00:00",
+  "recovery_ts": "2026-11-27T07:41:51.945938+00:00",
+  "seed": 7,
+  "chaos_manifest_hash": "5d39fe1954834f03",
+  "window_start": "2026-11-27T07:35:51.746210+00:00",
+  "window_end": "2026-11-27T07:42:51.945938+00:00",
+  "validation_passed": true
+}
