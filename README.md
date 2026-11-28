@@ -1,56 +1,58 @@
 # OTel SRE-Copilot
 
-An LLM agent that finds the root cause of a Kubernetes incident from OpenTelemetry metrics, traces, logs and pod events, with every cited piece of evidence checked against the queries it really ran: for SREs evaluating AI incident triage, and for engineers who want an honest benchmark harness for it.
+OTel SRE-Copilot helps on-call engineers rank likely causes of Kubernetes incidents from OpenTelemetry metrics, traces, logs and pod events, with citations checked against the telemetry it queried.
 
 ![Replay of the agent investigating the checkout pod crash](showcase/demo.gif)
 
 ```bash
 git clone https://github.com/Wassbdr/otel-sre-copilot && cd otel-sre-copilot
-uv venv -p 3.12 && uv pip install -e .   # or: python3.12 -m venv .venv && .venv/bin/pip install -e .
-make demo                 # replays a recorded investigation: no API key, no cluster
+uv venv -p 3.12 && uv pip install -e .
+make demo
 ```
-
-`NIM_API_KEY=… make demo-live` runs the agent live on the same recorded telemetry (free [NVIDIA NIM](https://build.nvidia.com) key, or any OpenAI-compatible endpoint, see [LLM provider](#llm-provider)). `docker build -t otel-sre-copilot . && docker run --rm -it otel-sre-copilot` does the replay without a local Python.
 
 ## Key results
 
-<!-- benchmark:start (written by python -m eval.report) -->
-| Method | Top-1 | Top-3 | Service top-1 / top-3 | Grounding | Latency / incident | Tokens / incident |
-|---|---|---|---|---|---|---|
-| **SRE-Copilot agent (LLM)** | 36% ± 12 | 48% ± 7 | 62% / 86% | 0.97 | 54.8 s | 85,770 |
-| Composite z-score (5 signals) | 29% | 50% | 43% / 93% | n/a | 0 ms | 0 |
-| Z-score on error_rate | 0% | 14% | 14% / 50% | n/a | 0 ms | 0 |
-| Random | 0% | 0% | 0% / 29% | n/a | 0 ms | 0 |
+<!-- final-comparison:start -->
+Astronomy Shop replay: 6 held-out, 12 new untuned development, 14 tuned development snapshots; `nvidia/nemotron-3.5-lightning-30b-a3b` via NVIDIA NIM; 3 runs per Copilot method and 1 per HolmesGPT snapshot; x86_64, 8 vCPU, Linux, no GPU.
 
-<sub>14 replayed Chaos Mesh snapshots (7 scenarios × seeds 42, 7) of the OpenTelemetry Astronomy Shop; agent = `nvidia/nemotron-3.5-lightning-30b-a3b` via NVIDIA NIM, temperature 0, 3 runs per snapshot; baseline RANDOM_SEED=42; x86_64 8 vCPU, Linux, no GPU. Run `bench-20261127b`, full tables in [results/benchmark.md](results/benchmark.md).</sub>
-<!-- benchmark:end -->
+Each accuracy cell is strict top-1 / top-3 (service and fault type). Multi-fault runs score the fraction of true causes covered. Grounding and per-run costs are pooled.
 
-Agent rows are means over 3 runs per snapshot (± = standard deviation across runs). Baselines are deterministic. Regenerate with `make benchmark` (needs a key) or re-report the committed run with `bash showcase/make_showcase.sh`.
+| Method | Held-out | New development | Tuned development | Pooled | Grounding | Tokens | Seconds | USD |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| **SRE-Copilot** | 63.9% / 86.1% | 61.1% / 80.6% | 69.0% / 100.0% | 65.1% / 90.1% | 100.0% | 9,859 | 9.86 | 0.0000 |
+| Composite z-score | 50.0% / 58.3% | 16.7% / 50.0% | 28.6% / 50.0% | 28.1% / 51.6% | n/a | 0 | 0.00 | 0.0000 |
+| RCAEval N-Sigma (metrics) | 8.3% / 25.0% | 33.3% / 50.0% | 35.7% / 50.0% | 29.7% / 45.3% | n/a | 0 | 0.01 | 0.0000 |
+| ReAct without grounding verifier in the agent | 5.6% / 8.3% | 11.1% / 22.2% | 14.3% / 21.4% | 11.5% / 19.3% | 51.7% | 47,489 | 43.12 | 0.0000 |
+| HolmesGPT 0.48.0 (1 run per snapshot) | 0.0% / 50.0% | 8.3% / 16.7% | 14.3% / 28.6% | 9.4% / 28.1% | 83.3% | 437,350 | 115.53 | 0.0000 |
+| RCAEval BARO (metrics) | 0.0% / 25.0% | 16.7% / 58.3% | 28.6% / 42.9% | 18.8% / 45.3% | n/a | 0 | 0.01 | 0.0000 |
+| SRE-Copilot without anomaly prior | 0.0% / 8.3% | 16.7% / 22.2% | 9.5% / 19.0% | 10.4% / 18.2% | 87.8% | 9,056 | 10.41 | 0.0000 |
+| Random | 0.0% / 0.0% | 2.8% / 2.8% | 4.8% / 4.8% | 3.1% / 3.1% | n/a | 0 | 0.00 | 0.0000 |
+| Error-rate z-score | 0.0% / 0.0% | 0.0% / 8.3% | 0.0% / 14.3% | 0.0% / 9.4% | n/a | 0 | 0.00 | 0.0000 |
+
+RCAEval BARO (metrics) leads on service-only top-3 for new development (83.3% vs. 80.6%); the table uses strict matching.
+
+Seconds exclude rate-limit waits. USD reflects NIM free-tier pricing. Grounding is the share of citations matched to tool calls; n/a means no citations.
+<!-- final-comparison:end -->
 
 ## How it works
 
 ```mermaid
 flowchart LR
-  subgraph kind["kind cluster (make up)"]
-    shop["Astronomy Shop<br/>15 services"] --> col["OTel Collector"]
-    col --> prom["Prometheus"] & tempo["Tempo"] & loki["Loki"]
-    chaos["Chaos Mesh fault"] -.-> shop
-  end
-  kind -- "inject_and_snapshot.py" --> snap[("snapshots/<br/>telemetry + ground truth")]
-  snap --> ds["DataSource<br/>live or replay"]
-  prom & tempo & loki -.-> ds
-  ds --> agent["LangGraph agent<br/>8 tools, ≤10 steps"]
-  agent --> report["InvestigationReport<br/>top-3 causes + evidence"]
-  report --> verifier["grounding verifier<br/>evidence ⊂ tool calls"]
-  verifier --> metrics["metrics vs ground truth<br/>+ 3 baselines"]
+  sources["Live telemetry or snapshot"] --> candidate["Rank service + fault candidates"]
+  candidate --> model["Model re-ranks with evidence"]
+  model --> verify["Check citations and fill from prior"]
+  verify --> report["Top 3 causes + next steps"]
 ```
 
-1. **Fault injection.** A scenario YAML holds a Chaos Mesh manifest (pod failure, network delay, HTTP abort, CPU or memory stress) and the expected faulty service. `scripts/inject_and_snapshot.py` applies it, waits for the fault to play out, then records the telemetry of the incident window and an 8-minute pre-incident baseline into `snapshots/<id>/`, with `ground_truth.json`.
-2. **Investigation.** The agent gets only an opaque incident id, a namespace and a time window. It calls tools (`rank_services_by_signal`, `query_prometheus_range`, `search_traces`, `get_trace`, `query_loki`, `get_pod_events`, `get_service_topology`, …) through a `DataSource` that talks to the live backends or replays a snapshot, then writes a Pydantic `InvestigationReport`: three ranked hypotheses (service + fault type), evidence, remediation.
-3. **Verification.** The harness, not the agent, scores the report: top-1 / top-3 / MRR against Chaos Mesh ground truth, and a grounding score, the share of cited evidence (PromQL, LogQL, trace id, pod event) that matches a tool call made during the run. Below 0.8 the run is flagged `[HALLUCINATION WARNING]`.
-4. **Baselines.** Random, a Z-score on error rate, and a composite Z-score over five signals run on the same snapshots.
-
 ## Details
+
+The demo replays a recorded investigation without an API key or a cluster.
+`NIM_API_KEY=... make demo-live` runs the model against the same snapshot.
+Without `uv`, create a Python 3.12 virtual environment and install with `.venv/bin/pip install -e .`.
+
+1. **Fault injection.** A scenario YAML holds a Chaos Mesh manifest (pod failure, network delay, HTTP abort, CPU or memory stress) and the expected faulty service. `scripts/inject_and_snapshot.py` applies it, waits for the fault to play out, then records the telemetry of the incident window and an 8-minute pre-incident baseline into `snapshots/<id>/`, with `ground_truth.json`.
+2. **Investigation.** Signal fingerprints propose ranked service and fault pairs with observations. With only an incident window, namespace and opaque ID, the agent uses the same tools against live telemetry or a recording. It can reorder the list and propose one new pair with observed evidence.
+3. **Verification.** Unsupported hypotheses are removed, and ranked, grounded candidates fill open slots. A separate benchmark scorer checks report citations against tool calls and compares the predicted causes with the recorded ground truth.
 
 Use [your own telemetry](docs/using-your-telemetry.md) with the `copilot` CLI
 or Python API, [add a benchmark scenario](docs/adding-a-scenario.md), or
@@ -65,9 +67,9 @@ or Python API, [add a benchmark scenario](docs/adding-a-scenario.md), or
 | `src/demo.py` | Terminal renderer: replay a recorded `trace.json` or run live (`sre-copilot-demo`) |
 | `eval/` | scenario runner, metrics, grounding verifier, baselines, `report.py`, `compare.py` |
 | `scenarios/mvp/` | 7 Chaos Mesh scenarios |
-| `snapshots/` | recorded telemetry, 7 scenarios × 2 Chaos Mesh seeds, committed in full |
-| `artifacts/<run>/` | raw per-run results and one `trace.json` per agent investigation |
-| `results/` | `summary.json`, `benchmark.md`, `baseline_comparison.md` of the committed run |
+| `snapshots/` | validated telemetry from the original and expanded capture matrices |
+| `artifacts/<run>/` | pinned snapshot manifests and local resumable checkpoints |
+| `benchmarks/` | recorded per-run scores, cohort tables and investigation misses |
 | `infra/`, `scripts/` | kind config, Helm values, collector config, capture and health scripts |
 | `showcase/` | GIF, MP4, poster, `showcase.json`, and `make_showcase.sh` that rebuilds them |
 
@@ -101,12 +103,16 @@ Any OpenAI-compatible chat endpoint with tool calling works. `LLM_*` wins over `
 ### Re-running the benchmark
 
 ```bash
-export NIM_API_KEY=...               # or LLM_BASE_URL / LLM_API_KEY / LLM_MODEL
-make benchmark                       # agent × 3 + 3 baselines on every snapshot → artifacts/, results/
-make demo TRACE=artifacts/<run>/scenarios/<snapshot>/rep0/trace.json   # replay any investigation
+export NIM_API_KEY=...
+make bench BENCH_RUN_ID=my-comparison BENCH_METHODS='agent react agent_no_prior baro nsigma composite_zscore zscore random'
+make demo TRACE=artifacts/my-comparison/scenarios/<snapshot>/agent_full/rep0/trace.json
 ```
 
-`make eval-baselines` re-runs only the baselines (seconds, no key). `bash showcase/make_showcase.sh` checks the baselines reproduce the committed run exactly, then rebuilds `results/`, the poster, `showcase.json` and, if [vhs](https://github.com/charmbracelet/vhs) is installed, the GIF and MP4.
+Set `HOLMES_PYTHON` to include HolmesGPT; see [reference tools](docs/reference-tools.md).
+See [benchmark results](benchmarks/results.md) for iterations, cohort details and scenario misses.
+`python -m eval.final_report` rebuilds the comparison from recorded rows without a key.
+`bash showcase/make_showcase.sh` also rebuilds the poster and demo media; install
+[VHS](https://github.com/charmbracelet/vhs), ttyd and FFmpeg first.
 
 ### Capturing new snapshots (live cluster)
 
@@ -130,16 +136,14 @@ make lint     # ruff + mypy --strict
 
 CI (`.github/workflows/ci.yml`) runs lint, types, tests, the offline demo, a baseline reproducibility check against the committed run, and an end-to-end replay with the fake LLM.
 
-## Roadmap and known limitations
-
-- **Small benchmark.** 14 snapshots (7 scenarios × 2 seeds) of a single application. Percentages move by 7 points per snapshot; read them as indicative.
-- **The agent shares the baseline's statistic.** `rank_services_by_signal` exposes the composite Z-score per signal as a tool. What the LLM adds is reasoning over topology, traces, logs and events, and it can do worse than the baseline when it over-weights a symptom.
-- **One prompt adjustment was made after a development run** on `checkout-pod_crash-seed42` (the entry-point-symptom hint). That snapshot is part of the benchmark.
-- **Replay answers only recorded queries.** Free-form PromQL that the capture did not record returns no data; the prompt lists the exact queries available. Live mode has no such limit but was not benchmarked.
-- **Grounding checks citation, not interpretation.** A run that cites a real query but misreads it still scores 1.0, and a report with no evidence scores 1.0 too.
-- **Baseline windows.** Snapshots keep 8 minutes of pre-incident data and scenarios were captured 6 minutes apart, so a baseline can include the tail of the previous scenario's recovery.
-- **Roadmap.** More seeds and the 35-scenario set (`scenarios/full`), multi-fault incidents, a benchmarked live mode, and a comparison across several open models.
-
-## License
+### License
 
 MIT, see [LICENSE](LICENSE). Telemetry in `snapshots/` comes from the [OpenTelemetry Astronomy Shop demo](https://github.com/open-telemetry/opentelemetry-demo) (Apache-2.0) running on a local kind cluster; it contains no personal or company data.
+
+## Roadmap and known limitations
+
+- **One application and one model.** Iterations 4 through 6 tuned the system on the original development cohort. No changes were tuned on the new development or held-out cohorts. The held-out set includes two-fault incidents.
+- **Replay cannot answer arbitrary queries.** The benchmark uses recorded queries and sampled traces. HolmesGPT used the same telemetry and NIM model, with one run per snapshot and ten model steps. Unsupported queries can still return no evidence. Live mode was not benchmarked.
+- **Two references could not be scored on matched inputs.** k8sgpt's Pod analyzer needs Kubernetes API resource state; the snapshots hold events, not a Kubernetes API. OpenRCA needs a dataset, prompt and output adapter. See [reference tools](docs/reference-tools.md).
+- **Grounding checks citations, not interpretation.** A correct query can still support a wrong diagnosis. Reports with no citations contribute nothing to the grounding denominator.
+- **Roadmap.** Test on independent applications and models, add replay adapters for more references, and measure live investigations.

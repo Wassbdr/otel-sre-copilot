@@ -1,4 +1,3 @@
-# vhs showcase/demo.tape  — renders showcase/demo.gif + showcase/demo.mp4 (run from repo root)
 Output showcase/demo.gif
 Output showcase/demo.mp4
 Require python3
@@ -14,5 +13,4 @@ Hide
 Type "source .venv/bin/activate 2>/dev/null; export PS1='$ '; clear" Enter
 Show
 Type "make demo" Sleep 300ms Enter
-Sleep 16s
-Sleep 5s
+Sleep 19s

@@ -123,7 +123,7 @@ class Renderer:
             line = Text("Grounding ", style="bold")
             line.append(f"{score:.2f}", style=style)
             line.append(f"  ({grounding.get('verified')}/{grounding.get('total')} evidence items "
-                        f"match a real tool call) — {verdict}")
+                        f"match a real tool call): {verdict}")
             self.c.print(line)
         steps = report.get("remediation_steps") or []
         if steps:
@@ -148,7 +148,7 @@ def replay(trace_path: Path, delay: float, console: Console) -> int:
         f"Incident {trace.get('scenario_id')}",
         f"model {trace.get('model')}",
         trace.get("window", {}),
-        "REPLAY of a recorded agent run — no LLM or network call is made.",
+        "REPLAY of a recorded investigation. No model or network calls.",
     )
     for call in trace.get("tool_calls", []):
         r.tool_call(call)

@@ -1,5 +1,46 @@
 # Benchmark results
 
+<!-- final-comparison:start -->
+## Final comparison
+
+Astronomy Shop replay: 6 held-out, 12 new untuned development, 14 tuned development snapshots; `nvidia/nemotron-3.5-lightning-30b-a3b` via NVIDIA NIM; 3 runs per Copilot method and 1 per HolmesGPT snapshot; x86_64, 8 vCPU, Linux, no GPU.
+
+Each accuracy cell is strict top-1 / top-3 (service and fault type). Multi-fault runs score the fraction of true causes covered. Grounding and per-run costs are pooled.
+
+| Method | Held-out | New development | Tuned development | Pooled | Grounding | Tokens | Seconds | USD |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| **SRE-Copilot** | 63.9% / 86.1% | 61.1% / 80.6% | 69.0% / 100.0% | 65.1% / 90.1% | 100.0% | 9,859 | 9.86 | 0.0000 |
+| Composite z-score | 50.0% / 58.3% | 16.7% / 50.0% | 28.6% / 50.0% | 28.1% / 51.6% | n/a | 0 | 0.00 | 0.0000 |
+| RCAEval N-Sigma (metrics) | 8.3% / 25.0% | 33.3% / 50.0% | 35.7% / 50.0% | 29.7% / 45.3% | n/a | 0 | 0.01 | 0.0000 |
+| ReAct without grounding verifier in the agent | 5.6% / 8.3% | 11.1% / 22.2% | 14.3% / 21.4% | 11.5% / 19.3% | 51.7% | 47,489 | 43.12 | 0.0000 |
+| HolmesGPT 0.48.0 (1 run per snapshot) | 0.0% / 50.0% | 8.3% / 16.7% | 14.3% / 28.6% | 9.4% / 28.1% | 83.3% | 437,350 | 115.53 | 0.0000 |
+| RCAEval BARO (metrics) | 0.0% / 25.0% | 16.7% / 58.3% | 28.6% / 42.9% | 18.8% / 45.3% | n/a | 0 | 0.01 | 0.0000 |
+| SRE-Copilot without anomaly prior | 0.0% / 8.3% | 16.7% / 22.2% | 9.5% / 19.0% | 10.4% / 18.2% | 87.8% | 9,056 | 10.41 | 0.0000 |
+| Random | 0.0% / 0.0% | 2.8% / 2.8% | 4.8% / 4.8% | 3.1% / 3.1% | n/a | 0 | 0.00 | 0.0000 |
+| Error-rate z-score | 0.0% / 0.0% | 0.0% / 8.3% | 0.0% / 14.3% | 0.0% / 9.4% | n/a | 0 | 0.00 | 0.0000 |
+
+RCAEval BARO (metrics) leads on service-only top-3 for new development (83.3% vs. 80.6%); the table uses strict matching.
+
+Seconds exclude rate-limit waits. USD reflects NIM free-tier pricing. Grounding is the share of citations matched to tool calls; n/a means no citations.
+
+### SRE-Copilot by cohort
+
+| Cohort | Runs | Service top-1 | Service top-3 | Grounded citations | Tokens/run | Seconds/run | USD/run |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Held-out | 18 | 63.9% | 86.1% | 55/55 | 9,932 | 10.37 | 0.0000 |
+| New development | 36 | 69.4% | 80.6% | 104/104 | 9,772 | 5.99 | 0.0000 |
+| Tuned development | 42 | 83.3% | 100.0% | 142/142 | 9,903 | 12.95 | 0.0000 |
+| Pooled | 96 | 74.5% | 90.1% | 301/301 | 9,859 | 9.86 | 0.0000 |
+
+### SRE-Copilot misses
+
+Runs missing any true cause, grouped by scenario across seeds (top-1 / top-3). For two-fault incidents, top-1 necessarily misses at least one cause.
+
+- **Held-out:** `currency-cart-multi` 9/9 / 5/9.
+- **New development:** `cart-memory_stress` 3/3 / 0/3; `product-catalog-cpu_stress` 2/9 / 0/9; `quote-http_abort` 9/9 / 7/9.
+- **Tuned development:** `cart-memory_stress` 6/6 / 0/6; `payment-http_abort` 4/6 / 0/6; `recommendation-cpu_stress` 3/6 / 0/6.
+<!-- final-comparison:end -->
+
 Top-k is the fraction of true causes covered within the first k predictions. Strict accuracy requires both service and fault type. Grounding is matched citations divided by citations made; no citations is n/a. Latency excludes rate limit waits; cached responses retain the original request duration.
 
 [RCAEval](https://github.com/phamquiluan/RCAEval) BARO and N-Sigma use the maximum incident value after median/IQR or mean/standard-deviation scaling. The table projects ranked metrics to unique services and maps the top signal for each service to a fault type. This is a metrics-only comparison.
